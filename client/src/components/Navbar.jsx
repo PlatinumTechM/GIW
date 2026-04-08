@@ -108,20 +108,6 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            {/* CTA Button */}
-            <NavLink
-              to="/register"
-              className={`ml-4 px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${
-                isScrolled
-                  ? "bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:shadow-xl"
-                  : "bg-white text-slate-900 shadow-lg shadow-white/10 hover:bg-slate-100 hover:shadow-xl"
-              }`}
-            >
-              <span>Get Started</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </NavLink>
           </div>
 
           {/* Mobile Menu Button */}
