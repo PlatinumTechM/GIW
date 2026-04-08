@@ -41,7 +41,7 @@ const Login = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex overflow-hidden">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative h-screen overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 relative h-screen sticky top-0">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
           {/* Subtle Diamond Pattern Overlay */}
@@ -125,7 +125,7 @@ const Login = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-16 overflow-hidden">
+      <div className="w-full lg:w-3/5 h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-16 overflow-hidden">
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
@@ -148,6 +148,12 @@ const Login = () => {
             <p className="text-slate-500 mt-1">Sign in to your account</p>
           </div>
 
+
+          {/* Desktop Header */}
+          <div className="hidden lg:block mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h1>
+            <p className="text-slate-500">Sign in to your account to continue</p>
+          </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

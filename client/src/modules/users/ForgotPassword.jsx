@@ -83,7 +83,7 @@ const ForgotPassword = () => {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex overflow-hidden">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative h-screen overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 relative h-screen overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
           <div className="absolute inset-0 opacity-5">
             <div
@@ -129,7 +129,7 @@ const ForgotPassword = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-16 overflow-hidden">
+      <div className="w-full lg:w-3/5 h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-16 overflow-hidden">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
