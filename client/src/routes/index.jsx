@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "@/App";
 // import Home from "@/modules/home/Home";
-import Home from "@/modules/home/Home1";
+// import Home from "@/modules/home/Home1";
 // import Home from "@/modules/home/Home2";
-// import Home from "@/modules/home/Home3";
+import Home from "@/modules/home/Home3";
 // import Home from "@/modules/home/Home4";
 // import Home from "@/modules/home/Home5";
 // import Home from "@/modules/home/Home6";
@@ -23,7 +23,9 @@ import Login from "@/modules/users/Login";
 import ForgotPassword from "@/modules/users/ForgotPassword";
 import Pricing from "@/modules/pricing/Pricing";
 import Contact from "@/modules/contact/Contact";
-
+import AdminLayout from "@/modules/admin/AdminLayout";
+import AdminDashboard from "@/modules/admin/Dashboard";
+import UserManagement from "@/modules/admin/UserManagement";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -52,6 +54,20 @@ export const router = createBrowserRouter([
       {
         path: "/contact",
         element: <Contact />,
+      },
+      {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+          {
+            path: "",
+            element: <AdminDashboard />,
+          },
+          {
+            path: "users",
+            element: <UserManagement />,
+          },
+        ],
       },
     ],
   },
