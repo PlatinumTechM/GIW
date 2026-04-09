@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "@/App";
-import Home from "@/modules/home/Home";
-// import Home from "@/modules/home/Home1";
+// import Home from "@/modules/home/Home";
+import Home from "@/modules/home/Home1";
 // import Home from "@/modules/home/Home2";
 // import Home from "@/modules/home/Home3";
 // import Home from "@/modules/home/Home4";
@@ -21,6 +21,7 @@ import Home from "@/modules/home/Home";
 import Register from "@/modules/users/Register";
 import Login from "@/modules/users/Login";
 import ForgotPassword from "@/modules/users/ForgotPassword";
+import Pricing from "@/modules/pricing/Pricing";
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: "/forgot-password",
         element: <ForgotPassword />,
+      },
+      {
+        path: "/pricing",
+        element: <Pricing />,
       },
     ],
   },
