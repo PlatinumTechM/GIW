@@ -22,6 +22,7 @@ import Register from "@/modules/users/Register";
 import Login from "@/modules/users/Login";
 import ForgotPassword from "@/modules/users/ForgotPassword";
 import Pricing from "@/modules/pricing/Pricing";
+import Contact from "@/modules/contact/Contact";
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
       {
         path: "/pricing",
         element: <Pricing />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
       },
     ],
   },
