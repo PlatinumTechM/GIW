@@ -185,32 +185,26 @@ const Pricing = () => {
             </motion.div>
 
             {/* Billing Toggle */}
-            <motion.div variants={fadeInUp}>
-              <div className="inline-flex items-center gap-4 p-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
-                <button
-                  onClick={() => setBillingCycle("monthly")}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    billingCycle === "monthly"
-                      ? "bg-slate-900 text-white shadow-md"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingCycle("yearly")}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                    billingCycle === "yearly"
-                      ? "bg-slate-900 text-white shadow-md"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
-                >
-                  Yearly
-                  <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs rounded-full">
-                    Save 20%
-                  </span>
-                </button>
-              </div>
+            <motion.div variants={fadeInUp} className="flex items-center justify-center gap-3">
+              <span className={`text-sm font-medium transition-colors duration-200 ${billingCycle === "monthly" ? "text-slate-900" : "text-slate-500"}`}>
+                Monthly
+              </span>
+              <button
+                onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
+                className="relative w-14 h-8 bg-slate-700 rounded-lg shadow-sm transition-colors duration-200"
+              >
+                <motion.div
+                  initial={false}
+                  animate={{
+                    x: billingCycle === "monthly" ? 2 : 26,
+                  }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className="absolute top-1 w-6 h-6 bg-blue-400 rounded-md shadow-sm"
+                />
+              </button>
+              <span className={`text-sm font-medium transition-colors duration-200 ${billingCycle === "yearly" ? "text-slate-900" : "text-slate-500"}`}>
+                Yearly
+              </span>
             </motion.div>
           </motion.div>
         </div>
