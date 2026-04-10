@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const ForgotPassword = () => {
@@ -14,6 +14,11 @@ const ForgotPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,48 +87,106 @@ const ForgotPassword = () => {
 
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex overflow-hidden">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-2/5 relative h-screen overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          <div className="absolute inset-0 opacity-5">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30 30 0z' fill='%23ffffff' fill-opacity='1'/%3E%3C/svg%3E")`,
-                backgroundSize: "60px 60px",
-              }}
-            />
-          </div>
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-slate-600/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-slate-500/10 rounded-full blur-3xl" />
+      {/* Left Side - Branding - Animated */}
+      <div className="hidden lg:flex lg:w-2/5 relative h-screen sticky top-0 overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-slate-950">
+          <img
+            src="/images/Diamond_Web_Background_A_brilliant-cut_diamond_is_presented_against_a_nVuBY9HB (1).png"
+            alt="Diamond"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms] ease-out ${isLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}
+          />
+
+          {/* Dark Luxury Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-slate-950/80 to-slate-900/85" />
+
+          {/* Animated Floating Orbs */}
+          <div className={`absolute -top-20 -left-16 w-72 h-72 bg-white/5 rounded-full blur-3xl transition-all duration-[2500ms] ease-out ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'}`} />
+          <div className={`absolute top-1/3 right-[-60px] w-72 h-72 bg-slate-400/10 rounded-full blur-3xl transition-all duration-[2500ms] delay-300 ease-out ${isLoaded ? 'translate-x-0 opacity-100' : 'translate-x-20 opacity-0'}`} />
+          <div className={`absolute bottom-0 left-1/4 w-80 h-80 bg-slate-500/10 rounded-full blur-3xl transition-all duration-[2500ms] delay-500 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`} />
+          <div className={`absolute top-1/2 left-1/2 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-pulse transition-all duration-[3000ms] delay-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`} />
+
+          {/* Animated Grid */}
+          <div className={`absolute inset-0 bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px] transition-opacity duration-[2000ms] ${isLoaded ? 'opacity-[0.06]' : 'opacity-0'}`} />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-300 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div>
-              <span className="text-2xl font-bold text-white tracking-tight">GIW</span>
-              <p className="text-xs text-slate-400 tracking-widest uppercase">Diamond Exchange</p>
-            </div>
-          </Link>
+        {/* Content */}
+        <div className="relative z-10 flex h-full w-full flex-col justify-between p-10 xl:p-12">
+          {/* Top Logo - Animated */}
+          <div className={`flex items-start justify-between transition-all duration-1000 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
+            <Link to="/" className="group inline-flex items-center gap-4">
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-[0_10px_40px_rgba(255,255,255,0.08)] transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20 group-hover:shadow-[0_10px_60px_rgba(255,255,255,0.15)] animate-float">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent animate-shimmer" />
+                <svg
+                  className="relative z-10 h-7 w-7 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-white">GIW</h2>
+                <p className="mt-0.5 text-[11px] uppercase tracking-[0.28em] text-slate-400">
+                  Diamond Exchange
+                </p>
+              </div>
+            </Link>
 
-          <div className="max-w-md">
-            <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
-              Account
-              <br />
-              <span className="text-slate-400">Recovery</span>
-            </h2>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              Secure password reset process for verified diamond dealers.
-            </p>
+            <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-medium text-emerald-300 backdrop-blur-md animate-glow">
+              Secure Reset
+            </div>
           </div>
 
-          <div className="text-slate-500 text-sm">
-            © 2025 GIW Diamond Exchange. All rights reserved.
+          {/* Main Message - Simplified & Animated */}
+          <div className={`max-w-sm transition-all duration-1000 delay-300 ease-out ${isLoaded ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md animate-pulse-slow">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              Secure recovery process
+            </div>
+
+            <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight text-white">
+              Account
+              <br />
+              <span className="bg-gradient-to-r from-emerald-200 via-white to-slate-400 bg-clip-text text-transparent animate-gradient">
+                Recovery
+              </span>
+            </h1>
+
+            <p className={`mt-4 text-sm leading-6 text-slate-300 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+              Verified password reset for diamond dealers & traders.
+            </p>
+
+            {/* Feature Points - Minimal */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              {['Verified', 'Secure', 'Fast'].map((item, i) => (
+                <div
+                  key={item}
+                  className={`flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm transition-all duration-700 hover:bg-white/10 hover:scale-105 cursor-default ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+                  style={{ transitionDelay: `${600 + i * 150}ms` }}
+                >
+                  <svg className="h-3 w-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-xs text-slate-200">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Info - Animated */}
+          <div className={`flex items-center justify-between border-t border-white/10 pt-4 transition-all duration-1000 delay-700 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+            <p className="text-xs text-slate-500">© 2025 GIW</p>
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Protected
+            </div>
           </div>
         </div>
       </div>
