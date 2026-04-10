@@ -33,7 +33,7 @@ const Login = () => {
   };
 
   const inputClasses = (fieldName) => `
-    w-full px-4 py-3.5 pl-12 rounded-xl border-2 transition-all duration-300 ease-out
+    w-full px-4 py-3 pl-12 rounded-xl border-2 transition-all duration-300 ease-out
     ${
       focusedField === fieldName
         ? "border-slate-400 ring-4 ring-slate-100 bg-white"
@@ -44,9 +44,9 @@ const Login = () => {
   `;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex flex-col lg:flex-row">
       {/* Left Side - Branding - Animated */}
-      <div className="hidden lg:flex lg:w-2/5 relative h-screen sticky top-0 overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 relative h-screen lg:fixed lg:left-0 lg:top-0 overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-slate-950">
           <img
@@ -109,7 +109,7 @@ const Login = () => {
               Trusted by 10K+ professionals
             </div>
 
-            <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight text-white">
+            <h1 className="text-3xl lg:text-4xl font-bold leading-[1.1] tracking-tight text-white">
               Premium
               <br />
               <span className="bg-gradient-to-r from-emerald-200 via-white to-slate-400 bg-clip-text text-transparent animate-gradient">
@@ -117,19 +117,19 @@ const Login = () => {
               </span>
             </h1>
 
-            <p className={`mt-4 text-sm leading-6 text-slate-300 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <p className={`mt-3 lg:mt-4 text-xs lg:text-sm leading-5 lg:leading-6 text-slate-300 transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
               Secure B2B marketplace connecting trusted diamond dealers worldwide.
             </p>
 
             {/* Stats - Minimal */}
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-4 lg:mt-6 flex flex-wrap gap-2 lg:gap-3">
               {['10K+ Active', '$2B+ Volume', '99.9% Uptime'].map((item, i) => (
                 <div
                   key={item}
-                  className={`flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-sm transition-all duration-700 hover:bg-white/10 hover:scale-105 cursor-default ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+                  className={`flex items-center gap-1.5 lg:gap-2 rounded-full border border-white/10 bg-white/5 px-2 lg:px-3 py-1 lg:py-1.5 backdrop-blur-sm transition-all duration-700 hover:bg-white/10 hover:scale-105 cursor-default ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
                   style={{ transitionDelay: `${600 + i * 150}ms` }}
                 >
-                  <span className="text-xs text-slate-200">{item}</span>
+                  <span className="text-[10px] lg:text-xs text-slate-200">{item}</span>
                 </div>
               ))}
             </div>
@@ -147,11 +147,11 @@ const Login = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-3/5 h-screen flex items-center justify-center p-4 sm:p-8 lg:p-12 xl:p-16 overflow-hidden">
-        <div className="w-full max-w-md animate-fade-in">
+      <div className="w-full lg:w-3/5 lg:ml-[40%] min-h-screen flex items-start lg:items-center justify-center p-3 sm:p-4 lg:p-6 xl:p-8">
+        <div className="w-full max-w-md my-auto">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl mb-4 shadow-lg">
+          <div className="lg:hidden text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl mb-3 sm:mb-4 shadow-lg">
               <svg
                 className="w-7 h-7 text-white"
                 fill="none"
@@ -166,22 +166,22 @@ const Login = () => {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Welcome Back</h1>
-            <p className="text-slate-500 mt-1">Sign in to your account</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Welcome Back</h1>
+            <p className="text-sm sm:text-base text-slate-500 mt-1">Sign in to your account</p>
           </div>
 
 
           {/* Desktop Header */}
-          <div className="hidden lg:block mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h1>
-            <p className="text-slate-500">Sign in to your account to continue</p>
+          <div className="hidden lg:block mb-2 lg:mb-4">
+            <h1 className="text-lg lg:text-xl xl:text-2xl font-bold text-slate-900 mb-1">Welcome Back</h1>
+            <p className="text-xs lg:text-sm text-slate-500">Sign in to your account to continue</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 lg:space-y-5">
               {/* Email */}
               <div className="relative">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
@@ -216,7 +216,7 @@ const Login = () => {
 
               {/* Password */}
               <div className="relative">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -324,11 +324,11 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-4 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl
+                className="w-full py-2.5 sm:py-3 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl
                   shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30
                   transition-all duration-300 hover:-translate-y-0.5
                   active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0
-                  flex items-center justify-center gap-2"
+                  flex items-center justify-center gap-2 text-sm"
               >
                 {isLoading ? (
                   <>
@@ -375,7 +375,7 @@ const Login = () => {
             </form>
 
             {/* Divider */}
-            <div className="relative my-8">
+            <div className="relative my-3 sm:my-4 lg:my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200"></div>
               </div>
@@ -389,17 +389,17 @@ const Login = () => {
             {/* Register Link */}
             <Link
               to="/register"
-              className="w-full py-3.5 px-6 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl
+              className="w-full py-2.5 sm:py-3 px-6 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl
                 hover:border-slate-400 hover:bg-slate-50
                 transition-all duration-300 active:scale-[0.98]
-                flex items-center justify-center gap-2"
+                flex items-center justify-center gap-2 text-sm"
             >
               <span>Create Account</span>
             </Link>
 
           {/* Trust Badges */}
-          <div className="mt-8 flex items-center justify-center gap-6 text-slate-400">
-            <div className="flex items-center gap-2 text-xs">
+          <div className="mt-3 sm:mt-4 lg:mt-5 flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 text-slate-400 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -415,7 +415,7 @@ const Login = () => {
               </svg>
               <span>Bank-grade security</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
               <svg
                 className="w-4 h-4"
                 fill="none"
