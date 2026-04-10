@@ -10,6 +10,7 @@ app.get("/", (req, res) => {
   res.send("API running");
 });
 
+app.use(cors());
 // app.use("/api/v1/auth");
 
 // 404 handler
