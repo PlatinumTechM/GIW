@@ -1,0 +1,5 @@
+ssh root@88.222.213.19
+PatinumTech#123
+
+scp -r ./client/dist root@88.222.213.19:/var/www/frontend
+scp -r ./server root@88.222.213.19:/var/www/backend
