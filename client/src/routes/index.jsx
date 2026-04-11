@@ -1,9 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "@/App";
 import Home from "@/modules/home/Home";
-import Register from "@/modules/users/Register";
-import Login from "@/modules/users/Login";
-import ForgotPassword from "@/modules/users/ForgotPassword";
+import Register from "@/modules/auth/Register";
+import Login from "@/modules/auth/Login";
+import ForgotPassword from "@/modules/auth/ForgotPassword";
 import Pricing from "@/modules/pricing/Pricing";
 import Contact from "@/modules/contact/Contact";
 import AdminLayout from "@/modules/admin/AdminLayout";
