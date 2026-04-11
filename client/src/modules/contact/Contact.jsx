@@ -15,6 +15,7 @@ import {
   Star,
   Zap,
 } from "lucide-react";
+import Input from "../../components/ui/Input";
 
 // Animation variants
 const containerVariants = {
@@ -127,26 +128,26 @@ const Contact = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white pt-12 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F8FAFC] pt-12 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Floating Shapes */}
         <motion.div
           variants={floatingShapeVariants}
           animate="animate"
-          className="absolute top-20 left-10 w-20 h-20 bg-amber-100/30 rounded-full blur-xl"
+          className="absolute top-20 left-10 w-20 h-20 bg-[#3B82F6]/10 rounded-full blur-xl"
         />
         <motion.div
           variants={floatingShapeVariants}
           animate="animate"
           style={{ animationDelay: "2s" }}
-          className="absolute top-40 right-20 w-32 h-32 bg-amber-200/20 rounded-full blur-2xl"
+          className="absolute top-40 right-20 w-32 h-32 bg-[#1E3A8A]/10 rounded-full blur-2xl"
         />
         <motion.div
           variants={floatingShapeVariants}
           animate="animate"
           style={{ animationDelay: "4s" }}
-          className="absolute bottom-40 left-1/4 w-24 h-24 bg-amber-300/20 rounded-full blur-xl"
+          className="absolute bottom-40 left-1/4 w-24 h-24 bg-[#3B82F6]/15 rounded-full blur-xl"
         />
         
         {/* Diamond Icons */}
@@ -154,39 +155,39 @@ const Contact = () => {
           animate={{ 
             y: [0, -30, 0], 
             rotate: [0, 15, -15, 0],
-            opacity: [0.3, 0.6, 0.3]
+            opacity: [0.2, 0.4, 0.2]
           }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-32 left-[10%]"
         >
-          <Diamond className="w-8 h-8 text-amber-300" />
+          <Diamond className="w-8 h-8 text-[#3B82F6]/50" />
         </motion.div>
         <motion.div
           animate={{ 
             y: [0, 20, 0], 
             rotate: [0, -10, 10, 0],
-            opacity: [0.2, 0.5, 0.2]
+            opacity: [0.15, 0.35, 0.15]
           }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className="absolute top-60 right-[15%]"
         >
-          <Diamond className="w-6 h-6 text-amber-200" />
+          <Diamond className="w-6 h-6 text-[#1E3A8A]/40" />
         </motion.div>
         <motion.div
           animate={{ 
             y: [0, -25, 0], 
             rotate: [0, 20, -20, 0],
-            opacity: [0.3, 0.5, 0.3]
+            opacity: [0.2, 0.4, 0.2]
           }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 2 }}
           className="absolute bottom-60 left-[20%]"
         >
-          <Sparkles className="w-10 h-10 text-amber-300/50" />
+          <Sparkles className="w-10 h-10 text-[#3B82F6]/40" />
         </motion.div>
 
         {/* Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: `linear-gradient(#f59e0b 1px, transparent 1px), linear-gradient(90deg, #f59e0b 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(#1E3A8A 1px, transparent 1px), linear-gradient(90deg, #1E3A8A 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
         }} />
       </div>
@@ -207,7 +208,7 @@ const Contact = () => {
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 rounded-full text-amber-600 text-sm font-medium mb-4"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#DBEAFE]/50 rounded-full text-[#1E3A8A] text-sm font-medium mb-4 shadow-sm"
               >
                 <Zap className="w-4 h-4" />
                 <span>Get in Touch</span>
@@ -216,27 +217,17 @@ const Contact = () => {
 
             <motion.h1 
               variants={itemVariants}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#0F172A] leading-tight"
             >
               Ready To Grow Your{" "}
-              <motion.span 
-                className="text-amber-500 inline-block"
-                animate={{ 
-                  textShadow: [
-                    "0 0 20px rgba(245, 158, 11, 0)",
-                    "0 0 20px rgba(245, 158, 11, 0.3)",
-                    "0 0 20px rgba(245, 158, 11, 0)"
-                  ]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
+              <span className="text-[#1E3A8A]">
                 Diamond Business?
-              </motion.span>
+              </span>
             </motion.h1>
 
             <motion.p 
               variants={itemVariants}
-              className="text-lg text-slate-500 leading-relaxed max-w-xl"
+              className="text-lg text-[#64748B] leading-relaxed max-w-xl"
             >
               Get in touch with GIW for more information on our B2B solutions for the diamond and jewelry industry. We are here to assist you.
             </motion.p>
@@ -254,13 +245,13 @@ const Contact = () => {
                 <motion.div 
                   whileHover={{ rotate: 360, scale: 1.1 }}
                   transition={{ duration: 0.5 }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center shadow-lg shadow-amber-200/50 group-hover:shadow-amber-300/50 transition-all"
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] flex items-center justify-center shadow-lg shadow-[#1E3A8A]/10 group-hover:shadow-[#1E3A8A]/20 transition-all"
                 >
-                  <Mail className="w-6 h-6 text-amber-500" />
+                  <Mail className="w-6 h-6 text-[#1E3A8A]" />
                 </motion.div>
                 <div>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Email</p>
-                  <p className="text-slate-900 font-semibold text-lg group-hover:text-amber-600 transition-colors">info@giwdiamonds.com</p>
+                  <p className="text-sm text-[#64748B] uppercase tracking-wide">Email</p>
+                  <p className="text-[#1E3A8A] font-semibold text-lg group-hover:text-[#3B82F6] transition-colors">info@giwdiamonds.com</p>
                 </div>
               </motion.div>
 
@@ -272,13 +263,13 @@ const Contact = () => {
                 <motion.div 
                   whileHover={{ rotate: -360, scale: 1.1 }}
                   transition={{ duration: 0.5 }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center shadow-lg shadow-amber-200/50 group-hover:shadow-amber-300/50 transition-all"
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] flex items-center justify-center shadow-lg shadow-[#1E3A8A]/10 group-hover:shadow-[#1E3A8A]/20 transition-all"
                 >
-                  <Phone className="w-6 h-6 text-amber-500" />
+                  <Phone className="w-6 h-6 text-[#1E3A8A]" />
                 </motion.div>
                 <div>
-                  <p className="text-sm text-slate-400 uppercase tracking-wide">Phone</p>
-                  <p className="text-slate-900 font-semibold text-lg group-hover:text-amber-600 transition-colors">+1 (212) 221-0975</p>
+                  <p className="text-sm text-[#64748B] uppercase tracking-wide">Phone</p>
+                  <p className="text-[#1E3A8A] font-semibold text-lg group-hover:text-[#3B82F6] transition-colors">+1 (212) 221-0975</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -291,8 +282,8 @@ const Contact = () => {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
             <motion.div 
-              className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl shadow-amber-100/50 border border-amber-50"
-              whileHover={{ boxShadow: "0 25px 50px -12px rgba(245, 158, 11, 0.15)" }}
+              className="bg-white rounded-3xl p-8 shadow-xl shadow-[#0F172A]/5 border border-[#E2E8F0]"
+              whileHover={{ boxShadow: "0 25px 50px -12px rgba(30, 58, 138, 0.12)" }}
               transition={{ duration: 0.3 }}
             >
               <motion.div 
@@ -302,18 +293,13 @@ const Contact = () => {
                 className="mb-8"
               >
                 <motion.h2 
-                  className="text-2xl font-bold text-slate-900 flex items-center gap-2"
+                  className="text-2xl font-bold text-[#0F172A] flex items-center gap-2"
                   whileHover={{ x: 5 }}
                 >
-                  <motion.span
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                  >
-                    <Star className="w-6 h-6 text-amber-500" />
-                  </motion.span>
+                  <Star className="w-6 h-6 text-[#3B82F6]" />
                   Send us a message
                 </motion.h2>
-                <p className="text-slate-400 mt-2">
+                <p className="text-[#64748B] mt-2">
                   We&apos;ll get back to you within 24 hours
                 </p>
               </motion.div>
@@ -327,140 +313,103 @@ const Contact = () => {
               >
                 {/* Full Name */}
                 <motion.div variants={itemVariants} className="space-y-2">
-                  <label className="text-slate-800 text-sm font-medium flex items-center gap-1">
-                    Full Name 
-                    <motion.span 
-                      animate={{ scale: [1, 1.2, 1] }} 
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="text-amber-500"
-                    >*</motion.span>
+                  <label className="text-[#0F172A] text-sm font-medium flex items-center gap-1">
+                    Full Name
+                    <span className="text-[#EF4444]">*</span>
                   </label>
-                  <motion.input
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
+                  <Input
                     type="text"
                     name="fullName"
                     value={formData.fullName || ''}
                     onChange={handleChange}
                     placeholder="John Doe"
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300"
                   />
                 </motion.div>
 
                 {/* Contact Row */}
                 <motion.div variants={itemVariants} className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-slate-800 text-sm font-medium flex items-center gap-1">
-                      Email 
-                      <motion.span 
-                        animate={{ scale: [1, 1.2, 1] }} 
-                        transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-                        className="text-amber-500"
-                      >*</motion.span>
+                    <label className="text-[#0F172A] text-sm font-medium flex items-center gap-1">
+                      Email
+                      <span className="text-[#EF4444]">*</span>
                     </label>
-                    <motion.input
-                      whileFocus={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
+                    <Input
                       type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="john@company.com"
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-slate-800 text-sm font-medium">Phone Number</label>
-                    <motion.input
-                      whileFocus={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
+                    <label className="text-[#0F172A] text-sm font-medium">Phone Number</label>
+                    <Input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="+1 (555) 000-0000"
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300"
                     />
                   </div>
                 </motion.div>
 
                 {/* Company */}
                 <motion.div variants={itemVariants} className="space-y-2">
-                  <label className="text-slate-800 text-sm font-medium flex items-center gap-1">
-                    Company 
-                    <motion.span 
-                      animate={{ scale: [1, 1.2, 1] }} 
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-                      className="text-amber-500"
-                    >*</motion.span>
+                  <label className="text-[#0F172A] text-sm font-medium flex items-center gap-1">
+                    Company
+                    <span className="text-[#EF4444]">*</span>
                   </label>
-                  <motion.input
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
+                  <Input
                     type="text"
                     name="company"
                     value={formData.company}
                     onChange={handleChange}
                     placeholder="Your Company Ltd"
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300"
                   />
                 </motion.div>
 
                 {/* Subject */}
                 <motion.div variants={itemVariants} className="space-y-2">
-                  <label className="text-slate-800 text-sm font-medium flex items-center gap-1">
-                    Subject 
-                    <motion.span 
-                      animate={{ scale: [1, 1.2, 1] }} 
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
-                      className="text-amber-500"
-                    >*</motion.span>
+                  <label className="text-[#0F172A] text-sm font-medium flex items-center gap-1">
+                    Subject
+                    <span className="text-[#EF4444]">*</span>
                   </label>
-                  <motion.input
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
+                  <Input
                     type="text"
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
                     placeholder="Enter subject"
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300"
                   />
                 </motion.div>
 
                 {/* Message */}
                 <motion.div variants={itemVariants} className="space-y-2">
-                  <label className="text-slate-800 text-sm font-medium flex items-center gap-1">
-                    Message 
-                    <motion.span 
-                      animate={{ scale: [1, 1.2, 1] }} 
-                      transition={{ duration: 2, repeat: Infinity, delay: 0.8 }}
-                      className="text-amber-500"
-                    >*</motion.span>
+                  <label className="text-[#0F172A] text-sm font-medium flex items-center gap-1">
+                    Message
+                    <span className="text-[#EF4444]">*</span>
                   </label>
-                  <motion.textarea
-                    whileFocus={{ scale: 1.01 }}
-                    transition={{ duration: 0.2 }}
+                  <textarea
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Tell us about your requirements..."
                     rows={4}
-                    className="w-full px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-slate-900 placeholder-slate-300 focus:outline-none focus:border-amber-400 focus:shadow-lg focus:shadow-amber-100/50 transition-all duration-300 resize-none"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-md resize-none"
                   />
                 </motion.div>
 
-                {/* Submit Button with shimmer effect */}
+                {/* Submit Button */}
                 <motion.div variants={itemVariants}>
                   <motion.button
                     type="submit"
                     disabled={isSubmitting}
-                    whileHover={{ 
+                    whileHover={{
                       scale: 1.02,
-                      boxShadow: "0 20px 40px -10px rgba(245, 158, 11, 0.4)"
+                      boxShadow: "0 20px 40px -10px rgba(30, 58, 138, 0.35)"
                     }}
                     whileTap={{ scale: 0.98 }}
-                    className="relative w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all duration-300 disabled:opacity-70 flex items-center justify-center gap-2 overflow-hidden group"
+                    className="relative w-full py-4 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white font-semibold rounded-xl shadow-lg shadow-[#1E3A8A]/25 transition-all duration-300 disabled:opacity-70 flex items-center justify-center gap-2 overflow-hidden group hover:shadow-xl hover:shadow-[#1E3A8A]/30"
                   >
                     {/* Shimmer effect */}
                     <motion.div
@@ -495,14 +444,9 @@ const Contact = () => {
 
                 <motion.p 
                   variants={itemVariants}
-                  className="text-center text-slate-400 text-sm flex items-center justify-center gap-2"
+                  className="text-center text-[#64748B] text-sm flex items-center justify-center gap-2"
                 >
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  </motion.div>
+                  <CheckCircle className="w-4 h-4 text-[#10B981]" />
                   <span>Your information is securely encrypted</span>
                 </motion.p>
               </motion.form>
