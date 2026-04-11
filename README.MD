@@ -135,3 +135,169 @@ git checkout develop
 
 Keep it simple.
 Don’t overthink Git — just follow the flow.
+
+### Database Change
+
+# "#" = "%23", "@" = "%40"
+
+.env
+DATABASE_URL=postgres://user:Pass@localhost:5432/GIW
+
+npx node-pg-migrate create init_users_table
+
+Change in file
+export const up = (pgm) => {
+pgm.sql(
+`
+        SQL query`,
+);
+};
+
+npm run migrate
+
+# 🗄️ Database Migration Guide (PostgreSQL)
+
+This project uses **node-pg-migrate** to manage database changes.
+
+---
+
+## 🚨 Important Rule
+
+> ❌ Never change database manually
+> ✅ Always use migration files
+
+---
+
+## 👑 When You Change Database (Main Developer)
+
+### 1. Create a new migration
+
+```bash
+npx node-pg-migrate create your_change_name
+```
+
+---
+
+### 2. Open the created file
+
+Location:
+
+```
+backend/migrations/
+```
+
+---
+
+### 3. Write your database change
+
+Example:
+
+```js
+export const up = (pgm) => {
+  pgm.sql(`
+    ALTER TABLE rissue
+    ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+  `);
+};
+
+export const down = (pgm) => {
+  pgm.sql(`
+    ALTER TABLE rissue
+    DROP COLUMN status;
+  `);
+};
+```
+
+---
+
+### 4. Run migration locally
+
+```bash
+npm run migrate
+```
+
+---
+
+### 5. Push changes to Git
+
+```bash
+git add .
+git commit -m "DB: added status column to rissue"
+git push
+```
+
+---
+
+## 👨‍💻 For Other Developers
+
+After pulling latest code:
+
+```bash
+git pull
+npm run migrate
+```
+
+✅ Database will be automatically updated
+
+---
+
+## 🧪 First-Time Setup
+
+```bash
+createdb your_db
+npm install
+npm run migrate
+```
+
+---
+
+## ⚠️ Rules to Follow
+
+- ❌ Do NOT edit old migration files
+
+- ❌ Do NOT run manual SQL in pgAdmin
+
+- ❌ Do NOT share SQL queries manually
+
+- ✅ Always create a new migration
+
+- ✅ Always commit migration files
+
+- ✅ Always run `npm run migrate` after pull
+
+---
+
+## 🧠 Concept
+
+- `up` → Apply changes
+- `down` → Undo changes
+
+---
+
+## 🔁 Workflow Summary
+
+```
+Write → Run → Push → Pull → Run
+```
+
+---
+
+## 💬 Notes
+
+- Migration history is stored in table: `pgmigrations`
+- Each migration runs only once per database
+
+---
+
+## 🚀 Example Changes
+
+| Change        | What to write                 |
+| ------------- | ----------------------------- |
+| Add column    | `ALTER TABLE ... ADD COLUMN`  |
+| Remove column | `ALTER TABLE ... DROP COLUMN` |
+| Create table  | `CREATE TABLE ...`            |
+| Delete table  | `DROP TABLE ...`              |
+
+---
+
+Keep this flow strict to avoid database mismatch issues.
