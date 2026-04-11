@@ -9,6 +9,8 @@ import Contact from "@/modules/contact/Contact";
 import AdminLayout from "@/modules/admin/AdminLayout";
 import AdminDashboard from "@/modules/admin/Dashboard";
 import UserManagement from "@/modules/admin/UserManagement";
+import Jewelry from "@/modules/jewelry/Jewelry";
+import LabGrownJewelry from "@/modules/jewelry/LabGrownJewelry";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -37,6 +39,14 @@ export const router = createBrowserRouter([
       {
         path: "/contact",
         element: <Contact />,
+      },
+      {
+        path: "/jewelry",
+        element: <Jewelry />,
+      },
+      {
+        path: "/lab-grown-jewelry",
+        element: <LabGrownJewelry />,
       },
       {
         path: "/admin",

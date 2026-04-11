@@ -82,13 +82,12 @@ const Login = () => {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-10 xl:p-12 h-full w-full">
-          {/* Top Logo - Animated */}
-          <div className={`flex items-start justify-between transition-all duration-1000 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
-            <Link to="/" className="group inline-flex items-center gap-4">
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-[0_10px_40px_rgba(255,255,255,0.08)] transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20 group-hover:shadow-[0_10px_60px_rgba(255,255,255,0.15)] animate-float">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent animate-shimmer" />
+          {/* Top Logo - Only Logo and GIW */}
+          <div className={`flex items-center transition-all duration-1000 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
+            <Link to="/" className="group inline-flex items-center gap-3">
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] shadow-lg transition-all duration-500 group-hover:scale-110">
                 <svg
-                  className="relative z-10 h-7 w-7 text-white"
+                  className="relative z-10 h-6 w-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -101,17 +100,8 @@ const Login = () => {
                   />
                 </svg>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white">GIW</h2>
-                <p className="mt-0.5 text-[11px] uppercase tracking-[0.28em] text-slate-400">
-                  Diamond Exchange
-                </p>
-              </div>
+              <h2 className="text-2xl font-bold tracking-tight text-white">GIW</h2>
             </Link>
-
-            <div className="rounded-full border border-[#3B82F6]/30 bg-[#3B82F6]/10 px-3 py-1 text-[11px] font-medium text-[#60A5FA] backdrop-blur-md">
-              Verified Network
-            </div>
           </div>
 
           {/* Main Message - Simplified & Animated */}
@@ -159,47 +149,45 @@ const Login = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-3/5 lg:ml-[40%] min-h-screen lg:h-screen flex items-start lg:items-center justify-center px-10 sm:px-20 lg:p-8 xl:p-12 pt-6 sm:pt-8 lg:pt-0 lg:overflow-auto">
-        <div className="w-full max-w-md my-auto">
-          {/* Mobile Logo - Clickable to Home */}
-          <div className="lg:hidden text-center mb-6 sm:mb-8">
-            <Link to="/" className="inline-flex flex-col items-center group cursor-pointer">
-              <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] rounded-2xl mb-3 sm:mb-4 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
-                <svg
-                  className="w-7 h-7 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                  />
-                </svg>
-              </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] group-hover:text-[#1E3A8A] transition-colors">GIW</h1>
-                <svg className="w-5 h-5 text-[#3B82F6] opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
-              <p className="text-sm text-[#64748B] mt-1">Click to go home</p>
-            </Link>
-            <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A] mt-4">Welcome Back</h2>
-            <p className="text-sm sm:text-base text-[#64748B] mt-1">Sign in to your account</p>
+      {/* Mobile Logo - Absolute Top - No Background */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-20 px-4 py-3">
+        <Link to="/" className="inline-flex items-center gap-2 group cursor-pointer">
+          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] rounded-lg shadow-md transition-all duration-300 group-hover:scale-105">
+            <svg
+              className="w-4 h-4 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+          </div>
+          <span className="text-base font-bold text-[#0F172A]">GIW</span>
+        </Link>
+      </div>
+
+      <div className="w-full lg:w-3/5 lg:ml-[40%] min-h-screen lg:h-screen flex items-start lg:items-center justify-center px-4 sm:px-6 lg:px-8 xl:p-12 pt-14 sm:pt-16 lg:pt-0 lg:overflow-auto">
+        <div className="w-full max-w-md my-auto pb-8 lg:pb-0">
+          {/* Mobile Welcome Text - Only shows below header */}
+          <div className="lg:hidden text-left mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-semibold text-[#0F172A]">Welcome Back</h2>
+            <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Sign in to your account</p>
           </div>
 
 
           {/* Desktop Header */}
-          <div className="hidden lg:block mb-2 lg:mb-4">
-            <h1 className="text-lg lg:text-xl xl:text-2xl font-bold text-[#0F172A] mb-1">Welcome Back</h1>
-            <p className="text-xs lg:text-sm text-[#64748B]">Sign in to your account to continue</p>
+          <div className="hidden lg:block mb-4 lg:mb-6">
+            <h1 className="text-xl lg:text-2xl font-bold text-[#0F172A] mb-1">Welcome Back</h1>
+            <p className="text-sm text-[#64748B]">Sign in to your account to continue</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 lg:space-y-7">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
               {/* Email or Mobile */}
               <div className="w-full">
                 <label className="block text-sm font-medium text-[#0F172A] mb-1.5">
@@ -293,7 +281,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 sm:py-3 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1E40AF] hover:to-[#2563EB] text-white font-semibold rounded-xl
+                className="w-full py-3 sm:py-3.5 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1E40AF] hover:to-[#2563EB] text-white font-semibold rounded-xl
                   shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30
                   transition-all duration-300 hover:-translate-y-0.5
                   active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0
@@ -344,7 +332,7 @@ const Login = () => {
             </form>
 
             {/* Divider */}
-            <div className="relative my-3 sm:my-4 lg:my-5">
+            <div className="relative my-4 sm:my-5 lg:my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#E2E8F0]"></div>
               </div>
@@ -358,7 +346,7 @@ const Login = () => {
             {/* Register Link */}
             <Link
               to="/register"
-              className="w-full py-2.5 sm:py-3 px-6 border-2 border-[#E2E8F0] text-[#0F172A] font-semibold rounded-xl
+              className="w-full py-3 sm:py-3.5 px-6 border-2 border-[#E2E8F0] text-[#0F172A] font-semibold rounded-xl
                 hover:border-[#3B82F6] hover:bg-[#EFF6FF]
                 transition-all duration-300 active:scale-[0.98]
                 flex items-center justify-center gap-2 text-sm"
@@ -367,7 +355,7 @@ const Login = () => {
             </Link>
 
           {/* Trust Badges */}
-          <div className="mt-3 sm:mt-4 lg:mt-5 flex items-center justify-center gap-2 sm:gap-3 lg:gap-4 text-[#64748B] flex-wrap">
+          <div className="mt-4 sm:mt-6 lg:mt-8 flex items-center justify-center gap-3 sm:gap-4 lg:gap-6 text-[#64748B] flex-wrap">
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
               <svg
                 className="w-4 h-4 text-[#3B82F6]"
