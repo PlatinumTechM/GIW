@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import routes from "./routes.js";
 dotenv.config();
 
 const app = express();
@@ -11,7 +12,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(cors());
-// app.use("/api/v1/auth");
+app.use("/api", routes);
 
 // 404 handler
 app.use((req, res) => {
