@@ -90,7 +90,7 @@ const Home = () => {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#F8FAFC] text-[#0F172A]">
       {/* Hero Section */}
-      <section className="relative flex min-h-screen items-center overflow-hidden">
+      <section className="relative flex py-10 items-center overflow-hidden">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#DBEAFE]/30 via-[#F8FAFC] to-[#F1F5F9]" />
 
@@ -239,10 +239,7 @@ const Home = () => {
             <div className="absolute left-1/4 right-1/4 top-24 hidden h-px bg-gradient-to-r from-transparent via-[#CBD5E1] to-transparent md:block" />
 
             {steps.map((item, index) => (
-              <div
-                key={index}
-                className="group relative"
-              >
+              <div key={index} className="group relative">
                 <div className="absolute -top-3 left-0 text-7xl font-bold text-[#DBEAFE]/60 transition-colors duration-300 group-hover:text-[#DBEAFE]">
                   {item.step}
                 </div>
