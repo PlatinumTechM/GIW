@@ -82,7 +82,7 @@ const Register = () => {
   };
 
 return (
-  <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row overflow-x-hidden">
+  <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row overflow-x-hidden w-full max-w-full">
     {/* Left Side - Branding - Animated 3D Diamond */}
     <div className="hidden lg:flex lg:w-2/5 relative h-screen lg:fixed lg:left-0 lg:top-0 overflow-hidden">
       {/* Animated Background with 3D Diamond */}
@@ -129,13 +129,12 @@ return (
 
       {/* Content */}
       <div className="relative z-10 flex h-full w-full flex-col justify-between p-10 xl:p-12">
-        {/* Top Logo - Animated */}
-        <div className={`flex items-start justify-between transition-all duration-1000 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
-          <Link to="/" className="group inline-flex items-center gap-4">
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md shadow-[0_10px_40px_rgba(255,255,255,0.08)] transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20 group-hover:shadow-[0_10px_60px_rgba(255,255,255,0.15)] animate-float">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent animate-shimmer" />
+        {/* Top Logo - Only Logo and GIW */}
+        <div className={`flex items-center transition-all duration-1000 ease-out ${isLoaded ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}>
+          <Link to="/" className="group inline-flex items-center gap-3">
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] shadow-lg transition-all duration-500 group-hover:scale-110">
               <svg
-                className="relative z-10 h-7 w-7 text-white"
+                className="relative z-10 h-6 w-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -148,18 +147,8 @@ return (
                 />
               </svg>
             </div>
-
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-white">GIW</h2>
-              <p className="mt-0.5 text-[11px] uppercase tracking-[0.28em] text-slate-400">
-                Diamond Exchange
-              </p>
-            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">GIW</h2>
           </Link>
-
-          <div className="rounded-full border border-[#3B82F6]/30 bg-[#3B82F6]/10 px-3 py-1 text-[11px] font-medium text-[#60A5FA] backdrop-blur-md">
-            Verified Network
-          </div>
         </div>
 
         {/* Middle Hero Content - Simplified & Animated */}
@@ -229,49 +218,47 @@ return (
     </div>
 
     {/* Right Side - Form */}
-    <div className="w-full lg:w-3/5 lg:ml-[40%] lg:h-screen lg:overflow-y-auto flex items-start justify-center px-10 sm:px-20 lg:p-8 xl:p-12 pt-6 sm:pt-8 lg:pt-8">
-      <div className="w-full max-w-2xl mx-auto py-8">
-        {/* Mobile Logo - Clickable to Home */}
-        <div className="lg:hidden text-center mb-6 sm:mb-8">
-          <Link to="/" className="inline-flex flex-col items-center group cursor-pointer">
-            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] rounded-2xl mb-3 sm:mb-4 shadow-lg transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
-            <svg
-              className="w-7 h-7 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-              </svg>
-            </div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] group-hover:text-[#1E3A8A] transition-colors">GIW</h1>
-              <svg className="w-5 h-5 text-[#3B82F6] opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </div>
-            <p className="text-sm text-[#64748B] mt-1">Click to go home</p>
-          </Link>
-          <h2 className="text-lg sm:text-xl font-semibold text-[#0F172A] mt-4">Create Account</h2>
-          <p className="text-sm text-[#64748B] mt-1">Register your diamond business</p>
+    {/* Mobile Logo */}
+    <div className="lg:hidden px-4 py-3">
+      <Link to="/" className="inline-flex items-center gap-2 group cursor-pointer">
+        <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] rounded-lg shadow-md transition-all duration-300 group-hover:scale-105">
+          <svg
+            className="w-4 h-4 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+            />
+          </svg>
+        </div>
+        <span className="text-base font-bold text-[#0F172A]">GIW</span>
+      </Link>
+    </div>
+
+    <div className="w-full lg:w-3/5 lg:ml-[40%] lg:h-screen lg:overflow-y-auto flex items-start justify-center px-3 sm:px-6 lg:px-8 xl:p-12 pt-14 sm:pt-16 lg:pt-8">
+      <div className="w-full max-w-2xl mx-auto py-6 sm:py-8 lg:py-8 px-0 sm:px-0">
+        {/* Mobile Welcome Text - Only shows below header */}
+        <div className="lg:hidden text-left mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold text-[#0F172A]">Create Account</h2>
+          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Register your diamond business</p>
         </div>
 
         {/* Desktop Header */}
-        <div className="hidden lg:block mb-6 lg:mb-8">
+        <div className="hidden lg:block mb-4 lg:mb-6">
           <h1 className="text-2xl lg:text-3xl font-bold text-[#0F172A] mb-2">Create Account</h1>
           <p className="text-sm lg:text-base text-[#64748B]">Register your diamond business with GIW</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6 lg:space-y-7">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
           {/* Name & Email Row */}
-          <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Full Name
               </label>
@@ -289,7 +276,7 @@ return (
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Email Address
               </label>
@@ -309,8 +296,8 @@ return (
           </div>
 
           {/* Company & Mobile Row */}
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Company Name
               </label>
@@ -328,7 +315,7 @@ return (
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Mobile Number
               </label>
@@ -348,7 +335,7 @@ return (
           </div>
 
           {/* Address */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
               Business Address
             </label>
@@ -364,14 +351,14 @@ return (
                 onChange={handleChange}
                 onFocus={() => setFocusedField("address")}
                 onBlur={() => setFocusedField(null)}
-                className="w-full px-3 py-2 pl-10 border border-gray-200 rounded-md resize-none pt-3"
+                className="w-full min-w-0 px-3 py-2 pl-10 border border-gray-200 rounded-md resize-none pt-3 text-sm sm:text-base"
                 required
               />
             </div>
           </div>
 
           {/* GST */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
               GST Number
             </label>
@@ -390,8 +377,8 @@ return (
           </div>
 
           {/* Password Row */}
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Password
               </label>
@@ -428,7 +415,7 @@ return (
               />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
                 Confirm Password
               </label>
@@ -467,12 +454,12 @@ return (
           </div>
 
           {/* File Upload */}
-          <div>
+          <div className="min-w-0">
             <label className="block text-sm font-medium text-[#0F172A] mb-2">
               Business Document Upload
             </label>
             <div
-              className={`relative border-2 border-dashed rounded-xl p-5 text-center transition-all duration-300 cursor-pointer ${
+              className={`relative border-2 border-dashed rounded-xl p-3 sm:p-5 text-center transition-all duration-300 cursor-pointer min-w-0 ${
                 formData.upload
                   ? "border-[#3B82F6] bg-[#DBEAFE]/30"
                   : "border-[#E2E8F0] hover:border-[#3B82F6]/50 hover:bg-[#F1F5F9]"
@@ -487,9 +474,9 @@ return (
               />
 
               {formData.upload ? (
-                <div className="flex items-center justify-center gap-2 text-[#1E3A8A]">
+                <div className="flex items-center justify-center gap-2 text-[#1E3A8A] min-w-0">
                   <svg
-                    className="w-5 h-5 text-[#10B981]"
+                    className="w-5 h-5 text-[#10B981] flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -501,13 +488,13 @@ return (
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <span className="text-sm font-medium">{formData.upload.name}</span>
+                  <span className="text-sm font-medium truncate max-w-[200px] sm:max-w-xs">{formData.upload.name}</span>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-[#DBEAFE] rounded-full flex items-center justify-center mx-auto">
+                <div className="space-y-2 min-w-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#DBEAFE] rounded-full flex items-center justify-center mx-auto flex-shrink-0">
                     <svg
-                      className="w-6 h-6 text-[#3B82F6]"
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-[#3B82F6]"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -520,7 +507,7 @@ return (
                       />
                     </svg>
                   </div>
-                  <p className="text-sm text-[#0F172A] font-medium">
+                  <p className="text-xs sm:text-sm text-[#0F172A] font-medium px-1">
                     Click to upload or drag and drop
                   </p>
                   <p className="text-xs text-[#64748B]">PDF, JPG or PNG (max 10MB)</p>
@@ -530,7 +517,7 @@ return (
           </div>
 
           {/* Terms Checkbox */}
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 min-w-0">
             <input
               id="terms"
               name="terms"
@@ -554,7 +541,7 @@ return (
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1E40AF] hover:to-[#2563EB] text-white font-semibold rounded-xl
+            className="w-full py-3.5 sm:py-4 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1E40AF] hover:to-[#2563EB] text-white font-semibold rounded-xl
               shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30
               transition-all duration-300 hover:-translate-y-0.5
               active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0
@@ -614,7 +601,7 @@ return (
         </div>
 
         {/* Trust Badges */}
-        <div className="mt-8 flex items-center justify-center gap-6 text-[#64748B]">
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[#64748B]">
           <div className="flex items-center gap-2 text-xs">
             <svg
               className="w-4 h-4 text-[#3B82F6]"

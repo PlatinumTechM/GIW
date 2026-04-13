@@ -7,11 +7,16 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
+const corsOptions = {
+  origin: process.env.CLIENT_URL || true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 app.get("/", (req, res) => {
   res.send("API running");
 });
 
-app.use(cors());
 app.use("/api", routes);
 
 // 404 handler
