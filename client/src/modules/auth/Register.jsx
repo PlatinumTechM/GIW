@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+
 const Register = () => {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    companyName: "",
+    company: "",
     address: "",
-    mobileNo: "",
+    phone: "",
     gst: "",
     password: "",
     confirmPassword: "",
@@ -20,6 +24,8 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     setIsLoaded(true);
@@ -36,9 +42,77 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log("Register Data:", formData);
-    setIsLoading(false);
+    setError("");
+    setSuccess("");
+
+    // Client-side validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("email", formData.email);
+      submitData.append("company", formData.company);
+      submitData.append("phone", formData.phone);
+      submitData.append("address", formData.address);
+      submitData.append("gst", formData.gst);
+      submitData.append("password", formData.password);
+      submitData.append("confirmPassword", formData.confirmPassword);
+      
+      if (formData.upload) {
+        submitData.append("upload", formData.upload);
+      }
+
+      console.log("API URL:", `${API_BASE_URL}/auth/register`);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        body: submitData,
+      });
+
+      console.log("Response status:", response.status);
+      
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+
+      setSuccess("Registration successful! Redirecting to login...");
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        company: "",
+        address: "",
+        phone: "",
+        gst: "",
+        password: "",
+        confirmPassword: "",
+        upload: null,
+      });
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -53,12 +127,12 @@ const Register = () => {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
       </svg>
     ),
-    companyName: (
+    company: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
       </svg>
     ),
-    mobileNo: (
+    phone: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
       </svg>
@@ -254,6 +328,20 @@ return (
           <p className="text-sm lg:text-base text-[#64748B]">Register your diamond business with GIW</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
+            <p className="text-sm">{success}</p>
+          </div>
+        )}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6">
           {/* Name & Email Row */}
@@ -303,15 +391,15 @@ return (
               </label>
               <Input
                 type="text"
-                name="companyName"
+                name="company"
                 placeholder="Diamond Traders Ltd"
-                value={formData.companyName}
+                value={formData.company}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("companyName")}
+                onFocus={() => setFocusedField("company")}
                 onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "companyName"}
+                isFocused={focusedField === "company"}
                 required
-                icon={icons.companyName}
+                icon={icons.company}
               />
             </div>
 
@@ -321,15 +409,15 @@ return (
               </label>
               <Input
                 type="tel"
-                name="mobileNo"
+                name="phone"
                 placeholder="+91 98765 43210"
-                value={formData.mobileNo}
+                value={formData.phone}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("mobileNo")}
+                onFocus={() => setFocusedField("phone")}
                 onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "mobileNo"}
+                isFocused={focusedField === "phone"}
                 required
-                icon={icons.mobileNo}
+                icon={icons.phone}
               />
             </div>
           </div>
