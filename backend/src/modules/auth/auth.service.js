@@ -9,7 +9,16 @@ export class AuthService {
     if (!user) {
       throw new Error("User not found");
     }
-    if (String(password) !== String(user.password)) {
+    
+    const cleanInput = String(password).trim();
+    const cleanDB = String(user.password).trim();
+    
+    console.log("Login attempt for:", email);
+    console.log("Input password:", cleanInput);
+    console.log("DB password:", cleanDB);
+    console.log("Match:", cleanInput === cleanDB);
+    
+    if (cleanInput !== cleanDB) {
       throw new Error("Invalid password");
     }
 
@@ -21,20 +30,62 @@ export class AuthService {
       },
     );
 
-    return { token, user: { id: user.id, email: user.email } };
+    return { 
+      token, 
+      user: { 
+        id: user.id, 
+        name: user.name,
+        email: user.email,
+        company: user.company,
+        phone: user.phone,
+        address: user.address,
+        gst: user.gst
+      } 
+    };
   }
 
-  async register(email, password) {
+  async register(userData) {
+    const { name, email, company, phone, address, gst, password, confirmPassword, document } = userData;
+    
+    // Validation
+    if (!name || !email || !company || !phone || !address || !gst || !password) {
+      throw new Error("All fields are required");
+    }
+    
+    if (password !== confirmPassword) {
+      throw new Error("Passwords do not match");
+    }
+    
+    if (password.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+    
     const existingUser = await authRepo.findUserByEmail(email);
     if (existingUser) {
-      throw new Error("User already exists");
+      throw new Error("User already exists with this email");
     }
 
     const newUser = await authRepo.createUser({
+      name,
       email,
+      company,
+      phone,
+      address,
+      gst,
       password,
+      document
     });
 
-    return newUser;
+    return {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      company: newUser.company,
+      phone: newUser.phone,
+      address: newUser.address,
+      gst: newUser.gst,
+      document: newUser.document,
+      createdAt: newUser.created_at
+    };
   }
 }

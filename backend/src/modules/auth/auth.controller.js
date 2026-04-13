@@ -26,11 +26,43 @@ export class AuthController {
 
   async register(req, res) {
     try {
-      const { email, password } = req.body;
-      const result = await authService.register(email, password);
-      res.status(201).json(result);
+      const {
+        name,
+        email,
+        company,
+        phone,
+        address,
+        gst,
+        password,
+        confirmPassword
+      } = req.body;
+      
+      // Get document full path if file was uploaded
+      const document = req.file ? `/uploads/documents/${req.file.filename}` : null;
+
+      const result = await authService.register({
+        name,
+        email,
+        company,
+        phone,
+        address,
+        gst,
+        password,
+        confirmPassword,
+        document
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "User registered successfully",
+        data: result
+      });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      console.error("Error at register = ", error);
+      res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
     }
   }
 }
