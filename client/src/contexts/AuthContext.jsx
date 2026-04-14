@@ -17,51 +17,34 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on app start
+    // Check if user is logged in on app start using cookie
     const checkAuth = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
       try {
-        // Fetch fresh user data from API
+        // Fetch user data from API - cookie will be sent automatically
         const userData = await authAPI.getCurrentUser();
         setUser(userData);
-        // Only store role in localStorage
+        // Store role in localStorage for UI purposes only
         localStorage.setItem("role", userData.role || "user");
       } catch (error) {
-        console.error("Failed to fetch user:", error);
-        // If API fails, we don't have user data
+        // If API fails (401), user is not logged in
         setUser(null);
+        localStorage.removeItem("role");
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-
-    // Listen for storage changes (login/logout from other tabs)
-    window.addEventListener('storage', () => checkAuth());
-    return () => window.removeEventListener('storage', checkAuth);
   }, []);
 
   const login = async (identifier, password) => {
     try {
       const response = await authAPI.login(identifier, password);
-      const { token, user: userData } = response;
+      const { user: userData } = response;
 
-      if (!token) {
-        console.error("No token in response");
-        return { success: false, error: "No token received from server" };
-      }
-
-      localStorage.setItem("token", token);
+      // Token is stored in httpOnly cookie by backend
+      // Only store role in localStorage for UI purposes
       localStorage.setItem("role", userData.role || "user");
-      localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
 
       return { success: true };
@@ -87,11 +70,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    authAPI.logout();
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
+  const logout = async () => {
+    await authAPI.logout();
     setUser(null);
+    localStorage.removeItem("role");
     notify.info("Logged Out", "You have been successfully logged out");
   };
 
