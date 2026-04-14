@@ -11,6 +11,7 @@ const Input = ({
   icon = null,
   rightElement = null,
   className = "",
+  autoComplete = "",
 }) => {
   const baseClasses = `w-full px-3 py-2 ${icon ? "pl-10" : ""} border border-gray-200 rounded-md`;
 
@@ -31,6 +32,7 @@ const Input = ({
         onBlur={onBlur}
         className={`${baseClasses} ${rightElement ? "pr-12" : ""} ${className}`}
         required={required}
+        autoComplete={autoComplete}
       />
       {rightElement && (
         <div className="absolute right-4 top-1/2 -translate-y-1/2">
