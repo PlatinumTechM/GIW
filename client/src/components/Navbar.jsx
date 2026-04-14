@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { Diamond, Crown, Gem, Sparkles, User, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -20,35 +23,47 @@ const Navbar = () => {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsUserDropdownOpen(false);
   }, [location]);
 
-  const navLinks = [
-    {
-      path: "/jewelry",
-      label: "Jewelry",
-      icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-    },
-    {
-      path: "/lab-grown-jewelry",
-      label: "Lab-Grown",
-      icon: "M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4",
-    },
-    {
-      path: "/pricing",
-      label: "Pricing",
-      icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    },
-    {
-      path: "/contact",
-      label: "Contact",
-      icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
-    },
-    {
-      path: "/admin",
-      label: "Admin",
-      icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
-    },
-  ];
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const getNavLinks = () => {
+    const links = [
+      {
+        path: isAuthenticated ? "/user/home" : "/",
+        label: "Home",
+        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+      },
+      {
+        path: "/pricing",
+        label: "Pricing",
+        icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
+      },
+      {
+        path: "/contact",
+        label: "Contact",
+        icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+      },
+    ];
+    // Hide Home, Pricing, Contact for admin users - only show Dashboard in dropdown
+    if (user?.role === 'admin') {
+      return links.filter(link => link.label !== "Home" && link.label !== "Pricing" && link.label !== "Contact");
+    }
+    return links;
+  };
+
+  const navLinks = getNavLinks();
 
   // Check if we're on auth pages (Login, Register, ForgotPassword) to hide navbar
   const isAuthPage = ["/login", "/register", "/forgot-password"].includes(
@@ -74,7 +89,7 @@ const Navbar = () => {
             <motion.div
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6]"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shadow-lg bg-linear-to-br from-[#1E3A8A] to-[#3B82F6]"
             >
               <svg
                 className="w-5 h-5 sm:w-6 sm:h-6 text-white"
@@ -143,15 +158,125 @@ const Navbar = () => {
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-[#E2E8F0]">
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-[#475569]">
-                    Welcome, {user?.email}
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="px-4 py-2 text-sm font-medium text-[#475569] hover:text-[#1E3A8A] rounded-xl hover:bg-[#F1F5F9] transition-all duration-300"
+                  {/* Admin Dashboard Link - Only for admin */}
+                  {user?.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#475569] hover:text-[#1E3A8A] rounded-xl hover:bg-[#F1F5F9] transition-all duration-300"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                      <span className="hidden lg:inline">Dashboard</span>
+                    </Link>
+                  )}
+                  {/* Luxury User Dropdown - Hover to Open with delay */}
+                  <div 
+                    className="relative"
+                    onMouseEnter={() => setIsUserDropdownOpen(true)}
+                    onMouseLeave={() => setTimeout(() => setIsUserDropdownOpen(false), 1000)}
                   >
-                    Logout
-                  </button>
+                    <button
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 ${
+                        isUserDropdownOpen
+                          ? "bg-gradient-to-r from-[#1E3A8A]/10 to-[#3B82F6]/10 text-[#1E3A8A]"
+                          : "text-[#475569] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
+                      }`}
+                    >
+                      {/* Gold Ring Avatar */}
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px] shadow-md shadow-[#FFD700]/20">
+                        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center">
+                          <span className="text-white text-sm font-semibold">
+                            {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="hidden lg:inline max-w-[120px] truncate font-medium">
+                        {user?.name || user?.email}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-300 ${isUserDropdownOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {/* Luxury Dropdown Menu */}
+                    <AnimatePresence>
+                      {isUserDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-50 overflow-hidden"
+                          onMouseEnter={() => setIsUserDropdownOpen(true)}
+                          onMouseLeave={() => setTimeout(() => setIsUserDropdownOpen(false), 1000)}
+                        >
+                          {/* Gold Accent Top */}
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700]"></div>
+
+                          {/* User Info Header */}
+                          <div className="px-4 py-3 bg-gradient-to-r from-[#F8FAFC] to-white border-b border-[#E2E8F0]">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px]">
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center">
+                                  <span className="text-white text-sm font-semibold">
+                                    {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-[#0F172A] truncate">{user?.name || "Valued Customer"}</p>
+                                <div className="flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-[#FFD700]" />
+                                  <p className="text-xs text-[#94A3B8] truncate">{user?.email}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Menu Items */}
+                          <div className="p-2 space-y-1">
+                            {/* Dashboard - Admin Only */}
+                            {user?.role === 'admin' && (
+                              <Link
+                                to="/admin"
+                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                  <LayoutDashboard className="w-4 h-4" />
+                                </div>
+                                <span className="font-medium">Dashboard</span>
+                                <Crown className="w-4 h-4 text-[#FFD700] ml-auto" />
+                              </Link>
+                            )}
+
+                            <Link
+                              to="/profile"
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                <User className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">My Profile</span>
+                              <Gem className="w-4 h-4 text-[#3B82F6] ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
+
+                            <div className="h-px bg-[#E2E8F0] my-2"></div>
+
+                            <button
+                              onClick={logout}
+                              className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                                <LogOut className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">Logout</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -265,13 +390,48 @@ const Navbar = () => {
                 >
                   {isAuthenticated ? (
                     <div className="space-y-2">
-                      <div className="px-4 py-2 text-sm text-[#475569] text-center">
-                        Welcome, {user?.email}
-                      </div>
+                      {/* Admin Dashboard Link - Only for admin */}
+                      {user?.role === 'admin' && (
+                        <NavLink
+                          to="/admin"
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                              isActive
+                                ? "bg-[#1E3A8A] text-white shadow-md"
+                                : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                            }`
+                          }
+                        >
+                          <svg className={`w-5 h-5 ${({isActive}) => isActive ? "text-[#93C5FD]" : "text-[#94A3B8]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                          </svg>
+                          Dashboard
+                        </NavLink>
+                      )}
+                      {/* Profile Button */}
+                      <NavLink
+                        to="/profile"
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                            isActive
+                              ? "bg-[#1E3A8A] text-white shadow-md"
+                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                          }`
+                        }
+                      >
+                        <svg className={`w-5 h-5 ${({isActive}) => isActive ? "text-[#93C5FD]" : "text-[#94A3B8]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Profile
+                      </NavLink>
+                      {/* Logout Button */}
                       <button
                         onClick={logout}
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 text-[#475569] text-sm font-medium rounded-xl hover:bg-[#F8FAFC] transition-all"
+                        className="flex items-center gap-3 px-4 py-3 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-all"
                       >
+                        <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
                         Logout
                       </button>
                     </div>
@@ -279,28 +439,21 @@ const Navbar = () => {
                     <>
                       <Link
                         to="/login"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 text-[#475569] text-sm font-medium rounded-xl hover:bg-[#F8FAFC] transition-all"
+                        className="flex items-center gap-3 px-4 py-3 text-[#475569] text-sm font-medium rounded-xl hover:bg-[#F8FAFC] hover:text-[#1E3A8A] transition-all"
                       >
+                        <svg className="w-5 h-5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
                         Sign In
                       </Link>
                       <Link
                         to="/register"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
+                        className="flex items-center gap-3 px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
                       >
-                        Get Started
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 7l5 5m0 0l-5 5m5-5H6"
-                          />
+                        <svg className="w-5 h-5 text-[#93C5FD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
+                        Get Started
                       </Link>
                     </>
                   )}
