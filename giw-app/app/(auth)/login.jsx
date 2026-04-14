@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +13,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authAPI } from "../../src/api/api.js";
 import Toast from "react-native-toast-message";
+import { secureStorage } from "../../src/utils/secureStorage.js";
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -27,10 +26,6 @@ const LoginScreen = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Optional: add startup logic or animation state.
-  }, []);
 
   const handleChange = (field, value) => {
     if (error) {
@@ -72,14 +67,65 @@ const LoginScreen = () => {
       const result = await login(formData.identifier, formData.password);
 
       if (result.success) {
+        // Store authentication data securely
+        console.log("Storing user data:", result.data);
+
+        // Store each piece of data separately to verify
+        const tokenStored = await secureStorage.setToken(result.token);
+        console.log(
+          "Token storage result:",
+          tokenStored ? "SUCCESS" : "FAILED",
+        );
+
+        const userDataStored = await secureStorage.setUserData(result.data);
+        console.log(
+          "User data storage result:",
+          userDataStored ? "SUCCESS" : "FAILED",
+        );
+
+        const roleStored = await secureStorage.setRole(
+          result.data?.role || "user",
+        );
+        console.log("Role storage result:", roleStored ? "SUCCESS" : "FAILED");
+
+        // Verify storage immediately after storing
+        console.log("Verifying storage immediately after storing...");
+        const verifyToken = await secureStorage.getToken();
+        const verifyUserData = await secureStorage.getUserData();
+        console.log(
+          "Verification - Token:",
+          verifyToken ? "EXISTS" : "MISSING",
+        );
+        console.log(
+          "Verification - User Data:",
+          verifyUserData ? "EXISTS" : "MISSING",
+        );
+
+        // Double-check with delay to ensure async operations complete
+        setTimeout(async () => {
+          console.log("Delayed verification after 500ms...");
+          const delayedToken = await secureStorage.getToken();
+          const delayedUserData = await secureStorage.getUserData();
+          console.log("Delayed - Token:", delayedToken ? "EXISTS" : "MISSING");
+          console.log(
+            "Delayed - User Data:",
+            delayedUserData ? "EXISTS" : "MISSING",
+          );
+        }, 500);
+
         Toast.show({
           type: "success",
           text1: "Login Successful",
           text2: "Welcome back!",
         });
-        // TODO: Store token and user data securely
-        // TODO: Navigate to main app after successful login
-        console.log("Login successful:", result);
+
+        // Navigate based on user role
+        if (result.data?.role === "user") {
+          router.push("/(user)/home");
+        } else {
+          // TODO: Navigate to regular user dashboard
+          console.log("Regular user login - implement dashboard navigation");
+        }
       } else {
         Toast.show({
           type: "error",
@@ -101,111 +147,106 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ScrollView
+      contentContainerStyle={[
+        styles.scrollContainer,
+        { paddingBottom: insets.bottom + 24 },
+      ]}
+      keyboardShouldPersistTaps="handled"
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContainer,
-          { paddingBottom: insets.bottom + 24 },
-        ]}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.topSection}>
-          <Text style={styles.brand}>GIW</Text>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>
-            Sign in to your account to continue.
-          </Text>
+      <View style={styles.topSection}>
+        <Text style={styles.brand}>GIW</Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>
+          Sign in to your account to continue.
+        </Text>
+      </View>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <View style={styles.formCard}>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>Email or Mobile Number</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.identifier}
+            onChangeText={(value) => handleChange("identifier", value)}
+            placeholder="dealer@gmail.com or 9876543210"
+            placeholderTextColor="#9CA3AF"
+            keyboardType="default"
+            textContentType="username"
+            autoCapitalize="none"
+          />
         </View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        <View style={styles.formCard}>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Email or Mobile Number</Text>
+        <View style={styles.field}>
+          <Text style={styles.fieldLabel}>Password</Text>
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.input}
-              value={formData.identifier}
-              onChangeText={(value) => handleChange("identifier", value)}
-              placeholder="dealer@gmail.com or 9876543210"
+              style={[styles.input, styles.passwordInput]}
+              value={formData.password}
+              onChangeText={(value) => handleChange("password", value)}
+              placeholder="Enter your password"
               placeholderTextColor="#9CA3AF"
-              keyboardType="default"
-              textContentType="username"
+              secureTextEntry={!showPassword}
+              textContentType="password"
               autoCapitalize="none"
             />
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                value={formData.password}
-                onChangeText={(value) => handleChange("password", value)}
-                placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry={!showPassword}
-                textContentType="password"
-                autoCapitalize="none"
-              />
-              <Pressable
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword((prev) => !prev)}
-                hitSlop={8}
-              >
-                <MaterialIcons
-                  name={showPassword ? "visibility" : "visibility-off"}
-                  size={20}
-                  color="#6B7280"
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          <View style={styles.rowBetween}>
             <Pressable
-              style={styles.rememberMe}
-              onPress={() => setRememberMe((prev) => !prev)}
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword((prev) => !prev)}
+              hitSlop={8}
             >
-              <View
-                style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
-              >
-                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.rememberText}>Remember me</Text>
-            </Pressable>
-
-            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-              <Text style={styles.linkText}>Forgot password?</Text>
+              <MaterialIcons
+                name={showPassword ? "visibility" : "visibility-off"}
+                size={20}
+                color="#6B7280"
+              />
             </Pressable>
           </View>
+        </View>
 
+        <View style={styles.rowBetween}>
           <Pressable
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleSubmit}
-            disabled={loading}
+            style={styles.rememberMe}
+            onPress={() => setRememberMe((prev) => !prev)}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
+            <View
+              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            >
+              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.rememberText}>Remember me</Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+            <Text style={styles.linkText}>Forgot password?</Text>
           </Pressable>
         </View>
 
-        <View style={styles.bottomRow}>
-          <Text style={styles.bottomText}>New to GIW?</Text>
-          <Pressable onPress={() => router.push("/(auth)/register")}>
-            <Text style={[styles.bottomText, styles.linkText]}>
-              {" "}
-              Create account
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <Pressable
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign In</Text>
+          )}
+        </Pressable>
+      </View>
+
+      <View style={styles.bottomRow}>
+        <Text style={styles.bottomText}>New to GIW?</Text>
+        <Pressable onPress={() => router.push("/(auth)/register")}>
+          <Text style={[styles.bottomText, styles.linkText]}>
+            {" "}
+            Create account
+          </Text>
+        </Pressable>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -266,7 +307,7 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
     borderRadius: 14,
     paddingHorizontal: 16,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#FFFFFF",
     fontSize: 16,
     color: "#0F172A",
   },
@@ -317,7 +358,7 @@ const styles = StyleSheet.create({
   button: {
     height: 52,
     borderRadius: 16,
-    backgroundColor: "#1E3A8A",
+    backgroundColor: "#2563EB",
     justifyContent: "center",
     alignItems: "center",
   },
