@@ -15,5 +15,6 @@ router.post(
 );
 router.get("/me", authenticate, authController.getCurrentUser);
 router.put("/profile", authenticate, authController.updateProfile);
+router.post("/logout", authenticate, authController.logout);
 
 export { router as authRoutes };

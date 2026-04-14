@@ -6,20 +6,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
-
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
@@ -37,10 +23,9 @@ api.interceptors.response.use(
     // Only handle 401 as session expiration if NOT on login or verify-admin requests
     if (status === 401 && !isLoginRequest && !isVerifyAdminRequest) {
       notify.warning("Please try again..");
-      
     }
     return Promise.reject(error);
-  },  
+  },
 );
 
 export const authAPI = {
@@ -54,18 +39,25 @@ export const authAPI = {
     return response.data;
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  logout: async () => {
+    try {
+      // Call backend logout API to clear httpOnly cookie
+      await api.post("/auth/logout");
+    } catch (error) {
+      // Silently fail
+      console.error("Logout API error:", error);
+    }
+    // Clear role from localStorage
+    localStorage.removeItem("role");
   },
 
-  getStoredUser: () => {
-    const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
-  },
-
-  isAuthenticated: () => {
-    return !!localStorage.getItem("token");
+  checkAuth: async () => {
+    try {
+      await api.get("/auth/me");
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   getCurrentUser: async () => {
