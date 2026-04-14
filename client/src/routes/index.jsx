@@ -12,8 +12,10 @@ import Contact from "@/modules/contact/Contact";
 import AdminLayout from "@/modules/admin/AdminLayout";
 import AdminDashboard from "@/modules/admin/Dashboard";
 import UserManagement from "@/modules/admin/UserManagement";
-import Jewelry from "@/modules/jewelry/Jewelry";
-import LabGrownJewelry from "@/modules/jewelry/LabGrownJewelry";
+import Jewelry from "@/modules/user/jewelry/Jewelry";
+import LabGrownJewelry from "@/modules/user/jewelry/LabGrownJewelry";
+import DiamondDetail from "@/modules/user/Diamond/DiamondDetail";
+import JewelryDetail from "@/modules/user/jewelry/JewelryDetail";
 
 
 export const router = createBrowserRouter([
@@ -64,6 +66,14 @@ export const router = createBrowserRouter([
       {
         path: "/lab-grown-jewelry",
         element: <LabGrownJewelry />,
+      },
+      {
+        path: "/diamond/:type/:id",
+        element: <DiamondDetail />,
+      },
+      {
+        path: "/jewelry/:type/:id",
+        element: <JewelryDetail />,
       },
       {
         path: "/admin",
