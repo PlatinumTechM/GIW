@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { authAPI } from "@/services/api";
 import notify from "@/utils/notifications.jsx";
+import { formatFieldValue } from "@/utils/formatters.js";
 import { Diamond, Gem, Sparkles, Heart, User, Building2, Phone, MapPin, FileText, ChevronRight, Award, Shield, Edit2, Save, X, CheckCircle } from "lucide-react";
 
 const Profile = () => {
@@ -38,11 +39,8 @@ const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if(name === 'gst') {
-      setFormData((prev) => ({ ...prev, [name]: value.toUpperCase() }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    const formattedValue = formatFieldValue(name, value);
+    setFormData((prev) => ({ ...prev, [name]: formattedValue }));
   };
 
   const handleEdit = () => {
@@ -72,10 +70,10 @@ const Profile = () => {
 
     try {
       const response = await authAPI.updateProfile({
-        name: formData.name,
-        company: formData.company,
+        name: formData.name.trim(),
+        company: formData.company.trim(),
         phone: formData.phone,
-        address: formData.address,
+        address: formData.address.trim(),
         gst: formData.gst,
       });
 
