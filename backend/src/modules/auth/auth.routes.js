@@ -1,17 +1,19 @@
 import express from "express";
-import { AuthController } from "./auth.controller.js";
+import { authController } from "./auth.controller.js";
 import { validateLogin, validateRegister } from "./auth.validate.js";
 import { upload } from "../../middleware/upload.middleware.js";
+import { authenticate } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
-const authController = new AuthController();
 
-router.post("/login", validateLogin, authController.login.bind(authController));
+router.post("/login", validateLogin, authController.login);
 router.post(
-"/register",
+  "/register",
   upload.single("upload"),
   validateRegister,
-  authController.register.bind(authController),
+  authController.register,
 );
+router.get("/me", authenticate, authController.getCurrentUser);
+router.put("/profile", authenticate, authController.updateProfile);
 
 export { router as authRoutes };

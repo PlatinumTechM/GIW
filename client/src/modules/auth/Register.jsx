@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
+import notify from "../../utils/notifications.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -73,22 +74,24 @@ const Register = () => {
         submitData.append("upload", formData.upload);
       }
 
-      console.log("API URL:", `${API_BASE_URL}/auth/register`);
+    
       
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         body: submitData,
       });
 
-      console.log("Response status:", response.status);
+      
       
       const data = await response.json();
-      console.log("Response data:", data);
+
 
       if (!response.ok) {
+        notify.error("Registration Failed", data.error || "Please try again");
         throw new Error(data.error || "Registration failed");
       }
 
+      notify.success("Registration Successful", "Your account has been created!");
       setSuccess("Registration successful! Redirecting to login...");
       
       // Reset form
@@ -109,6 +112,7 @@ const Register = () => {
         navigate("/login");
       }, 2000);
     } catch (err) {
+      notify.error("Registration Failed", err.message);
       setError(err.message);
     } finally {
       setIsLoading(false);

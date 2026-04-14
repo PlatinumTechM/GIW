@@ -1,7 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "@/App";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/modules/home/Home";
 import UserHome from "@/modules/user/Home";
+import Profile from "@/components/Profile";
 import NaturalDiamond from "@/modules/user/Diamond/NaturalDiamond";
 import LabGrownDiamond from "@/modules/user/Diamond/LabGrownDiamond";
 import Register from "@/modules/auth/Register";
@@ -27,7 +29,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "/user/home",
-        element: <UserHome />,
+        element: (
+          <ProtectedRoute>
+            <UserHome />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile",
+        element: (
+          <ProtectedRoute allowAdmin>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/natural-diamonds",
@@ -67,7 +81,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "/admin",
-        element: <AdminLayout />,
+        element: (
+          <ProtectedRoute requireAdmin>
+            <AdminLayout />
+          </ProtectedRoute>
+        ),
         children: [
           {
             path: "",
