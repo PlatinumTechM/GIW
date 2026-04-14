@@ -17,20 +17,12 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
   };
 
   useEffect(() => {
-    const fetchStock = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`/api/stock/${type}`);
-        const data = await response.json();
-        setItems(data || getMockData(type));
-      } catch (error) {
-        console.error("Error fetching stock:", error);
-        setItems(getMockData(type));
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStock();
+    // Use mock data directly for now since API endpoint doesn't exist
+    setLoading(true);
+    setTimeout(() => {
+      setItems(getMockData(type));
+      setLoading(false);
+    }, 500);
   }, [type]);
 
   // Reset to page 1 when filters or search change
@@ -53,36 +45,58 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
       const caratMin = parseFloat((0.3 + Math.random() * 2).toFixed(2));
       const caratMax = parseFloat((caratMin + 0.5 + Math.random() * 2).toFixed(2));
       const priceMin = Math.floor(2000 + Math.random() * 30000);
-      const priceMax = Math.floor(priceMin + 5000 + Math.random() * 50000);
-      const isFancy = Math.random() > 0.7;
+      const table = Math.floor(54 + Math.random() * 10);
+      const depth = Math.floor(59 + Math.random() * 8);
+      // Advanced filter properties
+      const length = parseFloat((5 + Math.random() * 10).toFixed(2));
+      const width = parseFloat((4 + Math.random() * 8).toFixed(2));
+      const height = parseFloat((3 + Math.random() * 5).toFixed(2));
+      const crownHeight = parseFloat((10 + Math.random() * 5).toFixed(1));
+      const crownAngle = parseFloat((30 + Math.random() * 5).toFixed(1));
+      const pavilionDepth = parseFloat((40 + Math.random() * 5).toFixed(1));
+      const pavilionAngle = parseFloat((40 + Math.random() * 5).toFixed(1));
+      const girdle = parseFloat((1 + Math.random() * 4).toFixed(1));
       return {
         id: `${category}-${i + 1}`,
         shape: shapes[Math.floor(Math.random() * shapes.length)],
         carat: parseFloat(((caratMin + caratMax) / 2).toFixed(2)),
         caratMin,
         caratMax,
-        colorType: isFancy ? "Fancy" : "White",
-        color: isFancy
+        priceMin,
+        priceMax: Math.floor(priceMin + 5000 + Math.random() * 50000),
+        get price() { return Math.floor((this.priceMin + this.priceMax) / 2); },
+        colorType: Math.random() > 0.7 ? "Fancy" : "White",
+        color: Math.random() > 0.7
           ? fancyColors[Math.floor(Math.random() * fancyColors.length)]
           : whiteColors[Math.floor(Math.random() * whiteColors.length)],
-        fancyIntensity: isFancy ? fancyIntensities[Math.floor(Math.random() * fancyIntensities.length)] : null,
-        fancyOvertone: isFancy ? fancyOvertones[Math.floor(Math.random() * fancyOvertones.length)] : null,
+        fancyIntensity: Math.random() > 0.7 ? fancyIntensities[Math.floor(Math.random() * fancyIntensities.length)] : null,
+        fancyOvertone: Math.random() > 0.7 ? fancyOvertones[Math.floor(Math.random() * fancyOvertones.length)] : null,
         clarity: clarities[Math.floor(Math.random() * clarities.length)],
         cut: cuts[Math.floor(Math.random() * cuts.length)],
         polish: cuts[Math.floor(Math.random() * cuts.length)],
         symmetry: cuts[Math.floor(Math.random() * cuts.length)],
         fluorescence: ["None", "Faint", "Medium"][Math.floor(Math.random() * 3)],
-        price: Math.floor((priceMin + priceMax) / 2),
-        priceMin,
-        priceMax,
         certification: certifications[Math.floor(Math.random() * certifications.length)],
         certificationNumber: `CERT-${Math.floor(Math.random() * 1000000)}`,
         hasMedia: hasMedia[Math.floor(Math.random() * hasMedia.length)],
         image: `https://images.unsplash.com/photo-${['1605100804763-247f67b3557e', '1515377905703-c4788e51af15', '1573408301185-9146fe634ad0', '1603561591411-07134e71a2a9'][i % 4]}?w=600&h=600&fit=crop`,
         badge: i % 3 === 0 ? "GIA Certified" : i % 4 === 0 ? "Available" : null,
         available: Math.random() > 0.2,
-        table: Math.floor(54 + Math.random() * 10),
-        depth: Math.floor(59 + Math.random() * 8),
+        table,
+        depth,
+        // Advanced filter properties
+        length,
+        width,
+        height,
+        ratio: parseFloat((length / width).toFixed(2)),
+        crownHeight,
+        crownAngle,
+        pavilionDepth,
+        pavilionAngle,
+        girdle,
+        milky: ["None", "Light", "Medium", "Heavy"][Math.floor(Math.random() * 4)],
+        eyeClean: ["Yes", "No"][Math.floor(Math.random() * 2)],
+        shade: ["None", "Light", "Medium"][Math.floor(Math.random() * 3)],
       };
     });
   };
@@ -145,8 +159,38 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     if (filters?.showOnlyMedia && !item.hasMedia) return false;
     if (filters?.caratMin && item.carat < parseFloat(filters.caratMin)) return false;
     if (filters?.caratMax && item.carat > parseFloat(filters.caratMax)) return false;
-    if (filters?.priceMin && item.price < parseFloat(filters.priceMin)) return false;
-    if (filters?.priceMax && item.price > parseFloat(filters.priceMax)) return false;
+    if (filters?.priceMin !== "" && filters?.priceMin != null && item.price < parseFloat(filters.priceMin)) return false;
+    if (filters?.priceMax !== "" && filters?.priceMax != null && item.price > parseFloat(filters.priceMax)) return false;
+
+    // Advanced Filters - Measurements
+    if (filters?.lengthMin && item.length < parseFloat(filters.lengthMin)) return false;
+    if (filters?.lengthMax && item.length > parseFloat(filters.lengthMax)) return false;
+    if (filters?.widthMin && item.width < parseFloat(filters.widthMin)) return false;
+    if (filters?.widthMax && item.width > parseFloat(filters.widthMax)) return false;
+    if (filters?.heightMin && item.height < parseFloat(filters.heightMin)) return false;
+    if (filters?.heightMax && item.height > parseFloat(filters.heightMax)) return false;
+    if (filters?.ratioMin && item.ratio < parseFloat(filters.ratioMin)) return false;
+    if (filters?.ratioMax && item.ratio > parseFloat(filters.ratioMax)) return false;
+    if (filters?.depthMin && item.depth < parseFloat(filters.depthMin)) return false;
+    if (filters?.depthMax && item.depth > parseFloat(filters.depthMax)) return false;
+    if (filters?.tableMin && item.table < parseFloat(filters.tableMin)) return false;
+    if (filters?.tableMax && item.table > parseFloat(filters.tableMax)) return false;
+    if (filters?.crownHeightMin && item.crownHeight < parseFloat(filters.crownHeightMin)) return false;
+    if (filters?.crownHeightMax && item.crownHeight > parseFloat(filters.crownHeightMax)) return false;
+    if (filters?.crownAngleMin && item.crownAngle < parseFloat(filters.crownAngleMin)) return false;
+    if (filters?.crownAngleMax && item.crownAngle > parseFloat(filters.crownAngleMax)) return false;
+    if (filters?.pavilionDepthMin && item.pavilionDepth < parseFloat(filters.pavilionDepthMin)) return false;
+    if (filters?.pavilionDepthMax && item.pavilionDepth > parseFloat(filters.pavilionDepthMax)) return false;
+    if (filters?.pavilionAngleMin && item.pavilionAngle < parseFloat(filters.pavilionAngleMin)) return false;
+    if (filters?.pavilionAngleMax && item.pavilionAngle > parseFloat(filters.pavilionAngleMax)) return false;
+    if (filters?.girdleMin && item.girdle < parseFloat(filters.girdleMin)) return false;
+    if (filters?.girdleMax && item.girdle > parseFloat(filters.girdleMax)) return false;
+
+    // Advanced Filters - Dropdowns
+    if (filters?.milky && item.milky !== filters.milky) return false;
+    if (filters?.eyeClean && item.eyeClean !== filters.eyeClean) return false;
+    if (filters?.shade && item.shade !== filters.shade) return false;
+
     return true;
   });
 
@@ -437,7 +481,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                     <Heart className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => openDiamondDetail(item)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDiamondDetail(item);
+                    }}
                     className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#64748B] hover:text-[#1E3A8A] hover:scale-110 transition-all duration-300"
                   >
                     <Eye className="w-5 h-5" />

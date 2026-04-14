@@ -199,10 +199,29 @@ const JewelryGrid = ({
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full justify-between">
+            {showSort && (
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-[#64748B]">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2.5 border border-[#E2E8F0] rounded-lg text-sm bg-white cursor-pointer min-w-[160px]"
+                  >
+                    {sortOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* View Mode Toggle */}
             {onViewModeChange && (
-              <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white p-1 order-2">
+              <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white p-1">
                 <button
                   onClick={() => onViewModeChange("grid")}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
@@ -225,25 +244,6 @@ const JewelryGrid = ({
                   <List className="h-4 w-4" />
                   <span className="hidden sm:inline">List</span>
                 </button>
-              </div>
-            )}
-
-            {showSort && (
-              <div className="relative order-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-[#64748B]">Sort by:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2.5 border border-[#E2E8F0] rounded-lg text-sm bg-white cursor-pointer min-w-[160px]"
-                  >
-                    {sortOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             )}
           </div>
@@ -297,7 +297,8 @@ const JewelryGrid = ({
                 variants={scaleIn}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className="group border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F8FAFC] transition-all duration-300"
+                onClick={() => onItemClick?.(item)}
+                className="group border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F8FAFC] transition-all duration-300 cursor-pointer"
               >
                 {/* Desktop Row */}
                 <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-4 items-center">

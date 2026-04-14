@@ -490,6 +490,13 @@ const LabGrownJewelry = () => {
             </div>
 
             <div className="flex items-center gap-3">
+              <button
+                className="hidden items-center gap-2 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[#1E40AF] lg:flex"
+              >
+                <Filter className="h-4 w-4" />
+                Apply Filter
+              </button>
+
               <Input
                 type="text"
                 placeholder="Search lab-grown jewelry..."
@@ -504,8 +511,6 @@ const LabGrownJewelry = () => {
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="hidden sm:inline">Filters</span>
               </button>
-              
-
             </div>
           </div>
         </div>
@@ -655,6 +660,13 @@ const LabGrownJewelry = () => {
                     </div>
                   )}
                 </div>
+
+                <button
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] py-3 text-sm font-medium text-white transition-all hover:bg-[#1E40AF]"
+                >
+                  <Filter className="h-4 w-4" />
+                  Apply Filter
+                </button>
 
                 {activeFiltersCount > 0 && (
                   <button

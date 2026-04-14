@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,16 +22,16 @@ import ShowStock from "./ShowStock";
 import Input from "../../../components/ui/Input";
 
 const shapes = [
-  { name: "ROUND", icon: "/diamond shap icon/round.svg", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop" },
-  { name: "PEAR", icon: "/diamond shap icon/pear.svg", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100&h=100&fit=crop" },
-  { name: "OVAL", icon: "/diamond shap icon/oval.svg", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&h=100&fit=crop" },
-  { name: "PRINCESS", icon: "/diamond shap icon/princess.svg", image: "https://images.unsplash.com/photo-1599643477877-5303c0c3f596?w=100&h=100&fit=crop" },
-  { name: "EMERALD", icon: "/diamond shap icon/emerald.svg", image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=100&h=100&fit=crop" },
-  { name: "CUSHION", icon: "/diamond shap icon/cub.svg", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=100&h=100&fit=crop" },
-  { name: "MARQUISE", icon: "/diamond shap icon/marquise.svg", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop" },
-  { name: "HEART", icon: "/diamond shap icon/heart.svg", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&h=100&fit=crop" },
-  { name: "RADIANT", icon: "/diamond shap icon/radiant.svg", image: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=100&h=100&fit=crop" },
-  { name: "OTHER", icon: "/diamond shap icon/other.svg", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop" },
+  { name: "ROUND", icon: "/diamond%20shap%20icon/round.svg", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop" },
+  { name: "PEAR", icon: "/diamond%20shap%20icon/pear.svg", image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=100&h=100&fit=crop" },
+  { name: "OVAL", icon: "/diamond%20shap%20icon/oval.svg", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&h=100&fit=crop" },
+  { name: "PRINCESS", icon: "/diamond%20shap%20icon/princess.svg", image: "https://images.unsplash.com/photo-1599643477877-5303c0c3f596?w=100&h=100&fit=crop" },
+  { name: "EMERALD", icon: "/diamond%20shap%20icon/emerald.svg", image: "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=100&h=100&fit=crop" },
+  { name: "CUSHION", icon: "/diamond%20shap%20icon/cub.svg", image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=100&h=100&fit=crop" },
+  { name: "MARQUISE", icon: "/diamond%20shap%20icon/marquise.svg", image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop" },
+  { name: "HEART", icon: "/diamond%20shap%20icon/heart.svg", image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=100&h=100&fit=crop" },
+  { name: "RADIANT", icon: "/diamond%20shap%20icon/radiant.svg", image: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=100&h=100&fit=crop" },
+  { name: "OTHER", icon: "/diamond%20shap%20icon/other.svg", image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop" },
 ];
 
 const whiteColors = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
@@ -59,10 +59,10 @@ const LabGrownDiamond = () => {
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [showOnlyMedia, setShowOnlyMedia] = useState(false);
   const [availableItems, setAvailableItems] = useState(false);
-  const [caratMin, setCaratMin] = useState("");
-  const [caratMax, setCaratMax] = useState("");
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
+  const [caratMin, setCaratMinState] = useState("");
+  const [caratMax, setCaratMaxState] = useState("");
+  const [priceMin, setPriceMinState] = useState("");
+  const [priceMax, setPriceMaxState] = useState("");
   const [colorType, setColorType] = useState("White");
   const [selectedWhiteColors, setSelectedWhiteColors] = useState([]);
   const [selectedFancyColors, setSelectedFancyColors] = useState([]);
@@ -79,6 +79,53 @@ const LabGrownDiamond = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Applied filters state - these are the filters actually passed to ShowStock
+  const [appliedFilters, setAppliedFilters] = useState({
+    shapes: [],
+    colors: [],
+    colorType: "White",
+    fancyIntensity: "",
+    fancyOvertone: "",
+    clarities: [],
+    cuts: [],
+    polish: [],
+    symmetry: [],
+    certifications: [],
+    certificateType: null,
+    available: false,
+    showOnlyMedia: false,
+    caratMin: "",
+    caratMax: "",
+    priceMin: "",
+    priceMax: "",
+    lengthMin: "",
+    lengthMax: "",
+    widthMin: "",
+    widthMax: "",
+    heightMin: "",
+    heightMax: "",
+    ratioMin: "",
+    ratioMax: "",
+    depthMin: "",
+    depthMax: "",
+    tableMin: "",
+    tableMax: "",
+    crownHeightMin: "",
+    crownHeightMax: "",
+    crownAngleMin: "",
+    crownAngleMax: "",
+    pavilionDepthMin: "",
+    pavilionDepthMax: "",
+    pavilionAngleMin: "",
+    pavilionAngleMax: "",
+    girdleMin: "",
+    girdleMax: "",
+    milky: "",
+    eyeClean: "",
+    shade: "",
+  });
+
   const [expandedSections, setExpandedSections] = useState({
     shape: true,
     color: true,
@@ -94,29 +141,58 @@ const LabGrownDiamond = () => {
   });
 
   // Advanced Filters - Measurements
-  const [lengthMin, setLengthMin] = useState("");
-  const [lengthMax, setLengthMax] = useState("");
-  const [widthMin, setWidthMin] = useState("");
-  const [widthMax, setWidthMax] = useState("");
-  const [heightMin, setHeightMin] = useState("");
-  const [heightMax, setHeightMax] = useState("");
-  const [depthMin, setDepthMin] = useState("");
-  const [depthMax, setDepthMax] = useState("");
-  const [tableMin, setTableMin] = useState("");
-  const [tableMax, setTableMax] = useState("");
-  const [crownHeightMin, setCrownHeightMin] = useState("");
-  const [crownHeightMax, setCrownHeightMax] = useState("");
-  const [crownAngleMin, setCrownAngleMin] = useState("");
-  const [crownAngleMax, setCrownAngleMax] = useState("");
-  const [pavilionDepthMin, setPavilionDepthMin] = useState("");
-  const [pavilionDepthMax, setPavilionDepthMax] = useState("");
-  const [pavilionAngleMin, setPavilionAngleMin] = useState("");
-  const [pavilionAngleMax, setPavilionAngleMax] = useState("");
-  const [girdleMin, setGirdleMin] = useState("");
-  const [girdleMax, setGirdleMax] = useState("");
-  const [milky, setMilky] = useState("");
-  const [eyeClean, setEyeClean] = useState("");
-  const [shade, setShade] = useState("");
+  const [lengthMin, setLengthMinState] = useState("");
+  const [lengthMax, setLengthMaxState] = useState("");
+  const [widthMin, setWidthMinState] = useState("");
+  const [widthMax, setWidthMaxState] = useState("");
+  const [heightMin, setHeightMinState] = useState("");
+  const [heightMax, setHeightMaxState] = useState("");
+  const [depthMin, setDepthMinState] = useState("");
+  const [depthMax, setDepthMaxState] = useState("");
+  const [tableMin, setTableMinState] = useState("");
+  const [tableMax, setTableMaxState] = useState("");
+  const [crownHeightMin, setCrownHeightMinState] = useState("");
+  const [crownHeightMax, setCrownHeightMaxState] = useState("");
+  const [crownAngleMin, setCrownAngleMinState] = useState("");
+  const [crownAngleMax, setCrownAngleMaxState] = useState("");
+  const [pavilionDepthMin, setPavilionDepthMinState] = useState("");
+  const [pavilionDepthMax, setPavilionDepthMaxState] = useState("");
+  const [pavilionAngleMin, setPavilionAngleMinState] = useState("");
+  const [pavilionAngleMax, setPavilionAngleMaxState] = useState("");
+  const [girdleMin, setGirdleMinState] = useState("");
+  const [girdleMax, setGirdleMaxState] = useState("");
+  const [milky, setMilkyState] = useState("");
+  const [eyeClean, setEyeCleanState] = useState("");
+  const [shade, setShadeState] = useState("");
+
+  // Wrapper functions for state setters
+  const setCaratMin = (val) => { setCaratMinState(val); };
+  const setCaratMax = (val) => { setCaratMaxState(val); };
+  const setPriceMin = (val) => { setPriceMinState(val); };
+  const setPriceMax = (val) => { setPriceMaxState(val); };
+  const setLengthMin = (val) => { setLengthMinState(val); };
+  const setLengthMax = (val) => { setLengthMaxState(val); };
+  const setWidthMin = (val) => { setWidthMinState(val); };
+  const setWidthMax = (val) => { setWidthMaxState(val); };
+  const setHeightMin = (val) => { setHeightMinState(val); };
+  const setHeightMax = (val) => { setHeightMaxState(val); };
+  const setDepthMin = (val) => { setDepthMinState(val); };
+  const setDepthMax = (val) => { setDepthMaxState(val); };
+  const setTableMin = (val) => { setTableMinState(val); };
+  const setTableMax = (val) => { setTableMaxState(val); };
+  const setCrownHeightMin = (val) => { setCrownHeightMinState(val); };
+  const setCrownHeightMax = (val) => { setCrownHeightMaxState(val); };
+  const setCrownAngleMin = (val) => { setCrownAngleMinState(val); };
+  const setCrownAngleMax = (val) => { setCrownAngleMaxState(val); };
+  const setPavilionDepthMin = (val) => { setPavilionDepthMinState(val); };
+  const setPavilionDepthMax = (val) => { setPavilionDepthMaxState(val); };
+  const setPavilionAngleMin = (val) => { setPavilionAngleMinState(val); };
+  const setPavilionAngleMax = (val) => { setPavilionAngleMaxState(val); };
+  const setGirdleMin = (val) => { setGirdleMinState(val); };
+  const setGirdleMax = (val) => { setGirdleMaxState(val); };
+  const setMilky = (val) => { setMilkyState(val); };
+  const setEyeClean = (val) => { setEyeCleanState(val); };
+  const setShade = (val) => { setShadeState(val); };
 
   const toggleShape = (shape) => {
     if (selectedShapes.includes(shape)) {
@@ -238,7 +314,105 @@ const LabGrownDiamond = () => {
     setMilky("");
     setEyeClean("");
     setShade("");
+    // Also clear applied filters
+    setAppliedFilters({
+      shapes: [],
+      colors: [],
+      colorType: "White",
+      fancyIntensity: "",
+      fancyOvertone: "",
+      clarities: [],
+      cuts: [],
+      polish: [],
+      symmetry: [],
+      certifications: [],
+      certificateType: null,
+      available: false,
+      showOnlyMedia: false,
+      caratMin: "",
+      caratMax: "",
+      priceMin: "",
+      priceMax: "",
+      lengthMin: "",
+      lengthMax: "",
+      widthMin: "",
+      widthMax: "",
+      heightMin: "",
+      heightMax: "",
+      ratioMin: "",
+      ratioMax: "",
+      depthMin: "",
+      depthMax: "",
+      tableMin: "",
+      tableMax: "",
+      crownHeightMin: "",
+      crownHeightMax: "",
+      crownAngleMin: "",
+      crownAngleMax: "",
+      pavilionDepthMin: "",
+      pavilionDepthMax: "",
+      pavilionAngleMin: "",
+      pavilionAngleMax: "",
+      girdleMin: "",
+      girdleMax: "",
+      milky: "",
+      eyeClean: "",
+      shade: "",
+    });
   };
+
+  // Apply filters function - copies pending state to applied filters
+  const applyFilters = useCallback(() => {
+    setAppliedFilters({
+      shapes: selectedShapes,
+      colors: colorType === "White" ? selectedWhiteColors : selectedFancyColors,
+      colorType,
+      fancyIntensity: selectedFancyIntensity,
+      fancyOvertone: selectedFancyOvertone,
+      clarities: selectedClarities,
+      cuts: selectedCuts,
+      polish: selectedPolish,
+      symmetry: selectedSymmetry,
+      certifications: selectedCertifications,
+      certificateType,
+      available: availableItems,
+      showOnlyMedia,
+      caratMin,
+      caratMax,
+      priceMin,
+      priceMax,
+      lengthMin,
+      lengthMax,
+      widthMin,
+      widthMax,
+      heightMin,
+      heightMax,
+      ratioMin,
+      ratioMax,
+      depthMin,
+      depthMax,
+      tableMin,
+      tableMax,
+      crownHeightMin,
+      crownHeightMax,
+      crownAngleMin,
+      crownAngleMax,
+      pavilionDepthMin,
+      pavilionDepthMax,
+      pavilionAngleMin,
+      pavilionAngleMax,
+      girdleMin,
+      girdleMax,
+      milky,
+      eyeClean,
+      shade,
+    });
+  }, [selectedShapes, selectedWhiteColors, selectedFancyColors, colorType, selectedFancyIntensity, selectedFancyOvertone, selectedClarities, selectedCuts, selectedPolish, selectedSymmetry, selectedCertifications, certificateType, availableItems, showOnlyMedia, caratMin, caratMax, priceMin, priceMax, lengthMin, lengthMax, widthMin, widthMax, heightMin, heightMax, depthMin, depthMax, tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin, crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin, pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade]);
+
+  // Auto-apply filters when any filter value changes
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const activeFiltersCount =
     selectedShapes.length +
@@ -1204,6 +1378,15 @@ const LabGrownDiamond = () => {
               <div className="sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                 <FilterContent />
 
+                {/* Apply Filters Button */}
+                <button
+                  onClick={applyFilters}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] py-3 text-sm font-medium text-white transition-all hover:bg-[#1E40AF] shadow-md"
+                >
+                  <Filter className="h-4 w-4" />
+                  Apply Filters
+                </button>
+
                 {/* Clear Filters */}
                 {activeFiltersCount > 0 && (
                   <button
@@ -1270,25 +1453,7 @@ const LabGrownDiamond = () => {
                 viewMode={viewMode}
                 sortBy={sortBy}
                 searchQuery={searchQuery}
-                filters={{
-                  shapes: selectedShapes,
-                  colors: colorType === "White" ? selectedWhiteColors : selectedFancyColors,
-                  colorType,
-                  fancyIntensity: selectedFancyIntensity,
-                  fancyOvertone: selectedFancyOvertone,
-                  clarities: selectedClarities,
-                  cuts: selectedCuts,
-                  polish: selectedPolish,
-                  symmetry: selectedSymmetry,
-                  certifications: selectedCertifications,
-                  certificateType,
-                  available: availableItems,
-                  showOnlyMedia,
-                  caratMin,
-                  caratMax,
-                  priceMin,
-                  priceMax,
-                }}
+                filters={appliedFilters}
               />
             </div>
           </div>
@@ -1350,10 +1515,13 @@ const LabGrownDiamond = () => {
                     Clear All
                   </button>
                   <button
-                    onClick={() => setShowMobileFilters(false)}
+                    onClick={() => {
+                      applyFilters();
+                      setShowMobileFilters(false);
+                    }}
                     className="flex-1 rounded-lg bg-[#1E3A8A] py-3 text-sm font-medium text-white hover:bg-[#1E40AF]"
                   >
-                    Show Results
+                    Apply Filters
                   </button>
                 </div>
               </div>
