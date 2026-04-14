@@ -20,12 +20,20 @@ api.interceptors.request.use(
   },
 );
 
-// Response interceptor to handle token expiration
+// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-  
-    if (error.response?.status === 401) {
+    const isLoginRequest = error.config?.url?.includes("/auth/login");
+    const status = error.response?.status;
+    
+    // Handle 404 - API endpoint not found
+    if (status === 404) {
+      notify.error("Connection Error", "Server is not reachable. Please try again later.");
+    }
+    
+    // Only handle 401 as session expiration if NOT on login request
+    if (status === 401 && !isLoginRequest) {
       notify.warning("Session Expired", "Please log in again");
       localStorage.removeItem("token");
       localStorage.removeItem("user");

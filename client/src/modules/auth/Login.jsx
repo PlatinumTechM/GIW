@@ -428,7 +428,6 @@ const Login = () => {
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit}
               type="submit"
               disabled={loading}
               className="w-full py-3 sm:py-3.5 px-6 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] hover:from-[#1E40AF] hover:to-[#2563EB] text-white font-semibold rounded-xl

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
 import notify from "../../utils/notifications.jsx";
+import { formatFieldValue } from "../../utils/formatters.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -34,9 +35,17 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+    
+    if (files) {
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
+      return;
+    }
+    
+    const formattedValue = formatFieldValue(name, value);
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value,
+      [name]: formattedValue,
     }));
   };
 
@@ -61,9 +70,10 @@ const Register = () => {
 
     try {
       const submitData = new FormData();
-      submitData.append("name", formData.name);
+      // Trim name and company, others are already handled in handleChange
+      submitData.append("name", formData.name.trim());
       submitData.append("email", formData.email);
-      submitData.append("company", formData.company);
+      submitData.append("company", formData.company.trim());
       submitData.append("phone", formData.phone);
       submitData.append("address", formData.address);
       submitData.append("gst", formData.gst);
