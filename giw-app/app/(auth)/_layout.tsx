@@ -11,7 +11,7 @@ export default function AuthLayout() {
         headerShown: false,
         presentation: "modal",
         contentStyle: {
-          backgroundColor: colorScheme === "dark" ? "#0a0a0a" : "#f8f9fa",
+          backgroundColor: "#f8f9fa",
         },
       }}
     >
@@ -20,7 +20,7 @@ export default function AuthLayout() {
         options={{
           title: "Login",
           contentStyle: {
-            backgroundColor: colorScheme === "dark" ? "#0a0a0a" : "#f8f9fa",
+            backgroundColor: "#f8f9fa",
           },
         }}
       />
@@ -29,7 +29,7 @@ export default function AuthLayout() {
         options={{
           title: "Register",
           contentStyle: {
-            backgroundColor: colorScheme === "dark" ? "#0a0a0a" : "#f8f9fa",
+            backgroundColor: "#f8f9fa",
           },
         }}
       />
@@ -38,7 +38,7 @@ export default function AuthLayout() {
         options={{
           title: "Forgot Password",
           contentStyle: {
-            backgroundColor: colorScheme === "dark" ? "#0a0a0a" : "#f8f9fa",
+            backgroundColor: "#f8f9fa",
           },
         }}
       />
