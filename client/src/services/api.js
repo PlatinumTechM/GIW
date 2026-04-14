@@ -1,4 +1,5 @@
 import axios from "axios";
+import notify from "../utils/notifications.jsx";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -23,7 +24,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+  
     if (error.response?.status === 401) {
+      notify.warning("Session Expired", "Please log in again");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       window.location.href = "/login";
@@ -33,13 +36,13 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: async (email, password) => {
-    const response = await api.post("/auth/login", { email, password });
+  login: async (identifier, password) => {
+    const response = await api.post("/auth/login", { email: identifier, password });
     return response.data;
   },
 
-  register: async (email, password) => {
-    const response = await api.post("/auth/register", { email, password });
+  register: async (userData) => {
+    const response = await api.post("/auth/register", userData);
     return response.data;
   },
 
@@ -48,13 +51,23 @@ export const authAPI = {
     localStorage.removeItem("user");
   },
 
-  getCurrentUser: () => {
+  getStoredUser: () => {
     const user = localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
   },
 
   isAuthenticated: () => {
     return !!localStorage.getItem("token");
+  },
+
+  getCurrentUser: async () => {
+    const response = await api.get("/auth/me");
+    return response.data;
+  },
+
+  updateProfile: async (userData) => {
+    const response = await api.put("/auth/profile", userData);
+    return response.data;
   },
 };
 

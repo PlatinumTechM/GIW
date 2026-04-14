@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Input from "../../components/ui/Input";
+import notify from "../../utils/notifications.jsx";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -47,6 +48,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
+    notify.success("Email Sent", "Check your inbox for reset instructions");
     setStep(2);
   };
 
@@ -54,8 +56,8 @@ const ForgotPassword = () => {
     e.preventDefault();
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Password Reset Data:", formData);
     setIsLoading(false);
+    notify.success("Password Reset", "Your password has been updated successfully");
     setIsSuccess(true);
   };
 
@@ -120,7 +122,7 @@ const ForgotPassword = () => {
       <div className="hidden lg:flex lg:w-2/5 lg:h-screen relative overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-slate-950">
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-all duration-[2000ms] ease-out ${
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-2000 ease-out ${
               isLoaded ? "scale-100 opacity-100" : "scale-110 opacity-0"
             }`}
           >
@@ -141,24 +143,24 @@ const ForgotPassword = () => {
           />
 
           <div
-            className={`absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent animate-light-ray transition-all duration-[2500ms] delay-300 ${
+            className={`absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent animate-light-ray transition-all duration-2500 delay-300 ${
               isLoaded ? "opacity-100" : "opacity-0"
             }`}
           />
           <div
-            className={`absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-blue-300/20 to-transparent animate-light-ray transition-all duration-[2500ms] delay-500 ${
+            className={`absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-blue-300/20 to-transparent animate-light-ray transition-all duration-2500 delay-500 ${
               isLoaded ? "opacity-100" : "opacity-0"
             }`}
             style={{ animationDelay: "2s" }}
           />
 
           <div
-            className={`absolute -top-20 -left-16 w-72 h-72 bg-white/8 rounded-full blur-3xl animate-diamond-float transition-all duration-[2500ms] ease-out ${
+            className={`absolute -top-20 -left-16 w-72 h-72 bg-white/8 rounded-full blur-3xl animate-diamond-float transition-all duration-2500 ease-out ${
               isLoaded ? "translate-x-0 opacity-100" : "-translate-x-20 opacity-0"
             }`}
           />
           <div
-            className={`absolute top-1/3 right-[-60px] w-72 h-72 bg-[#3B82F6]/15 rounded-full blur-3xl animate-pulse transition-all duration-[2500ms] delay-300 ease-out ${
+            className={`absolute top-1/3 -right-15 w-72 h-72 bg-[#3B82F6]/15 rounded-full blur-3xl animate-pulse transition-all duration-2500 delay-300 ease-out ${
               isLoaded ? "translate-x-0 opacity-100" : "translate-x-20 opacity-0"
             }`}
           />

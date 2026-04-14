@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../../contexts/AuthContext";
 import Input from "../../components/ui/Input";
+import notify from "../../utils/notifications.jsx";
 
 const Login = () => {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
 
@@ -36,21 +38,28 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(
-        /\/$/,
-        "",
-      );
-      const response = await axios.post(`${baseUrl}/auth/login`, formData, {
-        withCredentials: true,
-      });
+      const result = await login(formData.identifier, formData.password);
 
-      if (response?.status === 200) {
-        navigate("/user/home");
+      if (result.success) {
+        // Get role from localStorage (stored by AuthContext)
+        const role = localStorage.getItem('role') || 'user';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        // Show notification based on role
+        if (role === 'admin') {
+          notify.success("Welcome Back", `Welcome back, ${user.name || 'Admin'}!`);
+          navigate("/admin");
+        } else {
+          notify.success("Login Successful", `Welcome, ${user.name || 'User'}!`);
+          navigate("/user/home");
+        }
       } else {
-        setError(response?.data?.error || "Unable to sign in");
+        notify.error("Login Failed", result.error || "Invalid credentials");
+        setError(result.error || "Unable to sign in");
       }
     } catch (err) {
-      setError(err.response?.data?.error || "Unable to sign in");
+      notify.error("Login Failed", err.message || "Unable to sign in");
+      setError(err.message || "Unable to sign in");
     } finally {
       setLoading(false);
     }
@@ -278,20 +287,20 @@ const Login = () => {
               </div>
             )}
 
-            {/* Email */}
+            {/* Email or Mobile */}
             <div className="w-full">
               <label className="block text-sm font-medium text-[#0F172A] mb-1.5">
-                Email Address
+                Email or Mobile Number
               </label>
               <Input
-                type="email"
-                name="email"
-                placeholder="dealer@company.com"
-                value={formData.email}
+                type="text"
+                name="identifier"
+                placeholder="dealer@company.com or 9876543210"
+                value={formData.identifier}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("email")}
+                onFocus={() => setFocusedField("identifier")}
                 onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "email"}
+                isFocused={focusedField === "identifier"}
                 required
                 icon={
                   <svg
@@ -304,7 +313,7 @@ const Login = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={1.5}
-                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                     />
                   </svg>
                 }

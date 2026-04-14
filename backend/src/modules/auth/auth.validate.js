@@ -1,12 +1,13 @@
 export const validateLogin = (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email/Mobile and password are required" });
   }
-  // Basic email validation
+  // Check if email or phone format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({ error: "Invalid email format" });
+  const phoneRegex = /^[\d\s\-+()]{10,20}$/;
+  if (!emailRegex.test(email) && !phoneRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email or mobile number format" });
   }
   next();
 };
