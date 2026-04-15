@@ -147,6 +147,8 @@ const LabGrownDiamond = () => {
   const [widthMax, setWidthMaxState] = useState("");
   const [heightMin, setHeightMinState] = useState("");
   const [heightMax, setHeightMaxState] = useState("");
+  const [ratioMin, setRatioMinState] = useState("");
+  const [ratioMax, setRatioMaxState] = useState("");
   const [depthMin, setDepthMinState] = useState("");
   const [depthMax, setDepthMaxState] = useState("");
   const [tableMin, setTableMinState] = useState("");
