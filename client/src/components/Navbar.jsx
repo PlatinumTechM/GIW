@@ -2,7 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
-import { Diamond, Crown, Gem, Sparkles, User, LogOut, ChevronDown, LayoutDashboard } from "lucide-react";
+import {
+  Diamond,
+  Crown,
+  Gem,
+  Sparkles,
+  User,
+  LogOut,
+  ChevronDown,
+  LayoutDashboard,
+} from "lucide-react";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -71,6 +80,19 @@ const Navbar = () => {
     // Hide Home, Stock/Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === 'admin') {
       return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
+
+    // Hide Home, Pricing, Contact for admin users - only show Dashboard in dropdown
+    if (user?.role === "admin") {
+      return links.filter(
+        (link) =>
+          link.label !== "Home" &&
+          link.label !== "Pricing" &&
+          link.label !== "Contact",
+      );
+    }
+    // Hide Pricing for logged-in users
+    if (isAuthenticated) {
+      return links.filter((link) => link.label !== "Pricing");
     }
     return links;
   };
@@ -88,7 +110,7 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
           ? "bg-white/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(15,23,42,0.08)] py-3"
           : "bg-transparent py-5"
@@ -171,22 +193,34 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
                   {/* Admin Dashboard Link - Only for admin */}
-                  {user?.role === 'admin' && (
+                  {user?.role === "admin" && (
                     <Link
                       to="/admin"
                       className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#475569] hover:text-[#1E3A8A] rounded-xl hover:bg-[#F1F5F9] transition-all duration-300"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                        />
                       </svg>
                       <span className="hidden lg:inline">Dashboard</span>
                     </Link>
                   )}
                   {/* Luxury User Dropdown - Hover to Open with delay */}
-                  <div 
+                  <div
                     className="relative"
                     onMouseEnter={() => setIsUserDropdownOpen(true)}
-                    onMouseLeave={() => setTimeout(() => setIsUserDropdownOpen(false), 1000)}
+                    onMouseLeave={() =>
+                      setTimeout(() => setIsUserDropdownOpen(false), 1000)
+                    }
                   >
                     <button
                       className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 ${
@@ -199,7 +233,8 @@ const Navbar = () => {
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px] shadow-md shadow-[#FFD700]/20">
                         <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center">
                           <span className="text-white text-sm font-semibold">
-                            {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                            {user?.name?.charAt(0)?.toUpperCase() ||
+                              user?.email?.charAt(0)?.toUpperCase()}
                           </span>
                         </div>
                       </div>
@@ -207,7 +242,7 @@ const Navbar = () => {
                         {user?.name || user?.email}
                       </span>
                       <ChevronDown
-                        className={`w-4 h-4 transition-transform duration-300 ${isUserDropdownOpen ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 transition-transform duration-300 ${isUserDropdownOpen ? "rotate-180" : ""}`}
                       />
                     </button>
 
@@ -221,7 +256,9 @@ const Navbar = () => {
                           transition={{ duration: 0.2 }}
                           className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-50 overflow-hidden"
                           onMouseEnter={() => setIsUserDropdownOpen(true)}
-                          onMouseLeave={() => setTimeout(() => setIsUserDropdownOpen(false), 1000)}
+                          onMouseLeave={() =>
+                            setTimeout(() => setIsUserDropdownOpen(false), 1000)
+                          }
                         >
                           {/* Gold Accent Top */}
                           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700]"></div>
@@ -232,15 +269,20 @@ const Navbar = () => {
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px]">
                                 <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center">
                                   <span className="text-white text-sm font-semibold">
-                                    {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase()}
+                                    {user?.name?.charAt(0)?.toUpperCase() ||
+                                      user?.email?.charAt(0)?.toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-[#0F172A] truncate">{user?.name || "Valued Customer"}</p>
+                                <p className="text-sm font-semibold text-[#0F172A] truncate">
+                                  {user?.name || "Valued Customer"}
+                                </p>
                                 <div className="flex items-center gap-1">
                                   <Sparkles className="w-3 h-3 text-[#FFD700]" />
-                                  <p className="text-xs text-[#94A3B8] truncate">{user?.email}</p>
+                                  <p className="text-xs text-[#94A3B8] truncate">
+                                    {user?.email}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -249,7 +291,7 @@ const Navbar = () => {
                           {/* Menu Items */}
                           <div className="p-2 space-y-1">
                             {/* Dashboard - Admin Only */}
-                            {user?.role === 'admin' && (
+                            {user?.role === "admin" && (
                               <Link
                                 to="/admin"
                                 className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
@@ -403,7 +445,7 @@ const Navbar = () => {
                   {isAuthenticated ? (
                     <div className="space-y-2">
                       {/* Admin Dashboard Link - Only for admin */}
-                      {user?.role === 'admin' && (
+                      {user?.role === "admin" && (
                         <NavLink
                           to="/admin"
                           className={({ isActive }) =>
@@ -414,8 +456,18 @@ const Navbar = () => {
                             }`
                           }
                         >
-                          <svg className={`w-5 h-5 ${({isActive}) => isActive ? "text-[#93C5FD]" : "text-[#94A3B8]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                          <svg
+                            className={`w-5 h-5 ${({ isActive }) => (isActive ? "text-[#93C5FD]" : "text-[#94A3B8]")}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                            />
                           </svg>
                           Dashboard
                         </NavLink>
@@ -431,8 +483,18 @@ const Navbar = () => {
                           }`
                         }
                       >
-                        <svg className={`w-5 h-5 ${({isActive}) => isActive ? "text-[#93C5FD]" : "text-[#94A3B8]"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <svg
+                          className={`w-5 h-5 ${({ isActive }) => (isActive ? "text-[#93C5FD]" : "text-[#94A3B8]")}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
                         </svg>
                         Profile
                       </NavLink>
@@ -441,8 +503,18 @@ const Navbar = () => {
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-all"
                       >
-                        <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <svg
+                          className="w-5 h-5 text-red-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
                         </svg>
                         Logout
                       </button>
@@ -453,8 +525,18 @@ const Navbar = () => {
                         to="/login"
                         className="flex items-center gap-3 px-4 py-3 text-[#475569] text-sm font-medium rounded-xl hover:bg-[#F8FAFC] hover:text-[#1E3A8A] transition-all"
                       >
-                        <svg className="w-5 h-5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        <svg
+                          className="w-5 h-5 text-[#94A3B8]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                          />
                         </svg>
                         Sign In
                       </Link>
@@ -462,8 +544,18 @@ const Navbar = () => {
                         to="/register"
                         className="flex items-center gap-3 px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
                       >
-                        <svg className="w-5 h-5 text-[#93C5FD]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        <svg
+                          className="w-5 h-5 text-[#93C5FD]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                          />
                         </svg>
                         Get Started
                       </Link>

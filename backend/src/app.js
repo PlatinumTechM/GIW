@@ -15,7 +15,12 @@ app.use(cookieParser());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 const corsOptions = {
-  origin: [process.env.CLIENT_URL || "http://localhost:5173", "http://localhost:3000"],
+  origin: [
+    process.env.CLIENT_URL || "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:8081",
+    "http://192.168.1.75:8081",
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],

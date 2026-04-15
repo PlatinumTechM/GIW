@@ -1,22 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Diamond,
   Sparkles,
-  Heart,
   Star,
   Gem,
   Crown,
   Filter,
-  ChevronDown,
   X,
-  SlidersHorizontal,
   RefreshCw,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
 import Input from "../../../components/ui/Input";
+import JewelryFilters from "./JewelryFilters";
 
 const LabGrownJewelry = () => {
   const navigate = useNavigate();
@@ -49,6 +48,11 @@ const LabGrownJewelry = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [selectedCaratRange, setSelectedCaratRange] = useState(null);
   const [selectedThemes, setSelectedThemes] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [tempCategory, setTempCategory] = useState("all");
+  const [tempPriceRange, setTempPriceRange] = useState([0, 50000]);
+  const [tempMetals, setTempMetals] = useState([]);
 
   const itemsPerPage = 9;
 
@@ -246,7 +250,7 @@ const LabGrownJewelry = () => {
   };
 
   const toggleMetal = (metalId) => {
-    setSelectedMetals((prev) =>
+    setTempMetals((prev) =>
       prev.includes(metalId)
         ? prev.filter((id) => id !== metalId)
         : [...prev, metalId]
@@ -265,6 +269,9 @@ const LabGrownJewelry = () => {
     setActiveCategory("all");
     setPriceRange([0, 50000]);
     setSelectedMetals([]);
+    setTempCategory("all");
+    setTempPriceRange([0, 50000]);
+    setTempMetals([]);
     setSortBy("featured");
     setActiveTab("single");
     setShowWithMedia(false);
@@ -277,6 +284,13 @@ const LabGrownJewelry = () => {
     setSelectedPriceRange(null);
     setSelectedCaratRange(null);
     setSelectedThemes([]);
+    setSearchQuery("");
+  };
+
+  const applyFilters = () => {
+    setActiveCategory(tempCategory);
+    setPriceRange(tempPriceRange);
+    setSelectedMetals(tempMetals);
   };
 
   const imageStyleFiltersCount =
@@ -304,8 +318,12 @@ const LabGrownJewelry = () => {
       item.price >= priceRange[0] && item.price <= priceRange[1];
     const metalMatch =
       selectedMetals.length === 0 || selectedMetals.includes(item.metal);
+    const searchMatch =
+      searchQuery === "" ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return categoryMatch && priceMatch && metalMatch;
+    return categoryMatch && priceMatch && metalMatch && searchMatch;
   });
 
   filteredItems = [...filteredItems].sort((a, b) => {
@@ -388,13 +406,13 @@ const LabGrownJewelry = () => {
                 {filteredItems.length} products • GIA Certified • Premium Quality
               </motion.p>
             </div>
-              <Link
-                to="/jewelry"
-                className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
-              >
-                <Diamond className="h-4 w-4" />
-                <span className="text-xs sm:text-sm">View Jewelry</span>
-              </Link>
+            <Link
+              to="/jewelry"
+              className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+            >
+              <Diamond className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">View Jewelry</span>
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -478,6 +496,15 @@ const LabGrownJewelry = () => {
                     </span>
                   )}
 
+                  {searchQuery && (
+                    <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                      Search: {searchQuery}
+                      <button onClick={() => setSearchQuery("")}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+
                   <button
                     onClick={clearAllFilters}
                     className="ml-1 flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
@@ -493,10 +520,12 @@ const LabGrownJewelry = () => {
               <Input
                 type="text"
                 placeholder="Search lab-grown jewelry..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 icon={<Search className="h-4 w-4 text-[#64748B]" />}
                 className="w-48 sm:w-64 bg-white rounded-lg"
               />
-              
+
               <button
                 onClick={() => setMobileFiltersOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
@@ -504,8 +533,6 @@ const LabGrownJewelry = () => {
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="hidden sm:inline">Filters</span>
               </button>
-              
-
             </div>
           </div>
         </div>
@@ -514,159 +541,24 @@ const LabGrownJewelry = () => {
       <section className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex gap-8">
-            <aside className="hidden w-64 flex-shrink-0 lg:block">
-              <div className="sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-                  <button
-                    onClick={() => toggleSection("category")}
-                    className="flex w-full items-center justify-between text-left"
-                  >
-                    <h3 className="font-semibold text-[#0F172A]">Categories</h3>
-                    <ChevronDown
-                      className={`h-4 w-4 text-[#64748B] transition-transform ${
-                        expandedSections.category ? "" : "-rotate-90"
-                      }`}
-                    />
-                  </button>
-
-                  {expandedSections.category && (
-                    <div className="mt-4 space-y-2">
-                      {categories.map((category) => (
-                        <button
-                          key={category.id}
-                          onClick={() => setActiveCategory(category.id)}
-                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${
-                            activeCategory === category.id
-                              ? "bg-[#DBEAFE] text-[#1E3A8A]"
-                              : "text-[#475569] hover:bg-[#F1F5F9]"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <category.icon className="h-4 w-4" />
-                            {category.label}
-                          </span>
-                          <span className="text-xs text-[#64748B]">
-                            {category.count}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-                  <button
-                    onClick={() => toggleSection("price")}
-                    className="flex w-full items-center justify-between text-left"
-                  >
-                    <h3 className="font-semibold text-[#0F172A]">Price Range</h3>
-                    <ChevronDown
-                      className={`h-4 w-4 text-[#64748B] transition-transform ${
-                        expandedSections.price ? "" : "-rotate-90"
-                      }`}
-                    />
-                  </button>
-
-                  {expandedSections.price && (
-                    <div className="mt-4 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <Input
-                            type="number"
-                            value={priceRange[0]}
-                            onChange={(e) =>
-                              setPriceRange([Number(e.target.value), priceRange[1]])
-                            }
-                            icon={<span className="text-[#64748B]">$</span>}
-                            className="rounded-lg py-2.5"
-                            placeholder="Min"
-                          />
-                        </div>
-                        <span className="text-[#64748B]">-</span>
-                        <div className="flex-1">
-                          <Input
-                            type="number"
-                            value={priceRange[1]}
-                            onChange={(e) =>
-                              setPriceRange([priceRange[0], Number(e.target.value)])
-                            }
-                            icon={<span className="text-[#64748B]">$</span>}
-                            className="rounded-lg py-2.5"
-                            placeholder="Max"
-                          />
-                        </div>
-                      </div>
-
-                      <input
-                        type="range"
-                        min="0"
-                        max="50000"
-                        step="1000"
-                        value={priceRange[1]}
-                        onChange={(e) =>
-                          setPriceRange([priceRange[0], Number(e.target.value)])
-                        }
-                        className="w-full accent-[#1E3A8A]"
-                      />
-
-                      <div className="flex justify-between text-xs text-[#64748B]">
-                        <span>${priceRange[0].toLocaleString()}</span>
-                        <span>${priceRange[1].toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-                  <button
-                    onClick={() => toggleSection("metal")}
-                    className="flex w-full items-center justify-between text-left"
-                  >
-                    <h3 className="font-semibold text-[#0F172A]">Metal Type</h3>
-                    <ChevronDown
-                      className={`h-4 w-4 text-[#64748B] transition-transform ${
-                        expandedSections.metal ? "" : "-rotate-90"
-                      }`}
-                    />
-                  </button>
-
-                  {expandedSections.metal && (
-                    <div className="mt-4 space-y-2">
-                      {metalTypes.map((metal) => (
-                        <label
-                          key={metal.id}
-                          className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-[#F1F5F9]"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedMetals.includes(metal.id)}
-                            onChange={() => toggleMetal(metal.id)}
-                            className="h-4 w-4 rounded border-[#E2E8F0] text-[#1E3A8A] focus:ring-[#1E3A8A]"
-                          />
-                          <span
-                            className="h-4 w-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: metal.color }}
-                          />
-                          <span className="text-sm text-[#475569]">
-                            {metal.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-3 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
-                  >
-                    <X className="h-4 w-4" />
-                    Clear All Filters
-                  </button>
-                )}
-              </div>
-            </aside>
+            <JewelryFilters
+              tempCategory={tempCategory}
+              setTempCategory={setTempCategory}
+              tempPriceRange={tempPriceRange}
+              setTempPriceRange={setTempPriceRange}
+              tempMetals={tempMetals}
+              toggleMetal={toggleMetal}
+              expandedSections={expandedSections}
+              toggleSection={toggleSection}
+              applyFilters={applyFilters}
+              clearAllFilters={clearAllFilters}
+              mobileFiltersOpen={mobileFiltersOpen}
+              setMobileFiltersOpen={setMobileFiltersOpen}
+              categories={categories}
+              metalTypes={metalTypes}
+              filteredItemsCount={filteredItems.length}
+              isLabGrown={true}
+            />
 
             <div className="flex-1">
               <JewelryGrid
@@ -708,168 +600,6 @@ const LabGrownJewelry = () => {
         </div>
       </section>
 
-      <AnimatePresence>
-        {mobileFiltersOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMobileFiltersOpen(false)}
-              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
-            />
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 z-50 flex h-full w-80 flex-col bg-white lg:hidden"
-            >
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] p-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 overflow-hidden rounded-lg">
-                    <img
-                      src={
-                        filteredItems[0]?.image ||
-                        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100&h=100&fit=crop"
-                      }
-                      alt="Product"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-semibold text-[#0F172A]">
-                      Filters
-                    </h2>
-                    <p className="text-xs text-[#64748B]">
-                      {filteredItems.length} items
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setMobileFiltersOpen(false)}
-                  className="rounded-full p-2 hover:bg-[#F1F5F9]"
-                >
-                  <X className="h-5 w-5 text-[#64748B]" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
-                    Categories
-                  </h3>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => setActiveCategory(category.id)}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${
-                          activeCategory === category.id
-                            ? "bg-[#DBEAFE] text-[#1E3A8A]"
-                            : "text-[#475569] hover:bg-[#F1F5F9]"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <category.icon className="h-4 w-4" />
-                          {category.label}
-                        </span>
-                        <span className="text-xs text-[#64748B]">
-                          {category.count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
-                    Price Range
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <Input
-                          type="number"
-                          value={priceRange[0]}
-                          onChange={(e) =>
-                            setPriceRange([Number(e.target.value), priceRange[1]])
-                          }
-                          icon={<span className="text-[#64748B]">$</span>}
-                          className="focus:border-[#1E3A8A] focus:outline-none rounded-lg py-2.5"
-                          placeholder="Min"
-                        />
-                      </div>
-                      <span className="text-[#64748B]">-</span>
-                      <div className="flex-1">
-                        <Input
-                          type="number"
-                          value={priceRange[1]}
-                          onChange={(e) =>
-                            setPriceRange([priceRange[0], Number(e.target.value)])
-                          }
-                          icon={<span className="text-[#64748B]">$</span>}
-                          className="focus:border-[#1E3A8A] focus:outline-none rounded-lg py-2.5"
-                          placeholder="Max"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
-                    Metal Type
-                  </h3>
-                  <div className="space-y-2">
-                    {metalTypes.map((metal) => (
-                      <label
-                        key={metal.id}
-                        className="flex cursor-pointer items-center gap-3"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedMetals.includes(metal.id)}
-                          onChange={() => toggleMetal(metal.id)}
-                          className="h-4 w-4 rounded border-[#E2E8F0] text-[#1E3A8A]"
-                        />
-                        <span
-                          className="h-4 w-4 rounded-full border border-gray-200"
-                          style={{ backgroundColor: metal.color }}
-                        />
-                        <span className="text-sm text-[#475569]">
-                          {metal.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-[#E2E8F0] p-4">
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      clearAllFilters();
-                      setMobileFiltersOpen(false);
-                    }}
-                    className="flex-1 rounded-lg border border-[#E2E8F0] py-3 text-sm font-medium text-[#475569]"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={() => setMobileFiltersOpen(false)}
-                    className="flex-1 rounded-lg bg-[#1E3A8A] py-3 text-sm font-medium text-white"
-                  >
-                    Show {filteredItems.length} Results
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
