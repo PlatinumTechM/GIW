@@ -18,7 +18,8 @@ import Jewelry from "@/modules/user/jewelry/Jewelry";
 import LabGrownJewelry from "@/modules/user/jewelry/LabGrownJewelry";
 import DiamondDetail from "@/modules/user/Diamond/DiamondDetail";
 import JewelryDetail from "@/modules/user/jewelry/JewelryDetail";
-
+import AddStock from "@/modules/stock/AddStock";
+import AddStockManual from "@/modules/stock/AddStockManual";
 
 export const router = createBrowserRouter([
   {
@@ -88,6 +89,22 @@ export const router = createBrowserRouter([
       {
         path: "/jewelry/:type/:id",
         element: <JewelryDetail />,
+      },
+      {
+        path: "/add-stock",
+        element: (
+          <ProtectedRoute>
+            <AddStock />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/add-stock-manually",
+        element: (
+          <ProtectedRoute>
+            <AddStockManual />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/admin",
