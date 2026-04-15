@@ -4,7 +4,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { authAPI } from "@/services/api";
 import notify from "@/utils/notifications.jsx";
 import { formatFieldValue } from "@/utils/formatters.js";
-import { Diamond, Gem, Sparkles, Heart, User, Building2, Phone, MapPin, FileText, ChevronRight, Award, Shield, Edit2, Save, X, CheckCircle } from "lucide-react";
+import {
+  Diamond,
+  Gem,
+  Sparkles,
+  Heart,
+  User,
+  Building2,
+  Phone,
+  MapPin,
+  FileText,
+  ChevronRight,
+  Award,
+  Shield,
+  Edit2,
+  Save,
+  X,
+  CheckCircle,
+} from "lucide-react";
 
 const Profile = () => {
   const { user, isAuthenticated, loading: authLoading, setUser } = useAuth();
@@ -82,18 +99,26 @@ const Profile = () => {
         // Only store role in localStorage, not full user object
         localStorage.setItem("role", response.user.role || "user");
         setIsEditing(false);
-        notify.success("Profile Updated", "Your changes have been saved successfully");
+        notify.success(
+          "Profile Updated",
+          "Your changes have been saved successfully",
+        );
         setMessage({ type: "success", text: "Profile updated successfully!" });
       } else {
         notify.error("Save Failed", "Unable to save changes. Please try again");
-        setMessage({ type: "error", text: response.error || "Failed to update profile" });
+        setMessage({
+          type: "error",
+          text: response.error || "Failed to update profile",
+        });
       }
     } catch (error) {
       console.error("Update profile error:", error);
       notify.error("Save Failed", "Unable to save changes. Please try again");
       setMessage({
         type: "error",
-        text: error.response?.data?.error || "Failed to update profile. Please try again.",
+        text:
+          error.response?.data?.error ||
+          "Failed to update profile. Please try again.",
       });
     } finally {
       setSaveLoading(false);
@@ -114,7 +139,7 @@ const Profile = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FAFBFC] via-[#F8FAFC] to-[#E8D5B7]/20">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center bg-white rounded-3xl shadow-2xl shadow-[#0F172A]/10 border border-[#E2E8F0] p-12 max-w-md"
@@ -122,8 +147,12 @@ const Profile = () => {
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center shadow-lg shadow-[#1E3A8A]/20">
             <Diamond className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-[#0F172A] mb-2">Welcome to GIW</h2>
-          <p className="text-[#64748B] mb-6">Please sign in to access your exclusive profile</p>
+          <h2 className="text-2xl font-bold text-[#0F172A] mb-2">
+            Welcome to GIW
+          </h2>
+          <p className="text-[#64748B] mb-6">
+            Please sign in to access your exclusive profile
+          </p>
           <a
             href="/login"
             className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white font-medium rounded-xl hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all duration-300"
@@ -140,18 +169,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAFBFC] via-[#F8FAFC] to-[#E8D5B7]/10 pt-20 sm:pt-24 pb-8 sm:pb-12">
       <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-8">
-        {/* Elegant Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8 text-center"
-        >
-          
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0F172A] mb-2">My Profile</h1>
-          <p className="text-sm sm:text-base text-[#64748B]">Your exclusive account information</p>
-        </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Luxury Profile Card */}
           <motion.div
@@ -168,19 +185,22 @@ const Profile = () => {
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-1 shadow-lg shadow-[#FFD700]/30">
                     <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
                       <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] bg-clip-text text-transparent">
-                        {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toLowerCase()}
+                        {user?.name?.charAt(0)?.toUpperCase() ||
+                          user?.email?.charAt(0)?.toLowerCase()}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="pt-14 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 text-center">
                 <h2 className="text-lg sm:text-xl font-bold text-[#0F172A] mb-1 truncate px-2">
                   {user?.name || "Valued Customer"}
                 </h2>
-                <p className="text-[#64748B] text-xs sm:text-sm mb-4 truncate px-2">{user?.email}</p>
-                
+                <p className="text-[#64748B] text-xs sm:text-sm mb-4 truncate px-2">
+                  {user?.email}
+                </p>
+
                 {/* Role Badge */}
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FFD700]/10 to-[#FFA500]/10 border border-[#FFD700]/30 rounded-full">
                   <Award className="w-4 h-4 text-[#B8860B]" />
@@ -194,12 +214,16 @@ const Profile = () => {
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div className="text-center p-2 sm:p-3 bg-gradient-to-br from-[#F8FAFC] to-white rounded-xl">
                       <Gem className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-[#1E3A8A]" />
-                      <span className="text-base sm:text-lg font-bold text-[#0F172A]">0</span>
+                      <span className="text-base sm:text-lg font-bold text-[#0F172A]">
+                        0
+                      </span>
                       <p className="text-xs text-[#64748B]">Orders</p>
                     </div>
                     <div className="text-center p-2 sm:p-3 bg-gradient-to-br from-[#F8FAFC] to-white rounded-xl">
                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 text-rose-500" />
-                      <span className="text-base sm:text-lg font-bold text-[#0F172A]">0</span>
+                      <span className="text-base sm:text-lg font-bold text-[#0F172A]">
+                        0
+                      </span>
                       <p className="text-xs text-[#64748B]">Wishlist</p>
                     </div>
                   </div>
@@ -211,13 +235,17 @@ const Profile = () => {
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center flex-shrink-0">
                       <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1E3A8A]" />
                     </div>
-                    <span className="text-[#475569] truncate">{user?.company || "No company"}</span>
+                    <span className="text-[#475569] truncate">
+                      {user?.company || "No company"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm p-2 sm:p-3 bg-[#F8FAFC] rounded-xl">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center flex-shrink-0">
                       <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1E3A8A]" />
                     </div>
-                    <span className="text-[#475569]">{user?.phone || "No phone"}</span>
+                    <span className="text-[#475569]">
+                      {user?.phone || "No phone"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -240,8 +268,12 @@ const Profile = () => {
                       <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">Profile Information</h3>
-                      <p className="text-xs text-[#64748B] hidden sm:block">Your personal details are secure with us</p>
+                      <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
+                        Profile Information
+                      </h3>
+                      <p className="text-xs text-[#64748B] hidden sm:block">
+                        Your personal details are secure with us
+                      </p>
                     </div>
                   </div>
                   {!isEditing ? (
@@ -339,8 +371,18 @@ const Profile = () => {
                       </label>
                       <div className="relative">
                         <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                          <svg
+                            className="w-4 h-4 sm:w-5 sm:h-5 text-[#94A3B8]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                            />
                           </svg>
                         </div>
                         <input
@@ -353,8 +395,12 @@ const Profile = () => {
                       </div>
                       <p className="text-xs text-[#94A3B8] mt-1.5 sm:mt-2 flex items-center gap-1">
                         <Shield className="w-3 h-3" />
-                        <span className="hidden sm:inline">Email address cannot be changed</span>
-                        <span className="sm:hidden">Email cannot be changed</span>
+                        <span className="hidden sm:inline">
+                          Email address cannot be changed
+                        </span>
+                        <span className="sm:hidden">
+                          Email cannot be changed
+                        </span>
                       </p>
                     </div>
 
