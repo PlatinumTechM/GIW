@@ -59,6 +59,17 @@ export const authAPI = {
       },
     });
   },
+
+  updateProfile: async (profileData, token) => {
+    return apiRequest("/api/v1/auth/profile", {
+      method: "PUT",
+      headers: {
+        ...getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+  },
 };
 
 // Generic API methods for other modules
