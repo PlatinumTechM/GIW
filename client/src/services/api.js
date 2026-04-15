@@ -22,7 +22,7 @@ api.interceptors.response.use(
 
     // Only handle 401 as session expiration if NOT on login or verify-admin requests
     if (status === 401 && !isLoginRequest && !isVerifyAdminRequest) {
-      notify.warning("Please try again..");
+      notify.warning("Please try again.. Session Expired.");
     }
     return Promise.reject(error);
   },
