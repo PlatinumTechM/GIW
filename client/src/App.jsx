@@ -6,14 +6,16 @@ const App = () => {
   const location = useLocation();
 
   // Check if we're on auth pages (Login, Register, ForgotPassword) to hide footer
-  const isAuthPage = ["/login", "/register", "/forgot-password"].includes(location.pathname);
+  const isAuthPage = ["/login", "/register", "/forgot-password"].includes(
+    location.pathname,
+  );
   // Check if we're on admin pages to hide navbar and footer
   const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
     <>
       {!isAdminPage && <Navbar />}
-      <main className={isAuthPage || isAdminPage ? "" : "pt-20"}>
+      <main>
         <Outlet />
       </main>
       {!isAuthPage && !isAdminPage && <Footer />}
