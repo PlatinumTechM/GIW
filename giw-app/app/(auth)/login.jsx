@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -15,80 +18,216 @@ import { authAPI } from "../../src/api/api.js";
 import Toast from "react-native-toast-message";
 import { secureStorage } from "../../src/utils/secureStorage.js";
 
+/* ─── Animated floating-label input ─────────────────────────────────────── */
+const FloatingInput = ({
+  label,
+  value,
+  onChangeText,
+  secureTextEntry,
+  rightSlot,
+  ...rest
+}) => {
+  const floatAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef(null);
+
+  const animate = (toValue) =>
+    Animated.spring(floatAnim, {
+      toValue,
+      useNativeDriver: false,
+      speed: 30,
+      bounciness: 0,
+    }).start();
+
+  useEffect(() => {
+    if (value || focused) animate(1);
+    else animate(0);
+  }, [value, focused]);
+
+  const labelTop = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [16, -9],
+  });
+  const labelSize = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [16, 12],
+  });
+  const labelColor = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["#94A3B8", focused ? "#2563EB" : "#64748B"],
+  });
+  const labelBgColor = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["transparent", "#FFFFFF"],
+  });
+
+  const handlePress = () => {
+    // Explicitly focus the input when the container is pressed
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={[styles.floatWrapper, focused && styles.floatWrapperFocused]}
+    >
+      <Animated.Text
+        style={[
+          styles.floatLabel,
+          {
+            top: labelTop,
+            fontSize: labelSize,
+            color: labelColor,
+            backgroundColor: labelBgColor,
+          },
+        ]}
+        pointerEvents="none"
+      >
+        {label}
+      </Animated.Text>
+
+      <View style={styles.floatRow} pointerEvents="box-none">
+        <TextInput
+          ref={inputRef}
+          style={styles.floatInput}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize="none"
+          autoCorrect={false}
+          {...rest}
+        />
+        {rightSlot}
+      </View>
+    </Pressable>
+  );
+};
+
+/* ─── Password visibility toggle pill ───────────────────────────────────── */
+/*  Lives OUTSIDE the TextInput — no layout jump, no iOS quirks            */
+const VisibilityPill = ({ visible, onToggle }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.88,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 40,
+      }),
+    ]).start();
+    onToggle();
+  };
+
+  return (
+    <Pressable onPress={handlePress} hitSlop={10} style={styles.pillWrapper}>
+      <Animated.View
+        style={[styles.pill, { transform: [{ scale: scaleAnim }] }]}
+      >
+        <MaterialIcons
+          name={visible ? "visibility" : "visibility-off"}
+          size={14}
+          color={visible ? "#2563EB" : "#94A3B8"}
+        />
+        <Text style={[styles.pillText, visible && styles.pillTextActive]}>
+          {visible ? "Hide" : "Show"}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
+/* ─── Strength dot row ──────────────────────────────────────────────────── */
+const strengthLevel = (pw) => {
+  if (!pw) return 0;
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return s;
+};
+
+/* ─── Main Screen ─────────────────────────────────────────────────────────── */
 const LoginScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [formData, setFormData] = useState({
-    identifier: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(32)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 540,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        speed: 14,
+        bounciness: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const handleChange = (field, value) => {
-    if (error) {
-      setError("");
-    }
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    if (error) setError("");
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  /* ── identical login logic ── */
   const login = async (identifier, password) => {
     try {
       const result = await authAPI.login(identifier, password);
-
-      return {
-        success: true,
-        data: result.user,
-        token: result.token,
-      };
+      return { success: true, data: result.user, token: result.token };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || "Login failed",
-      };
+      return { success: false, error: error.message || "Login failed" };
     }
   };
 
   const handleSubmit = async () => {
+    Keyboard.dismiss();
     if (!formData.identifier || !formData.password) {
       setError("Please enter your email/mobile and password.");
       return;
     }
-
     setError("");
     setLoading(true);
-
     try {
       const result = await login(formData.identifier, formData.password);
-
       if (result.success) {
-        // Store authentication data securely
         console.log("Storing user data:", result.data);
-
-        // Store each piece of data separately to verify
         const tokenStored = await secureStorage.setToken(result.token);
         console.log(
           "Token storage result:",
           tokenStored ? "SUCCESS" : "FAILED",
         );
-
         const userDataStored = await secureStorage.setUserData(result.data);
         console.log(
           "User data storage result:",
           userDataStored ? "SUCCESS" : "FAILED",
         );
-
         const roleStored = await secureStorage.setRole(
           result.data?.role || "user",
         );
         console.log("Role storage result:", roleStored ? "SUCCESS" : "FAILED");
 
-        // Verify storage immediately after storing
         console.log("Verifying storage immediately after storing...");
         const verifyToken = await secureStorage.getToken();
         const verifyUserData = await secureStorage.getUserData();
@@ -101,7 +240,6 @@ const LoginScreen = () => {
           verifyUserData ? "EXISTS" : "MISSING",
         );
 
-        // Double-check with delay to ensure async operations complete
         setTimeout(async () => {
           console.log("Delayed verification after 500ms...");
           const delayedToken = await secureStorage.getToken();
@@ -119,11 +257,9 @@ const LoginScreen = () => {
           text2: "Welcome back!",
         });
 
-        // Navigate based on user role
         if (result.data?.role === "user") {
           router.push("/(user)/home");
         } else {
-          // TODO: Navigate to regular user dashboard
           console.log("Regular user login - implement dashboard navigation");
         }
       } else {
@@ -149,257 +285,341 @@ const LoginScreen = () => {
   return (
     <ScrollView
       contentContainerStyle={[
-        styles.scrollContainer,
-        { paddingBottom: insets.bottom + 24 },
+        styles.scroll,
+        { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 },
       ]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topSection}>
-        <Text style={styles.brand}>GIW</Text>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>
-          Sign in to your account to continue.
-        </Text>
-      </View>
+      {/* ── Decorative blobs ── */}
+      <View style={styles.blobTopRight} />
+      <View style={styles.blobBottomLeft} />
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      <Animated.View
+        style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+      >
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <View style={styles.logoMark}>
+            <Text style={styles.logoText}>G</Text>
+          </View>
+          <Text style={styles.brand}>GIW</Text>
+          <Text style={styles.title}>Welcome Back.</Text>
+          <Text style={styles.subtitle}>Sign in to continue your journey.</Text>
+        </View>
 
-      <View style={styles.formCard}>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Email or Mobile Number</Text>
-          <TextInput
-            style={styles.input}
+        {/* ── Error banner ── */}
+        {error ? (
+          <View style={styles.errorBanner}>
+            <MaterialIcons
+              name="error-outline"
+              size={16}
+              color="#DC2626"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+
+        {/* ── Form card ── */}
+        <View style={styles.card}>
+          <FloatingInput
+            label="Email or Mobile Number"
             value={formData.identifier}
-            onChangeText={(value) => handleChange("identifier", value)}
-            placeholder="dealer@gmail.com or 9876543210"
-            placeholderTextColor="#9CA3AF"
+            onChangeText={(v) => handleChange("identifier", v)}
             keyboardType="default"
             textContentType="username"
-            autoCapitalize="none"
+            returnKeyType="next"
           />
-        </View>
 
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
+          <View style={{ marginTop: 20 }}>
+            <FloatingInput
+              label="Password"
               value={formData.password}
-              onChangeText={(value) => handleChange("password", value)}
-              placeholder="Enter your password"
-              placeholderTextColor="#9CA3AF"
+              onChangeText={(v) => handleChange("password", v)}
               secureTextEntry={!showPassword}
-              textContentType="password"
-              autoCapitalize="none"
+              textContentType={Platform.OS === "ios" ? "password" : "password"}
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+              rightSlot={
+                <VisibilityPill
+                  visible={showPassword}
+                  onToggle={() => setShowPassword((p) => !p)}
+                />
+              }
             />
+          </View>
+
+          {/* ── Remember / Forgot ── */}
+          <View style={styles.rowBetween}>
             <Pressable
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword((prev) => !prev)}
-              hitSlop={8}
+              style={styles.rememberRow}
+              onPress={() => setRememberMe((p) => !p)}
             >
-              <MaterialIcons
-                name={showPassword ? "visibility" : "visibility-off"}
-                size={20}
-                color="#6B7280"
-              />
+              <View
+                style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+              >
+                {rememberMe && (
+                  <MaterialIcons name="check" size={12} color="#fff" />
+                )}
+              </View>
+              <Text style={styles.rememberText}>Remember me</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </Pressable>
           </View>
-        </View>
 
-        <View style={styles.rowBetween}>
+          {/* ── Sign In button ── */}
           <Pressable
-            style={styles.rememberMe}
-            onPress={() => setRememberMe((prev) => !prev)}
+            style={({ pressed }) => [
+              styles.btn,
+              pressed && styles.btnPressed,
+              loading && styles.btnDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={loading}
           >
-            <View
-              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
-            >
-              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-            <Text style={styles.rememberText}>Remember me</Text>
-          </Pressable>
-
-          <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-            <Text style={styles.linkText}>Forgot password?</Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.btnText}>Sign In</Text>
+                <MaterialIcons
+                  name="arrow-forward"
+                  size={18}
+                  color="#fff"
+                  style={{ marginLeft: 6 }}
+                />
+              </>
+            )}
           </Pressable>
         </View>
 
-        <Pressable
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
-          )}
-        </Pressable>
-      </View>
-
-      <View style={styles.bottomRow}>
-        <Text style={styles.bottomText}>New to GIW?</Text>
-        <Pressable onPress={() => router.push("/(auth)/register")}>
-          <Text style={[styles.bottomText, styles.linkText]}>
-            {" "}
-            Create account
-          </Text>
-        </Pressable>
-      </View>
+        {/* ── Register link ── */}
+        <View style={styles.bottomRow}>
+          <Text style={styles.bottomText}>New to GIW? </Text>
+          <Pressable onPress={() => router.push("/(auth)/register")}>
+            <Text style={styles.bottomLink}>Create account</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  scrollContainer: {
+  scroll: {
     flexGrow: 1,
-    padding: 24,
+    backgroundColor: "#F8FAFF",
+    paddingHorizontal: 24,
+  },
+
+  /* decorative */
+  blobTopRight: {
+    position: "absolute",
+    top: -60,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: "#DBEAFE",
+    opacity: 0.55,
+  },
+  blobBottomLeft: {
+    position: "absolute",
+    bottom: 80,
+    left: -80,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "#E0E7FF",
+    opacity: 0.45,
+  },
+
+  /* header */
+  header: { marginBottom: 32 },
+  logoMark: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: "#1D4ED8",
     justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    shadowColor: "#1D4ED8",
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  topSection: {
-    marginBottom: 28,
-  },
+  logoText: { color: "#fff", fontWeight: "800", fontSize: 20 },
   brand: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#475569",
-  },
-  errorText: {
-    color: "#B91C1C",
-    marginBottom: 16,
-  },
-  formCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-  },
-  field: {
-    marginBottom: 18,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: "#0F172A",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 2.5,
     marginBottom: 10,
   },
-  input: {
-    height: 50,
+  title: {
+    fontSize: 40,
+    fontWeight: "800",
+    color: "#0F172A",
+    lineHeight: 46,
+    marginBottom: 10,
+  },
+  subtitle: { fontSize: 15, color: "#64748B", lineHeight: 22 },
+
+  /* error */
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    borderColor: "#FECACA",
+  },
+  errorText: { color: "#DC2626", fontSize: 13, flex: 1 },
+
+  /* card */
+  card: {
     backgroundColor: "#FFFFFF",
+    borderRadius: 28,
+    padding: 24,
+    shadowColor: "#1E3A8A",
+    shadowOpacity: 0.09,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 5,
+    marginBottom: 28,
+  },
+
+  /* floating label field */
+  floatWrapper: {
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
+    backgroundColor: "#FAFBFF",
+    minHeight: 60,
+  },
+  floatWrapperFocused: {
+    borderColor: "#2563EB",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#2563EB",
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  floatLabel: {
+    position: "absolute",
+    left: 12,
+    paddingHorizontal: 4,
+    zIndex: 10,
+  },
+  floatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  floatInput: {
+    flex: 1,
     fontSize: 16,
     color: "#0F172A",
+    paddingTop: 2,
+    paddingBottom: 2,
   },
-  passwordLabelRow: {
+
+  /* visibility pill — sits right of the input, never inside it */
+  pillWrapper: { marginLeft: 8 },
+  pill: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 4,
   },
-  toggleText: {
-    color: "#2563EB",
-    fontSize: 14,
+  pillText: { fontSize: 12, fontWeight: "600", color: "#94A3B8" },
+  pillTextActive: { color: "#2563EB" },
+
+  /* strength bar */
+  strengthRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+    gap: 5,
+  },
+  strengthDot: {
+    flex: 1,
+    height: 3,
+    borderRadius: 2,
+  },
+  strengthLabel: {
+    fontSize: 11,
     fontWeight: "600",
+    marginLeft: 6,
+    minWidth: 38,
+    textAlign: "right",
   },
+
+  /* row */
   rowBetween: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 20,
     marginBottom: 24,
   },
-  rememberMe: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  rememberRow: { flexDirection: "row", alignItems: "center" },
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#94A3B8",
-    marginRight: 10,
-  },
-  checkboxChecked: {
-    backgroundColor: "#1E40AF",
-    borderColor: "#1E40AF",
-  },
-  checkmark: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "center",
-    textAlignVertical: "center",
-  },
-  rememberText: {
-    color: "#475569",
-    fontSize: 14,
-  },
-  button: {
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "#2563EB",
+    borderRadius: 7,
+    borderWidth: 1.5,
+    borderColor: "#CBD5E1",
+    marginRight: 8,
     justifyContent: "center",
     alignItems: "center",
   },
-  buttonDisabled: {
-    opacity: 0.7,
+  checkboxChecked: { backgroundColor: "#1D4ED8", borderColor: "#1D4ED8" },
+  rememberText: { color: "#475569", fontSize: 14 },
+  forgotText: { color: "#1D4ED8", fontSize: 14, fontWeight: "700" },
+
+  /* button */
+  btn: {
+    height: 54,
+    borderRadius: 17,
+    backgroundColor: "#1D4ED8",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#1D4ED8",
+    shadowOpacity: 0.32,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  buttonText: {
+  btnPressed: { opacity: 0.88, transform: [{ scale: 0.987 }] },
+  btnDisabled: { opacity: 0.65, shadowOpacity: 0 },
+  btnText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+    letterSpacing: 0.3,
   },
-  bottomRow: {
-    marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  bottomText: {
-    color: "#475569",
-    fontSize: 14,
-  },
-  linkText: {
-    color: "#1E40AF",
-    fontWeight: "700",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    position: "relative",
-  },
-  passwordInput: {
-    flex: 1,
-    paddingRight: 40,
-  },
-  eyeIcon: {
-    position: "absolute",
-    right: 12,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1,
-  },
+
+  /* bottom */
+  bottomRow: { flexDirection: "row", justifyContent: "center" },
+  bottomText: { color: "#64748B", fontSize: 14 },
+  bottomLink: { color: "#1D4ED8", fontSize: 14, fontWeight: "700" },
 });
 
 export default LoginScreen;

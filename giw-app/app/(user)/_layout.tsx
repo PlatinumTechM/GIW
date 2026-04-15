@@ -11,7 +11,7 @@ export default function UserLayout() {
           borderTopColor: "#E2E8F0",
           borderTopWidth: 1,
           paddingBottom: 8,
-          height: 80,
+          height: 70,
           elevation: 8,
           shadowColor: "#000",
           shadowOffset: { width: 0, height: 2 },
@@ -46,6 +46,35 @@ export default function UserLayout() {
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <MaterialIcons name="account-circle" size={size} color={color} />
           ),
+        }}
+      />
+      {/* Hide nested routes from tab bar - accessed via navigation */}
+      <Tabs.Screen
+        name="diamond/index"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="diamond/DiamondSearchScreen"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="jewelry/index"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="jewelry/JewelrySearchScreen"
+        options={{
+          href: null,
+          headerShown: false,
         }}
       />
     </Tabs>

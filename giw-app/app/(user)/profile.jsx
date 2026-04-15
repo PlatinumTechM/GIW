@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,14 +10,20 @@ import {
   Text,
   TextInput,
   View,
+  Animated,
+  Switch,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { secureStorage } from "../../src/utils/secureStorage.js";
 import { authAPI } from "../../src/api/api.js";
 import { authDebug } from "../../src/utils/authDebug.js";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // TODO: Replace with React Navigation
 // import { useAuth } from "@/contexts/AuthContext";
@@ -29,11 +35,16 @@ const Profile = () => {
   const insets = useSafeAreaInsets();
 
   const [user, setUser] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [activeTab, setActiveTab] = useState("profile"); // profile, settings
+
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(30))[0];
+  const scaleAnim = useState(new Animated.Value(0.95))[0];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -44,30 +55,52 @@ const Profile = () => {
     gst: "",
   });
 
+  const [settings, setSettings] = useState({
+    notifications: true,
+    biometricLogin: false,
+    language: "English",
+  });
+
   // Load user data from secure storage on component mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setLoading(true);
-
-        // Run comprehensive authentication debugging
         await authDebug.debugAuthState();
 
         const userData = await secureStorage.getUserData();
-        console.log("Raw userdata from storage:", userData);
-        console.log("Userdata type:", typeof userData);
-        console.log("Userdata is null:", userData === null);
 
+        // Here
         if (userData) {
           setUser(userData);
-          console.log("User data loaded successfully:", userData);
+          // Animate in content
+          Animated.parallel([
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+              toValue: 0,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+              toValue: 1,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]).start();
         } else {
-          console.log("No user data found in storage");
-          // If no user data, show error message but don't redirect
+          // User not logged in - show message and redirect
           setMessage({
             type: "error",
             text: "Please login to access your profile",
           });
+          // Redirect to login after short delay to show message
+          setTimeout(() => {
+            router.replace("/(auth)/login");
+          }, 1000);
         }
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -125,33 +158,48 @@ const Profile = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLogout = async () => {
-    try {
-      await secureStorage.clearAll();
-      Toast.show({
-        type: "success",
-        text1: "Logged Out",
-        text2: "You have been successfully logged out",
-      });
-      router.push("/(auth)/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Logout Failed",
-        text2: "Unable to logout. Please try again",
-      });
-    }
-  };
+  const handleLogout = useCallback(async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await secureStorage.clearAll();
+              Toast.show({
+                type: "success",
+                text1: "Logged Out",
+                text2: "You have been successfully logged out",
+              });
+              router.replace("/(auth)/login");
+            } catch (error) {
+              console.error("Logout error:", error);
+              Toast.show({
+                type: "error",
+                text1: "Logout Failed",
+                text2: "Unable to logout. Please try again",
+              });
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
+  }, [router]);
 
   const handleEdit = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsEditing(true);
     setMessage({ type: "", text: "" });
   };
 
   const handleCancel = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsEditing(false);
-    // Reset form data to original user data
     if (user) {
       setFormData({
         name: user.name || "",
@@ -233,11 +281,105 @@ const Profile = () => {
     }
   };
 
+  const getInitials = (name) => {
+    if (!name) return "??";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getRoleColor = (role) => {
+    switch (role?.toLowerCase()) {
+      case "admin":
+        return ["#7C3AED", "#A855F7"];
+      case "dealer":
+        return ["#059669", "#10B981"];
+      default:
+        return ["#1E3A8A", "#3B82F6"];
+    }
+  };
+
+  const renderField = (label, value, icon, key, placeholder, options = {}) => (
+    <View style={styles.fieldContainer} key={key}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <View
+        style={[
+          styles.inputWrapper,
+          isEditing && styles.inputWrapperEditing,
+          options.multiline && styles.inputWrapperMultiline,
+        ]}
+      >
+        <View style={styles.inputIconContainer}>
+          <MaterialIcons
+            name={icon}
+            size={20}
+            color={isEditing ? "#1E3A8A" : "#94A3B8"}
+          />
+        </View>
+        <TextInput
+          style={[
+            styles.modernInput,
+            options.multiline && styles.multilineInput,
+            !isEditing && styles.inputReadonly,
+          ]}
+          value={value}
+          onChangeText={(text) => handleInputChange(key, text)}
+          placeholder={placeholder}
+          placeholderTextColor="#CBD5E1"
+          editable={isEditing && !options.readonly}
+          multiline={options.multiline}
+          numberOfLines={options.numberOfLines}
+          textAlignVertical={options.multiline ? "top" : "center"}
+          keyboardType={options.keyboardType || "default"}
+          autoCapitalize={options.autoCapitalize || "sentences"}
+        />
+        {options.readonly && (
+          <View style={styles.readonlyBadge}>
+            <MaterialIcons name="lock" size={14} color="#94A3B8" />
+          </View>
+        )}
+      </View>
+    </View>
+  );
+
+  const renderSettingItem = (icon, title, subtitle, type, value, onToggle) => (
+    <View style={styles.settingItem} key={title}>
+      <View style={styles.settingIconContainer}>
+        <MaterialIcons name={icon} size={22} color="#1E3A8A" />
+      </View>
+      <View style={styles.settingContent}>
+        <Text style={styles.settingTitle}>{title}</Text>
+        <Text style={styles.settingSubtitle}>{subtitle}</Text>
+      </View>
+      {type === "switch" ? (
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ false: "#E2E8F0", true: "#1E3A8A" }}
+          thumbColor="#FFFFFF"
+        />
+      ) : (
+        <View style={styles.settingValueContainer}>
+          <Text style={styles.settingValue}>{value}</Text>
+          <MaterialIcons name="chevron-right" size={20} color="#94A3B8" />
+        </View>
+      )}
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color="#64748B" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <LinearGradient
+          colors={["#1E3A8A", "#3B82F6"]}
+          style={styles.loadingGradient}
+        >
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </LinearGradient>
       </View>
     );
   }
@@ -252,276 +394,391 @@ const Profile = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>My Profile</Text>
-              <Text style={styles.headerSubtitle}>
-                Your exclusive account information
-              </Text>
-            </View>
-            <Pressable style={styles.logoutButton} onPress={handleLogout}>
-              <MaterialIcons name="logout" size={20} color="#FFFFFF" />
-              <Text style={styles.logoutButtonText}>Logout</Text>
+        {/* Hero Header with Gradient */}
+        <LinearGradient
+          colors={["#1E3A8A", "#3B82F6", "#60A5FA"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroHeader}
+        >
+          <View style={styles.heroContent}>
+            <Pressable
+              style={styles.backButton}
+              onPress={() => router.back()}
+              hitSlop={8}
+            >
+              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+            </Pressable>
+            <Text style={styles.heroTitle}>My Profile</Text>
+            <Pressable
+              style={styles.heroLogoutButton}
+              onPress={handleLogout}
+              hitSlop={8}
+            >
+              <MaterialIcons name="logout" size={22} color="#FFFFFF" />
             </Pressable>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          {/* Profile Header with Avatar */}
-          <View style={styles.profileHeader}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <MaterialIcons name="person" size={40} color="#FFFFFF" />
-              </View>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>
-                {user?.name || "Valued Customer"}
-              </Text>
-              <Text style={styles.profileEmail}>{user?.email}</Text>
-              {/* Role Badge */}
-              <View style={styles.roleBadge}>
-                <MaterialIcons name="shield" size={16} color="#B8860B" />
-                <Text style={styles.roleText}>{user?.role || "Member"}</Text>
-              </View>
+        <Animated.View
+          style={[
+            styles.profileCardContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+            },
+          ]}
+        >
+          <View style={styles.avatarSection}>
+            <LinearGradient
+              colors={getRoleColor(user?.role)}
+              style={styles.avatarGradient}
+            >
+              <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+            </LinearGradient>
+            <View style={styles.avatarBadge}>
+              <MaterialIcons name="verified" size={16} color="#FFFFFF" />
             </View>
           </View>
 
-          {/* Stats */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <MaterialIcons name="diamond" size={24} color="#1E3A8A" />
+          <View style={styles.profileInfoSection}>
+            <Text style={styles.profileName}>
+              {user?.name || "Valued Customer"}
+            </Text>
+            <Text style={styles.profileEmail}>{user?.email}</Text>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: getRoleColor(user?.role)[0] + "20" },
+              ]}
+            >
+              <MaterialIcons
+                name="shield"
+                size={14}
+                color={getRoleColor(user?.role)[0]}
+              />
+              <Text
+                style={[
+                  styles.roleText,
+                  { color: getRoleColor(user?.role)[0] },
+                ]}
+              >
+                {(user?.role || "Member").toUpperCase()}
+              </Text>
+            </View>
+          </View>
+
+          {/* Stats Row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: "#FEF3C7" }]}>
+                <MaterialIcons name="shopping-bag" size={20} color="#F59E0B" />
+              </View>
               <Text style={styles.statNumber}>0</Text>
               <Text style={styles.statLabel}>Orders</Text>
             </View>
-            <View style={styles.statItem}>
-              <MaterialIcons name="favorite" size={24} color="#EF4444" />
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: "#FEE2E2" }]}>
+                <MaterialIcons name="favorite" size={20} color="#EF4444" />
+              </View>
               <Text style={styles.statNumber}>0</Text>
               <Text style={styles.statLabel}>Wishlist</Text>
             </View>
-          </View>
-
-          {/* Contact Info */}
-          <View style={styles.contactInfo}>
-            <View style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <MaterialIcons name="business" size={20} color="#1E3A8A" />
+            <View style={styles.statDivider} />
+            <View style={styles.statBox}>
+              <View style={[styles.statIcon, { backgroundColor: "#DBEAFE" }]}>
+                <MaterialIcons name="diamond" size={20} color="#3B82F6" />
               </View>
-              <Text style={styles.contactLabel}>
-                {user?.company || "No company"}
-              </Text>
-            </View>
-            <View style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <MaterialIcons name="phone" size={20} color="#1E3A8A" />
-              </View>
-              <Text style={styles.contactLabel}>
-                {user?.phone || "No phone"}
-              </Text>
+              <Text style={styles.statNumber}>0</Text>
+              <Text style={styles.statLabel}>Diamonds</Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Edit Form */}
-        <View style={styles.formCard}>
-          <View style={styles.formContent}>
-            {/* Name Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Full Name</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="person" size={20} color="#1E3A8A" />
-                </View>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={formData.name}
-                  onChangeText={(value) => handleInputChange("name", value)}
-                  placeholder="John Smith"
-                  placeholderTextColor="#9CA3AF"
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-
-            {/* Email Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Email Address</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="email" size={20} color="#94A3B8" />
-                </View>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={formData.email}
-                  onChangeText={(value) => handleInputChange("email", value)}
-                  placeholder="john@example.com"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={isEditing}
-                />
-                <View style={styles.fieldNote}>
-                  <MaterialIcons name="shield" size={12} color="#10B981" />
-                  <Text style={styles.fieldNoteText}>
-                    Email address cannot be changed
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Company Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Company Name</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="business" size={20} color="#1E3A8A" />
-                </View>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={formData.company}
-                  onChangeText={(value) => handleInputChange("company", value)}
-                  placeholder="Diamond Traders Ltd"
-                  placeholderTextColor="#9CA3AF"
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-
-            {/* Phone Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Phone Number</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="phone" size={20} color="#1E3A8A" />
-                </View>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={formData.phone}
-                  onChangeText={(value) => handleInputChange("phone", value)}
-                  placeholder="+91 98765 43210"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="phone-pad"
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-
-            {/* Address Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>Business Address</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="location-on" size={20} color="#1E3A8A" />
-                </View>
-                <TextInput
-                  style={[
-                    styles.input,
-                    styles.textArea,
-                    !isEditing && styles.inputDisabled,
-                  ]}
-                  value={formData.address}
-                  onChangeText={(value) => handleInputChange("address", value)}
-                  placeholder="Enter your full business address"
-                  placeholderTextColor="#9CA3AF"
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-
-            {/* GST Field */}
-            <View style={styles.field}>
-              <Text style={styles.fieldLabel}>GST Registration Number</Text>
-              <View style={styles.inputContainer}>
-                <View style={styles.inputIcon}>
-                  <MaterialIcons name="receipt" size={20} color="#B8860B" />
-                </View>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={formData.gst}
-                  onChangeText={(value) => handleInputChange("gst", value)}
-                  placeholder="22AAAAA0000A1Z5"
-                  placeholderTextColor="#9CA3AF"
-                  autoCapitalize="characters"
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            {!isEditing ? (
-              <Pressable onPress={handleEdit} style={styles.editButton}>
-                <MaterialIcons name="edit" size={20} color="#FFFFFF" />
-                <Text style={styles.editButtonText}>Edit Profile</Text>
-              </Pressable>
-            ) : (
-              <View style={styles.buttonRow}>
-                <Pressable
-                  onPress={handleCancel}
-                  disabled={saveLoading}
-                  style={[
-                    styles.cancelButton,
-                    saveLoading && styles.buttonDisabled,
-                  ]}
-                >
-                  <MaterialIcons name="close" size={20} color="#475569" />
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleSave}
-                  disabled={saveLoading}
-                  style={[
-                    styles.saveButton,
-                    saveLoading && styles.buttonDisabled,
-                  ]}
-                >
-                  {saveLoading ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <MaterialIcons name="save" size={20} color="#FFFFFF" />
-                      <Text style={styles.saveButtonText}>Save</Text>
-                    </>
-                  )}
-                </Pressable>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Message Alert */}
-        {message.text && (
-          <View
-            style={[
-              styles.messageContainer,
-              message.type === "success"
-                ? styles.successMessage
-                : styles.errorMessage,
-            ]}
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <Pressable
+            style={[styles.tab, activeTab === "profile" && styles.tabActive]}
+            onPress={() => {
+              setActiveTab("profile");
+            }}
           >
             <MaterialIcons
-              name={message.type === "success" ? "check-circle" : "error"}
-              size={24}
-              color={message.type === "success" ? "#10B981" : "#EF4444"}
+              name="person"
+              size={20}
+              color={activeTab === "profile" ? "#1E3A8A" : "#94A3B8"}
             />
             <Text
               style={[
-                styles.messageText,
-                message.type === "success"
-                  ? styles.successText
-                  : styles.errorText,
+                styles.tabText,
+                activeTab === "profile" && styles.tabTextActive,
               ]}
             >
-              {message.text}
+              Profile
             </Text>
-          </View>
+          </Pressable>
+          {/* <Pressable
+            style={[styles.tab, activeTab === "settings" && styles.tabActive]}
+            onPress={() => {
+              setActiveTab("settings");
+            }}
+          >
+            <MaterialIcons
+              name="settings"
+              size={20}
+              color={activeTab === "settings" ? "#1E3A8A" : "#94A3B8"}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "settings" && styles.tabTextActive,
+              ]}
+            >
+              Settings
+            </Text>
+          </Pressable> */}
+        </View>
+
+        {/* Content Based on Active Tab */}
+        {activeTab === "profile" ? (
+          <Animated.View
+            style={[
+              styles.contentCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            {/* Form Header */}
+            <View style={styles.formHeader}>
+              <View style={styles.formHeaderIcon}>
+                <MaterialIcons name="edit-note" size={24} color="#1E3A8A" />
+              </View>
+              <View>
+                <Text style={styles.formHeaderTitle}>
+                  {isEditing ? "Edit Profile" : "Profile Details"}
+                </Text>
+                <Text style={styles.formHeaderSubtitle}>
+                  {isEditing
+                    ? "Update your information below"
+                    : "Your personal and business information"}
+                </Text>
+              </View>
+            </View>
+
+            {/* Form Fields */}
+            <View style={styles.formFields}>
+              {renderField(
+                "Full Name",
+                formData.name,
+                "person",
+                "name",
+                "John Smith",
+              )}
+              {renderField(
+                "Email Address",
+                formData.email,
+                "email",
+                "email",
+                "john@example.com",
+                {
+                  readonly: true,
+                  keyboardType: "email-address",
+                  autoCapitalize: "none",
+                },
+              )}
+              {renderField(
+                "Company Name",
+                formData.company,
+                "business",
+                "company",
+                "Diamond Traders Ltd",
+              )}
+              {renderField(
+                "Phone Number",
+                formData.phone,
+                "phone",
+                "phone",
+                "+91 98765 43210",
+                { keyboardType: "phone-pad" },
+              )}
+              {renderField(
+                "Business Address",
+                formData.address,
+                "location-on",
+                "address",
+                "Enter your full business address",
+                { multiline: true, numberOfLines: 3 },
+              )}
+              {renderField(
+                "GST Registration",
+                formData.gst,
+                "receipt",
+                "gst",
+                "22AAAAA0000A1Z5",
+                { autoCapitalize: "characters" },
+              )}
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionContainer}>
+              {!isEditing ? (
+                <AnimatedPressable
+                  onPress={handleEdit}
+                  style={styles.primaryButton}
+                  android_ripple={{ color: "rgba(255,255,255,0.2)" }}
+                >
+                  <LinearGradient
+                    colors={["#1E3A8A", "#3B82F6"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.buttonGradient}
+                  >
+                    <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+                    <Text style={styles.primaryButtonText}>Edit Profile</Text>
+                  </LinearGradient>
+                </AnimatedPressable>
+              ) : (
+                <View style={styles.buttonRow}>
+                  <Pressable
+                    onPress={handleCancel}
+                    disabled={saveLoading}
+                    style={[
+                      styles.secondaryButton,
+                      saveLoading && styles.buttonDisabled,
+                    ]}
+                  >
+                    <MaterialIcons name="close" size={20} color="#64748B" />
+                    <Text style={styles.secondaryButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleSave}
+                    disabled={saveLoading}
+                    style={[
+                      styles.primaryButtonFlex,
+                      saveLoading && styles.buttonDisabled,
+                    ]}
+                  >
+                    {saveLoading ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <MaterialIcons name="check" size={20} color="#FFFFFF" />
+                        <Text style={styles.primaryButtonText}>
+                          Save Changes
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          </Animated.View>
+        ) : (
+          <Animated.View
+            style={[
+              styles.contentCard,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.formHeader}>
+              <View style={styles.formHeaderIcon}>
+                <MaterialIcons name="settings" size={24} color="#1E3A8A" />
+              </View>
+              <View>
+                <Text style={styles.formHeaderTitle}>Settings</Text>
+                <Text style={styles.formHeaderSubtitle}>
+                  Manage your preferences
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.settingsContainer}>
+              {renderSettingItem(
+                "notifications",
+                "Push Notifications",
+                "Receive order updates and offers",
+                "switch",
+                settings.notifications,
+                (value) => setSettings({ ...settings, notifications: value }),
+              )}
+              {renderSettingItem(
+                "fingerprint",
+                "Biometric Login",
+                "Use fingerprint or face recognition",
+                "switch",
+                settings.biometricLogin,
+                (value) => setSettings({ ...settings, biometricLogin: value }),
+              )}
+              {renderSettingItem(
+                "language",
+                "Language",
+                "Change app language",
+                "select",
+                settings.language,
+              )}
+            </View>
+
+            {/* Support Section */}
+            <View style={styles.supportSection}>
+              <Text style={styles.supportTitle}>Support</Text>
+              <Pressable style={styles.supportItem}>
+                <MaterialIcons name="help-outline" size={22} color="#64748B" />
+                <Text style={styles.supportItemText}>Help Center</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#94A3B8" />
+              </Pressable>
+              <Pressable style={styles.supportItem}>
+                <MaterialIcons name="privacy-tip" size={22} color="#64748B" />
+                <Text style={styles.supportItemText}>Privacy Policy</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#94A3B8" />
+              </Pressable>
+              <Pressable style={styles.supportItem}>
+                <MaterialIcons name="description" size={22} color="#64748B" />
+                <Text style={styles.supportItemText}>Terms of Service</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#94A3B8" />
+              </Pressable>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Message Alert */}
+        {message.text && (
+          <Animated.View
+            style={[
+              styles.floatingMessage,
+              message.type === "success"
+                ? styles.floatingSuccess
+                : styles.floatingError,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.messageContent}>
+              <MaterialIcons
+                name={message.type === "success" ? "check-circle" : "error"}
+                size={24}
+                color={message.type === "success" ? "#10B981" : "#EF4444"}
+              />
+              <Text
+                style={[
+                  styles.floatingMessageText,
+                  message.type === "success"
+                    ? styles.floatingSuccessText
+                    : styles.floatingErrorText,
+                ]}
+              >
+                {message.text}
+              </Text>
+            </View>
+          </Animated.View>
         )}
       </ScrollView>
     </KeyboardAvoidingView>
@@ -531,95 +788,112 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#F1F5F9",
+  },
+  loadingGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
   },
   loadingText: {
-    color: "#64748B",
-    textAlign: "center",
-    marginTop: 20,
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#FFFFFF",
   },
   scrollContainer: {
     flexGrow: 1,
-    padding: 16,
+    paddingBottom: 32,
   },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
-    backgroundColor: "#FFFFFF",
+
+  // Hero Header
+  heroHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 60,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
-  headerContent: {
+  heroContent: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
   },
-  headerTextContainer: {
-    flex: 1,
-  },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#DC2626",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    alignItems: "center",
   },
-  logoutButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
+  heroTitle: {
+    fontSize: 20,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#0F172A",
-    marginBottom: 8,
+  heroLogoutButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(220,38,38,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "#64748B",
-    textAlign: "center",
-  },
-  profileCard: {
+
+  // Profile Card
+  profileCardContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: 24,
-    padding: 20,
-    marginBottom: 24,
+    marginHorizontal: 16,
+    marginTop: -40,
+    padding: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  profileHeader: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#1E3A8A",
-    justifyContent: "center",
+  avatarSection: {
     alignItems: "center",
     marginBottom: 16,
   },
-  avatar: {
+  avatarGradient: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
-  profileInfo: {
+  avatarBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: "35%",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#10B981",
+    justifyContent: "center",
     alignItems: "center",
-    flex: 1,
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+  },
+  profileInfoSection: {
+    alignItems: "center",
+    marginBottom: 24,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: "700",
     color: "#0F172A",
     marginBottom: 4,
@@ -627,247 +901,361 @@ const styles = StyleSheet.create({
   profileEmail: {
     fontSize: 14,
     color: "#64748B",
+    marginBottom: 12,
   },
   roleBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#FEF2C8",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: 20,
   },
   roleText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#B8860B",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
-  statsContainer: {
+
+  // Stats
+  statsRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E2E8F0",
-  },
-  statItem: {
     alignItems: "center",
-    padding: 16,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
+    justifyContent: "space-between",
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+  statBox: {
     flex: 1,
+    alignItems: "center",
+  },
+  statIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     color: "#0F172A",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 12,
     color: "#64748B",
+    fontWeight: "500",
   },
-  contactInfo: {
-    gap: 16,
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "#E2E8F0",
   },
-  contactItem: {
+
+  // Tab Navigation
+  tabContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 16,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
-  },
-  contactIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F3F8FF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  contactLabel: {
-    fontSize: 14,
-    color: "#475569",
-    flex: 1,
-  },
-  formCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 16,
+    padding: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
   },
-  formHeader: {
-    alignItems: "center",
-    marginBottom: 24,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-  },
-  formHeaderContent: {
+  tab: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    backgroundColor: "#1E3A8A",
-    paddingHorizontal: 16,
+    justifyContent: "center",
+    gap: 8,
     paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 12,
   },
-  editIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  tabActive: {
+    backgroundColor: "#EFF6FF",
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#94A3B8",
+  },
+  tabTextActive: {
+    color: "#1E3A8A",
+  },
+
+  // Content Card
+  contentCard: {
     backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    marginHorizontal: 16,
+    marginTop: 8,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+
+  // Form Header
+  formHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  formHeaderIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#EFF6FF",
     justifyContent: "center",
     alignItems: "center",
   },
-  formTitle: {
+  formHeaderTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#0F172A",
+    marginBottom: 2,
   },
-  formSubtitle: {
-    fontSize: 12,
-    color: "#FFFFFF",
+  formHeaderSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
   },
-  field: {
-    marginBottom: 20,
+
+  // Form Fields
+  formFields: {
+    gap: 20,
+  },
+  fieldContainer: {
+    gap: 8,
   },
   fieldLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#475569",
-    marginBottom: 8,
+    color: "#374151",
+    marginLeft: 4,
   },
-  inputContainer: {
-    position: "relative",
-  },
-  inputIcon: {
-    position: "absolute",
-    left: 12,
-    top: "50%",
-    marginTop: -10,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#F3F8FF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    paddingLeft: 48,
-    paddingRight: 16,
-    backgroundColor: "#F8FAFC",
-    fontSize: 16,
-    color: "#475569",
-  },
-  inputDisabled: {
-    backgroundColor: "#F1F5F9",
-    color: "#9CA3AF",
-  },
-  textArea: {
-    height: 80,
-    paddingTop: 14,
-    textAlignVertical: "top",
-  },
-  fieldNote: {
+  inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    marginTop: 8,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 14,
+    minHeight: 52,
   },
-  fieldNoteText: {
-    fontSize: 12,
-    color: "#10B981",
+  inputWrapperEditing: {
+    borderColor: "#1E3A8A",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#1E3A8A",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  actionButtons: {
-    gap: 12,
+  inputWrapperMultiline: {
+    minHeight: 100,
+    paddingTop: 14,
+    alignItems: "flex-start",
+  },
+  inputIconContainer: {
+    marginRight: 12,
+  },
+  modernInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#1F2937",
+    paddingVertical: 0,
+    height: 52,
+  },
+  multilineInput: {
+    height: 100,
+    textAlignVertical: "top",
+    paddingTop: 4,
+  },
+  inputReadonly: {
+    color: "#6B7280",
+  },
+  readonlyBadge: {
+    marginLeft: 8,
+  },
+
+  // Action Buttons
+  actionContainer: {
+    marginTop: 24,
   },
   buttonRow: {
     flexDirection: "row",
     gap: 12,
   },
-  editButton: {
+  primaryButton: {
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  primaryButtonFlex: {
+    flex: 2,
+    backgroundColor: "#1E3A8A",
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#1E3A8A",
-    borderRadius: 12,
+    paddingVertical: 14,
   },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
+  buttonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
-  cancelButton: {
+  secondaryButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     backgroundColor: "#F1F5F9",
-    borderRadius: 12,
+    borderRadius: 14,
   },
-  cancelButtonText: {
-    fontSize: 14,
+  secondaryButtonText: {
+    fontSize: 15,
     fontWeight: "600",
-    color: "#475569",
-  },
-  saveButton: {
-    flex: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#1E3A8A",
-    borderRadius: 12,
-  },
-  saveButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#64748B",
   },
   buttonDisabled: {
     opacity: 0.5,
   },
-  messageContainer: {
+
+  // Settings
+  settingsContainer: {
+    gap: 4,
+  },
+  settingItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  settingIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#F0F9FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#0F172A",
+    marginBottom: 2,
+  },
+  settingSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+  },
+  settingValueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  settingValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#64748B",
+  },
+
+  // Support Section
+  supportSection: {
+    marginTop: 24,
+    paddingTop: 24,
+    // borderTopWidth: 1,
+    // borderTopColor: "#F1F5F9",
+  },
+  supportTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#64748B",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  supportItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  supportItemText: {
+    flex: 1,
+    fontSize: 15,
+    color: "#374151",
+    marginLeft: 14,
+  },
+
+  // Floating Message
+  floatingMessage: {
+    position: "absolute",
+    bottom: 20,
+    left: 16,
+    right: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  floatingSuccess: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#10B981",
+  },
+  floatingError: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#EF4444",
+  },
+  messageContent: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
   },
-  successMessage: {
-    backgroundColor: "#D1FAE5",
-  },
-  errorMessage: {
-    backgroundColor: "#FEE2E2",
-  },
-  messageText: {
-    fontSize: 14,
-    fontWeight: "500",
+  floatingMessageText: {
     flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
   },
-  successText: {
-    color: "#065F46",
+  floatingSuccessText: {
+    color: "#059669",
   },
-  errorText: {
+  floatingErrorText: {
     color: "#DC2626",
   },
 });
