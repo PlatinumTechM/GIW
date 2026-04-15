@@ -107,9 +107,33 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    // Clear the httpOnly cookie
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error("Error at logout = ", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 export const authController = {
   login,
   register,
   getCurrentUser,
-  updateProfile
+  updateProfile,
+  logout
 };

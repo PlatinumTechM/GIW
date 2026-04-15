@@ -12,6 +12,12 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
+  const handleLogout = async () => {
+    setIsUserDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    await logout();
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -76,7 +82,7 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
           ? "bg-white/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(15,23,42,0.08)] py-3"
           : "bg-transparent py-5"
@@ -264,7 +270,7 @@ const Navbar = () => {
                             <div className="h-px bg-[#E2E8F0] my-2"></div>
 
                             <button
-                              onClick={logout}
+                              onClick={handleLogout}
                               className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-red-600 hover:text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-transparent rounded-xl transition-all duration-200 group"
                             >
                               <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:bg-red-100 transition-colors">
@@ -426,7 +432,7 @@ const Navbar = () => {
                       </NavLink>
                       {/* Logout Button */}
                       <button
-                        onClick={logout}
+                        onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-all"
                       >
                         <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
