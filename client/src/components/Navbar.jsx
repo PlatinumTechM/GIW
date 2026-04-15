@@ -51,20 +51,26 @@ const Navbar = () => {
         label: "Home",
         icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
       },
-      {
-        path: "/pricing",
-        label: "Pricing",
-        icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
-      },
+      isAuthenticated
+        ? {
+            path: "/add-stock",
+            label: "Stock",
+            icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+          }
+        : {
+            path: "/pricing",
+            label: "Pricing",
+            icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
+          },
       {
         path: "/contact",
         label: "Contact",
         icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
       },
     ];
-    // Hide Home, Pricing, Contact for admin users - only show Dashboard in dropdown
+    // Hide Home, Stock/Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === 'admin') {
-      return links.filter(link => link.label !== "Home" && link.label !== "Pricing" && link.label !== "Contact");
+      return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
     }
     return links;
   };
