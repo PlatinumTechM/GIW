@@ -91,8 +91,6 @@ const Home = () => {
 
   const navigateToImage = useCallback(
     (direction) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
       const newIndex =
         direction === "next"
           ? (currentImageIndex + 1) % categoryImages.length
@@ -114,7 +112,6 @@ const Home = () => {
   const goToImage = useCallback(
     (index) => {
       if (index === currentImageIndex) return;
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       const direction = index > currentImageIndex ? "next" : "prev";
 
       Animated.timing(slideAnim, {
@@ -174,8 +171,18 @@ const Home = () => {
   ).current;
 
   const handleCategoryPress = (category) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    console.log("Navigate to:", category.path);
+    // Navigate based on category
+    if (category.id === "natural-diamonds") {
+      router.push("/(user)/diamond/DiamondSearchScreen?type=natural");
+    } else if (category.id === "lab-grown-diamonds") {
+      router.push("/(user)/diamond/DiamondSearchScreen?type=labgrown");
+    } else if (category.id === "jewelry") {
+      router.push("/(user)/jewelry/JewelrySearchScreen?type=natural");
+    } else if (category.id === "lab-grown-jewelry") {
+      router.push("/(user)/jewelry/JewelrySearchScreen?type=labgrown");
+    } else {
+      console.log("Navigate to:", category.path);
+    }
   };
 
   const handleCategoryPressIn = (categoryId) => {
@@ -211,7 +218,7 @@ const Home = () => {
       bounces={false}
     >
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <View>
           <Text style={styles.headerGreeting}>Welcome to</Text>
           <Text style={styles.headerTitle}>GIW Diamonds</Text>
@@ -222,7 +229,7 @@ const Home = () => {
         >
           <MaterialIcons name="person" size={24} color="#0F172A" />
         </Pressable>
-      </View>
+      </View> */}
 
       {/* Category Image Carousel with Swipe */}
       <View style={styles.carouselWrapper}>
@@ -344,55 +351,40 @@ const Home = () => {
                 onPressIn={() => handleCategoryPressIn(category.id)}
                 onPressOut={handleCategoryPressOut}
                 android_ripple={{
-                  color: `${category.color}20`,
+                  color: `${category.color}30`,
                   foreground: true,
                 }}
               >
+                {/* Icon */}
                 <LinearGradient
-                  colors={[category.color, `${category.color}DD`]}
+                  colors={[category.color, `${category.color}CC`]}
                   style={styles.categoryIcon}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
                   <MaterialIcons
                     name={category.icon}
-                    size={28}
+                    size={32}
                     color="#FFFFFF"
                   />
                 </LinearGradient>
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <MaterialIcons
-                  name="arrow-forward"
-                  size={16}
-                  color="#94A3B8"
-                  style={styles.categoryArrow}
-                />
+
+                {/* Name and Arrow Row */}
+                <View style={styles.categoryBottomRow}>
+                  <Text style={styles.categoryName} numberOfLines={2}>
+                    {category.name}
+                  </Text>
+                  <View style={styles.categoryArrowCircle}>
+                    <MaterialIcons
+                      name="arrow-forward-ios"
+                      size={12}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                </View>
               </Pressable>
             </Animated.View>
           ))}
-        </View>
-      </View>
-
-      {/* Featured Section */}
-      <View style={styles.featuredContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Featured</Text>
-          <Pressable style={styles.seeAllButton}>
-            <Text style={styles.seeAllText}>See All</Text>
-            <MaterialIcons name="arrow-forward" size={16} color="#3B82F6" />
-          </Pressable>
-        </View>
-        <View style={styles.featuredCard}>
-          <View style={styles.featuredIcon}>
-            <MaterialIcons name="stars" size={32} color="#F59E0B" />
-          </View>
-          <View style={styles.featuredContent}>
-            <Text style={styles.featuredTitle}>Premium Collection</Text>
-            <Text style={styles.featuredSubtitle}>
-              Discover our exclusive diamonds
-            </Text>
-          </View>
-          <MaterialIcons name="chevron-right" size={24} color="#94A3B8" />
         </View>
       </View>
     </ScrollView>
@@ -549,93 +541,59 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     paddingHorizontal: 16,
     marginTop: 24,
-    marginBottom: 24,
+    // marginBottom: 24,
   },
   categoriesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 10,
   },
   categoryCard: {
     width: (screenWidth - 56) / 2,
+    height: 140,
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: "space-between",
+    shadowColor: "#1E293B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
   categoryIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  categoryName: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#0F172A",
-  },
-  categoryArrow: {
-    marginLeft: 4,
-  },
-
-  // Featured Section Styles
-  featuredContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 32,
-  },
-  seeAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#3B82F6",
-  },
-  featuredCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  featuredIcon: {
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#FEF3C7",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginTop: 4,
   },
-  featuredContent: {
+  categoryBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 4,
+  },
+  categoryName: {
     flex: 1,
-  },
-  featuredTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     color: "#0F172A",
+    lineHeight: 20,
   },
-  featuredSubtitle: {
-    fontSize: 13,
-    color: "#64748B",
-    marginTop: 2,
+  categoryArrowCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(30, 41, 59, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
   },
 });
 
