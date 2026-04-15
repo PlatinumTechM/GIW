@@ -24,23 +24,23 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isLoginRequest = error.config?.url?.includes("/auth/login");
+    const url = error.config?.url || "";
+    const isLoginRequest = url.includes("/auth/login");
+    const isVerifyAdminRequest = url.includes("/admin/verify-password");
     const status = error.response?.status;
-    
+
     // Handle 404 - API endpoint not found
     if (status === 404) {
       notify.error("Connection Error", "Server is not reachable. Please try again later.");
     }
-    
-    // Only handle 401 as session expiration if NOT on login request
-    if (status === 401 && !isLoginRequest) {
-      notify.warning("Session Expired", "Please log in again");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+
+    // Only handle 401 as session expiration if NOT on login or verify-admin requests
+    if (status === 401 && !isLoginRequest && !isVerifyAdminRequest) {
+      notify.warning("Please try again..");
+      
     }
     return Promise.reject(error);
-  },
+  },  
 );
 
 export const authAPI = {
@@ -75,6 +75,16 @@ export const authAPI = {
 
   updateProfile: async (userData) => {
     const response = await api.put("/auth/profile", userData);
+    return response.data;
+  },
+
+  getAllUsers: async () => {
+    const response = await api.get("/admin/users");
+    return response.data;
+  },
+
+  verifyAdminPassword: async (password) => {
+    const response = await api.post("/admin/verify-password", { password });
     return response.data;
   },
 };
