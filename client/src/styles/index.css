@@ -343,7 +343,7 @@ body {
 .input-field:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px var(--accent-light);
+  box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .input-field:disabled {
@@ -373,6 +373,42 @@ body {
   outline: none;
   border-color: var(--accent-secondary);
   box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* Input with Icon (Icon inside input field) */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+
+.input-with-icon .input-field {
+  padding-left: 40px;
+}
+
+.input-with-icon .input-field:focus + .icon,
+.input-with-icon .input-field:focus ~ .icon,
+.input-with-icon:focus-within .icon {
+  color: var(--accent-secondary);
+}
+
+/* Input with Icon on Right side */
+.input-with-icon-right .icon {
+  left: auto;
+  right: 12px;
+}
+
+.input-with-icon-right .input-field {
+  padding-left: 16px;
+  padding-right: 40px;
 }
 
 /* ------------------------------------------

@@ -58,18 +58,27 @@ const validatePricingData = (price, stockLimit) => {
   }
 };
 
+// Validate plan type (at least one must be selected)
+const validatePlanType = (hasDiamonds, hasJewellery) => {
+  if (!hasDiamonds && !hasJewellery) {
+    throw new Error("At least one plan type (Diamonds or Jewellery) must be selected");
+  }
+};
+
 // Create subscription
 const createSubscription = async (data) => {
-  validateDuration(data.duration);
+  validateDuration(data.durationMonth);
   validatePricingData(data.price, data.stockLimit);
+  validatePlanType(data.hasDiamonds, data.hasJewellery);
   const subscription = await adminRepo.createSubscription(data);
   return subscription;
 };
 
 // Update subscription
 const updateSubscription = async (id, data) => {
-  validateDuration(data.duration);
+  validateDuration(data.durationMonth);
   validatePricingData(data.price, data.stockLimit);
+  validatePlanType(data.hasDiamonds, data.hasJewellery);
   const subscription = await adminRepo.updateSubscription(id, data);
   return subscription;
 };

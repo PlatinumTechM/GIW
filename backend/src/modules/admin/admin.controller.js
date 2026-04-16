@@ -60,7 +60,7 @@ const getSubscriptions = async (req, res) => {
 // Create subscription
 const createSubscription = async (req, res) => {
   try {
-    const { name, durationMonth, price, stockLimit } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
 
     if (
       !name ||
@@ -80,6 +80,9 @@ const createSubscription = async (req, res) => {
       durationMonth: parseInt(durationMonth),
       price: parseFloat(price),
       stockLimit: parseInt(stockLimit),
+      hasDiamonds: hasDiamonds === true || hasDiamonds === "true",
+      hasJewellery: hasJewellery === true || hasJewellery === "true",
+      description: description || null,
     });
 
     res.status(201).json({
@@ -100,7 +103,7 @@ const createSubscription = async (req, res) => {
 const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, durationMonth, price, stockLimit, isActive } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
 
     if (
       !name ||
@@ -120,6 +123,9 @@ const updateSubscription = async (req, res) => {
       durationMonth: parseInt(durationMonth),
       price: parseFloat(price),
       stockLimit: parseInt(stockLimit),
+      hasDiamonds: hasDiamonds === true || hasDiamonds === "true",
+      hasJewellery: hasJewellery === true || hasJewellery === "true",
+      description: description || null,
       isActive,
     });
 

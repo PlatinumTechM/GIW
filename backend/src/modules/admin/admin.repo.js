@@ -19,7 +19,8 @@ const getAllUsers = async () => {
 
 // Get all subscription plans
 const getSubscriptions = async () => {
-  const query = `SELECT id, name, duration_month, price, stock_limit, is_active, created_at
+  const query = `SELECT id, name, duration_month, price, stock_limit, is_active, 
+                        has_diamonds, has_jewellery, description, created_at
                  FROM subscription_plans ORDER BY name ASC, duration_month ASC`;
   const result = await pool.query(query);
   return result.rows.map((row) => ({
@@ -28,6 +29,9 @@ const getSubscriptions = async () => {
     durationMonth: row.duration_month,
     price: parseFloat(row.price),
     stockLimit: row.stock_limit,
+    hasDiamonds: row.has_diamonds,
+    hasJewellery: row.has_jewellery,
+    description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
   }));
@@ -35,15 +39,18 @@ const getSubscriptions = async () => {
 
 // Create subscription plan
 const createSubscription = async (data) => {
-  const { name, durationMonth, price, stockLimit } = data;
-  const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit)
-                 VALUES ($1, $2, $3, $4)
-                 RETURNING id, name, duration_month, price, stock_limit, is_active, created_at`;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = data;
+  const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
   const result = await pool.query(query, [
     name,
     durationMonth,
     price,
     stockLimit,
+    hasDiamonds ?? false,
+    hasJewellery ?? false,
+    description || null,
   ]);
   const row = result.rows[0];
   return {
@@ -52,6 +59,9 @@ const createSubscription = async (data) => {
     durationMonth: row.duration_month,
     price: parseFloat(row.price),
     stockLimit: row.stock_limit,
+    hasDiamonds: row.has_diamonds,
+    hasJewellery: row.has_jewellery,
+    description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
   };
@@ -59,16 +69,20 @@ const createSubscription = async (data) => {
 
 // Update subscription plan
 const updateSubscription = async (id, data) => {
-  const { name, durationMonth, price, stockLimit, isActive } = data;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = data;
   const query = `UPDATE subscription_plans
-                 SET name = $1, duration_month = $2, price = $3, stock_limit = $4, is_active = $5
-                 WHERE id = $6
-                 RETURNING id, name, duration_month, price, stock_limit, is_active, created_at`;
+                 SET name = $1, duration_month = $2, price = $3, stock_limit = $4, 
+                     has_diamonds = $5, has_jewellery = $6, description = $7, is_active = $8
+                 WHERE id = $9
+                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
   const result = await pool.query(query, [
     name,
     durationMonth,
     price,
     stockLimit,
+    hasDiamonds ?? false,
+    hasJewellery ?? false,
+    description || null,
     isActive ?? true,
     id,
   ]);
@@ -82,6 +96,9 @@ const updateSubscription = async (id, data) => {
     durationMonth: row.duration_month,
     price: parseFloat(row.price),
     stockLimit: row.stock_limit,
+    hasDiamonds: row.has_diamonds,
+    hasJewellery: row.has_jewellery,
+    description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
   };
