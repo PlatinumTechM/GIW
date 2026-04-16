@@ -78,8 +78,8 @@ const Navbar = () => {
       },
     ];
     // Hide Home, Stock/Pricing, Contact for admin users - only show Dashboard in dropdown
-    if (user?.role === 'admin') {
-      return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
+    // if (user?.role === 'admin') {
+    //   return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
 
     // Hide Home, Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === "admin") {
