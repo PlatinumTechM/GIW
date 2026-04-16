@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function AuthLayout() {
   return (
@@ -31,8 +32,15 @@ export default function AuthLayout() {
               headerShown: false,
             }}
           />
+          <Stack.Screen
+            name="(admin)"
+            options={{
+              headerShown: false,
+            }}
+          />
         </Stack>
       </SafeAreaView>
+      <Toast />
     </SafeAreaProvider>
   );
 }

@@ -1,4 +1,11 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL; // backend IP
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.75:5000/api/v1"; // Your computer IP - UPDATE if different!
+console.log("API URL = ", API_URL);
+
+// Validate API_URL is set
+if (!API_URL || API_URL === "undefined") {
+  console.error("❌ EXPO_PUBLIC_API_URL is not set! Add it to your .env file");
+}
 
 // Common headers for API requests
 const getHeaders = () => ({
@@ -7,7 +14,11 @@ const getHeaders = () => ({
 
 // Generic API request function
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_URL}${endpoint}`;
+  // Remove trailing slash from API_URL and ensure endpoint starts with /
+  const baseUrl = API_URL?.replace(/\/$/, "") || "";
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `${baseUrl}${path}`;
+  console.log("Final api = ", url);
   const config = {
     headers: getHeaders(),
     ...options,
@@ -23,7 +34,9 @@ const apiRequest = async (endpoint, options = {}) => {
 
     return data;
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("❌ API Error:", error.message);
+    console.error("   Request URL:", url);
+    console.error("   API_URL value:", API_URL);
     throw error;
   }
 };
@@ -31,28 +44,29 @@ const apiRequest = async (endpoint, options = {}) => {
 // Auth specific API methods
 export const authAPI = {
   login: async (email, password) => {
-    return apiRequest("/api/v1/auth/login", {
+    console.log("Email = ", email, "PAss = ", password);
+    return apiRequest("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
   },
 
   register: async (userData) => {
-    return apiRequest("/api/v1/auth/register", {
+    return apiRequest("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     });
   },
 
   forgotPassword: async (email) => {
-    return apiRequest("/api/v1/auth/forgot-password", {
+    return apiRequest("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
   },
 
   getCurrentUser: async (token) => {
-    return apiRequest("/api/v1/auth/me", {
+    return apiRequest("/auth/me", {
       headers: {
         ...getHeaders(),
         Authorization: `Bearer ${token}`,
@@ -61,13 +75,33 @@ export const authAPI = {
   },
 
   updateProfile: async (profileData, token) => {
-    return apiRequest("/api/v1/auth/profile", {
+    return apiRequest("/auth/profile", {
       method: "PUT",
       headers: {
         ...getHeaders(),
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(profileData),
+    });
+  },
+
+  getAllUsers: async (token) => {
+    return apiRequest("/admin/users", {
+      headers: {
+        ...getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  verifyAdminPassword: async (password, token) => {
+    return apiRequest("/admin/verify-password", {
+      method: "POST",
+      headers: {
+        ...getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ password }),
     });
   },
 };
