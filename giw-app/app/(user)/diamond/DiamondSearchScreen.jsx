@@ -13,6 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,16 +24,51 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 // DATA CONSTANTS (from web version)
 // ============================================
 const SHAPES = [
-  { name: "ROUND", icon: "circle", color: "#3B82F6" },
-  { name: "PEAR", icon: "water-drop", color: "#8B5CF6" },
-  { name: "OVAL", icon: "egg", color: "#10B981" },
-  { name: "PRINCESS", icon: "square", color: "#F59E0B" },
-  { name: "EMERALD", icon: "rectangle", color: "#14B8A6" },
-  { name: "CUSHION", icon: "pentagon", color: "#EC4899" },
-  { name: "MARQUISE", icon: "change-history", color: "#6366F1" },
-  { name: "HEART", icon: "favorite", color: "#EF4444" },
-  { name: "RADIANT", icon: "diamond", color: "#8B5CF6" },
-  { name: "OTHER", icon: "more-horiz", color: "#6B7280" },
+  { name: "ROUND", image: require("../../assets/images/shape/round.svg") },
+  { name: "PEAR", image: require("../../assets/images/shape/pear.svg") },
+  { name: "OVAL", image: require("../../assets/images/shape/oval.svg") },
+  {
+    name: "PRINCESS",
+    image: require("../../assets/images/shape/princess.svg"),
+  },
+  { name: "EMERALD", image: require("../../assets/images/shape/emerald.svg") },
+  { name: "CUSHION", image: require("../../assets/images/shape/cub.svg") },
+  {
+    name: "MARQUISE",
+    image: require("../../assets/images/shape/marquise.svg"),
+  },
+  { name: "HEART", image: require("../../assets/images/shape/heart.svg") },
+  { name: "RADIANT", image: require("../../assets/images/shape/radiant.svg") },
+  {
+    name: "BAGUETTE",
+    image: require("../../assets/images/shape/Baguette.svg"),
+  },
+  {
+    name: "HEXAGONAL",
+    image: require("../../assets/images/shape/Hexagonal.svg"),
+  },
+  {
+    name: "SQUARE EMERALD",
+    image: require("../../assets/images/shape/Square Emerald.svg"),
+  },
+  {
+    name: "BRIOLETTE",
+    image: require("../../assets/images/shape/Briolette.svg"),
+  },
+  {
+    name: "TRILLIANT",
+    image: require("../../assets/images/shape/Trilliant.svg"),
+  },
+  {
+    name: "HALF MOON",
+    image: require("../../assets/images/shape/half moon.svg"),
+  },
+  {
+    name: "ROSE CUT",
+    image: require("../../assets/images/shape/rose cut.svg"),
+  },
+  { name: "KITE", image: require("../../assets/images/shape/kite.svg") },
+  { name: "OTHER", image: require("../../assets/images/shape/other.svg") },
 ];
 
 const WHITE_COLORS = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
@@ -334,6 +370,10 @@ const DiamondSearchScreen = () => {
   const [showOnlyMedia, setShowOnlyMedia] = useState(false);
   const [availableItems, setAvailableItems] = useState(false);
 
+  // Shape pagination
+  const [visibleShapesCount, setVisibleShapesCount] = useState(8);
+  const SHAPES_BATCH_SIZE = 8;
+
   // Range States
   const [caratMin, setCaratMin] = useState("");
   const [caratMax, setCaratMax] = useState("");
@@ -437,6 +477,12 @@ const DiamondSearchScreen = () => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   }, []);
 
+  const showMoreShapes = useCallback(() => {
+    setVisibleShapesCount((prev) =>
+      Math.min(prev + SHAPES_BATCH_SIZE, SHAPES.length),
+    );
+  }, []);
+
   // ==========================================
   // CLEAR & APPLY FILTERS
   // ==========================================
@@ -459,6 +505,7 @@ const DiamondSearchScreen = () => {
     setPriceMax("");
     setShowOnlyMedia(false);
     setAvailableItems(false);
+    setVisibleShapesCount(8);
     setSelectedFluorescence([]);
     setLengthMin("");
     setLengthMax("");
@@ -567,7 +614,7 @@ const DiamondSearchScreen = () => {
         onToggle={() => toggleSection("shape")}
       >
         <View style={styles.shapesGrid}>
-          {SHAPES.map((shape, index) => (
+          {SHAPES.slice(0, visibleShapesCount).map((shape, index) => (
             <Pressable
               key={shape.name}
               style={[
@@ -578,22 +625,29 @@ const DiamondSearchScreen = () => {
               ]}
               onPress={() => toggleShape(shape.name)}
             >
-              <LinearGradient
-                colors={
-                  selectedShapes.includes(shape.name)
-                    ? [shape.color, shape.color]
-                    : ["#F1F5F9", "#E2E8F0"]
-                }
-                style={styles.shapeIconContainer}
+              <View
+                style={[
+                  styles.shapeIconContainer,
+                  {
+                    backgroundColor: selectedShapes.includes(shape.name)
+                      ? "#1E3A8A"
+                      : "#F1F5F9",
+                  },
+                ]}
               >
-                <MaterialIcons
-                  name={shape.icon}
-                  size={24}
-                  color={
-                    selectedShapes.includes(shape.name) ? "#FFFFFF" : "#64748B"
-                  }
+                <Image
+                  source={shape.image}
+                  style={[
+                    styles.shapeImage,
+                    {
+                      tintColor: selectedShapes.includes(shape.name)
+                        ? "#FFFFFF"
+                        : "#64748B",
+                    },
+                  ]}
+                  contentFit="contain"
                 />
-              </LinearGradient>
+              </View>
               <Text
                 style={[
                   styles.shapeLabel,
@@ -606,6 +660,12 @@ const DiamondSearchScreen = () => {
             </Pressable>
           ))}
         </View>
+        {visibleShapesCount < SHAPES.length && (
+          <Pressable style={styles.showMoreButton} onPress={showMoreShapes}>
+            <Text style={styles.showMoreText}>More Shape</Text>
+            <MaterialIcons name="expand-more" size={20} color="#1E3A8A" />
+          </Pressable>
+        )}
       </FilterSection>
 
       {/* Color Filter */}
@@ -1576,6 +1636,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
+  shapeImage: {
+    width: 36,
+    height: 36,
+  },
   shapeLabel: {
     fontSize: 11,
     fontWeight: "600",
@@ -1584,6 +1648,21 @@ const styles = StyleSheet.create({
   },
   shapeLabelSelected: {
     color: "#1E3A8A",
+  },
+  showMoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    marginTop: 12,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 10,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1E3A8A",
+    marginRight: 4,
   },
   colorTypeContainer: {
     flexDirection: "row",

@@ -230,9 +230,10 @@ const LoginScreen = () => {
           text2: "Welcome back!",
         });
 
-        if (result.data?.role === "user") {
-          router.push("/(user)/home");
+        if (result.data?.role === "admin") {
+          router.push("/(admin)/dashboard");
         } else {
+          router.push("/(user)/home");
         }
       } else {
         Toast.show({

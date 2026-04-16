@@ -20,6 +20,11 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:8081",
     "http://192.168.1.75:8081",
+    "http://192.168.1.75:8082", // Expo Go fallback
+    "exp://192.168.1.75:8081", // Expo Go protocol
+    "exp://192.168.1.75:8082",
+    "exp://192.168.1.75:19000", // Expo tunnel
+    "exp://192.168.1.75:19001",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
