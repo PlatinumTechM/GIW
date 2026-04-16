@@ -213,16 +213,12 @@ const RegisterScreen = () => {
         multiple: false,
       });
 
-      console.log("Document picker result:", result);
-
       if (result.canceled) {
-        console.log("User cancelled document selection");
         return;
       }
 
       if (result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        console.log("Selected document:", asset);
 
         setFormData((prev) => ({
           ...prev,

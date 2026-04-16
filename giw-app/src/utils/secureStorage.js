@@ -14,7 +14,6 @@ const memoryStorage = {
   setItem: async (key, value) => {
     try {
       memoryStorage.data[key] = value;
-      console.log("MemoryStorage: Data stored successfully for key:", key);
       return true;
     } catch (error) {
       console.error("MemoryStorage error:", error);
@@ -24,10 +23,6 @@ const memoryStorage = {
   getItem: async (key) => {
     try {
       const value = memoryStorage.data[key] || null;
-      console.log(
-        "MemoryStorage: Data retrieved:",
-        value ? "SUCCESS" : "MISSING",
-      );
       return value;
     } catch (error) {
       console.error("MemoryStorage error:", error);
@@ -37,7 +32,6 @@ const memoryStorage = {
   deleteItem: async (key) => {
     try {
       delete memoryStorage.data[key];
-      console.log("MemoryStorage: Data deleted successfully for key:", key);
       return true;
     } catch (error) {
       console.error("MemoryStorage error:", error);
@@ -47,7 +41,6 @@ const memoryStorage = {
   clearAll: async () => {
     try {
       memoryStorage.data = {};
-      console.log("MemoryStorage: All data cleared");
       return true;
     } catch (error) {
       console.error("MemoryStorage error:", error);
@@ -62,7 +55,6 @@ const webStorage = {
     try {
       if (typeof localStorage !== "undefined" && localStorage.setItem) {
         localStorage.setItem(key, value);
-        console.log("WebStorage: Data stored successfully");
         return true;
       } else {
         console.warn(
@@ -94,7 +86,6 @@ const webStorage = {
     try {
       if (typeof localStorage !== "undefined" && localStorage.removeItem) {
         localStorage.removeItem(key);
-        console.log("WebStorage: Data deleted successfully");
         return true;
       } else {
         console.warn(
@@ -114,27 +105,19 @@ export const secureStorage = {
   // Store authentication token securely
   setToken: async (token) => {
     try {
-      console.log("Storing token:", token ? "TOKEN_EXISTS" : "TOKEN_NULL");
-
       // Try SecureStore first (if available on mobile)
       if (Platform.OS !== "web") {
         try {
           await SecureStore.setItem(STORAGE_KEYS.TOKEN, token);
-          console.log("SecureStore token storage successful");
 
           // Verify immediately after SecureStore
           const verifySecure = await SecureStore.getItem(STORAGE_KEYS.TOKEN);
-          console.log(
-            "Immediate SecureStore token verification:",
-            verifySecure ? "SUCCESS" : "FAILED",
-          );
 
           if (!verifySecure) {
             console.warn(
               "SecureStore token verification failed, using memory storage fallback",
             );
             await memoryStorage.setItem(STORAGE_KEYS.TOKEN, token);
-            console.log("MemoryStorage token fallback completed");
           }
         } catch (secureError) {
           console.warn(
@@ -142,7 +125,6 @@ export const secureStorage = {
             secureError,
           );
           await memoryStorage.setItem(STORAGE_KEYS.TOKEN, token);
-          console.log("MemoryStorage token fallback completed");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -151,10 +133,6 @@ export const secureStorage = {
 
       // Final verification
       const finalVerify = await memoryStorage.getItem(STORAGE_KEYS.TOKEN);
-      console.log(
-        "Final token verification result:",
-        finalVerify ? "SUCCESS" : "FAILED",
-      );
 
       return true;
     } catch (error) {
@@ -166,13 +144,10 @@ export const secureStorage = {
   // Get authentication token securely
   getToken: async () => {
     try {
-      console.log("Retrieving token...");
-
       if (Platform.OS !== "web") {
         try {
           const token = await SecureStore.getItem(STORAGE_KEYS.TOKEN);
           if (token) {
-            console.log("SecureStore token retrieval successful");
             return token;
           } else {
             console.warn(
@@ -200,23 +175,16 @@ export const secureStorage = {
   // Store user data securely
   setUserData: async (userData) => {
     try {
-      console.log("Storing user data:", userData);
       const userDataString = JSON.stringify(userData);
-      console.log("User data string length:", userDataString.length);
 
       // Try SecureStore first (if available on mobile)
       if (Platform.OS !== "web") {
         try {
           await SecureStore.setItem(STORAGE_KEYS.USER_DATA, userDataString);
-          console.log("SecureStore setItem completed");
 
           // Verify immediately after SecureStore
           const verifySecure = await SecureStore.getItem(
             STORAGE_KEYS.USER_DATA,
-          );
-          console.log(
-            "Immediate SecureStore verification:",
-            verifySecure ? "SUCCESS" : "FAILED",
           );
 
           if (!verifySecure) {
@@ -224,7 +192,6 @@ export const secureStorage = {
               "SecureStore verification failed, using memory storage fallback",
             );
             await memoryStorage.setItem(STORAGE_KEYS.USER_DATA, userDataString);
-            console.log("MemoryStorage fallback completed");
           }
         } catch (secureError) {
           console.warn(
@@ -232,7 +199,6 @@ export const secureStorage = {
             secureError,
           );
           await memoryStorage.setItem(STORAGE_KEYS.USER_DATA, userDataString);
-          console.log("MemoryStorage fallback completed");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -241,11 +207,6 @@ export const secureStorage = {
 
       // Final verification
       const finalVerify = await memoryStorage.getItem(STORAGE_KEYS.USER_DATA);
-      console.log(
-        "Final verification result:",
-        finalVerify ? "SUCCESS" : "FAILED",
-      );
-
       return true;
     } catch (error) {
       console.error("Error storing user data:", error);
@@ -256,27 +217,20 @@ export const secureStorage = {
   // Get user data securely
   getUserData: async () => {
     try {
-      console.log("Retrieving user data...");
-
       if (Platform.OS !== "web") {
         try {
           const userDataString = await SecureStore.getItem(
             STORAGE_KEYS.USER_DATA,
           );
-          console.log("Retrieved user data string:", userDataString);
-
           if (!userDataString) {
-            console.log("No user data found in storage");
             return null;
           }
 
           try {
             const userData = JSON.parse(userDataString);
-            console.log("Successfully parsed user data:", userData);
             return userData;
           } catch (parseError) {
             console.error("Error parsing user data:", parseError);
-            console.log("Invalid JSON string:", userDataString);
             return null;
           }
         } catch (secureError) {
@@ -289,37 +243,29 @@ export const secureStorage = {
           );
 
           if (!userDataString) {
-            console.log("No user data found in memory storage");
             return null;
           }
 
           try {
             const userData = JSON.parse(userDataString);
-            console.log("Successfully parsed user data from memory:", userData);
             return userData;
           } catch (parseError) {
             console.error("Error parsing user data from memory:", parseError);
-            console.log("Invalid JSON string:", userDataString);
             return null;
           }
         }
       } else {
         // Web platform - use localStorage or memory storage
         const userDataString = await webStorage.getItem(STORAGE_KEYS.USER_DATA);
-        console.log("Retrieved user data string:", userDataString);
-
         if (!userDataString) {
-          console.log("No user data found in storage");
           return null;
         }
 
         try {
           const userData = JSON.parse(userDataString);
-          console.log("Successfully parsed user data:", userData);
           return userData;
         } catch (parseError) {
           console.error("Error parsing user data:", parseError);
-          console.log("Invalid JSON string:", userDataString);
           return null;
         }
       }
@@ -335,14 +281,12 @@ export const secureStorage = {
       if (Platform.OS !== "web") {
         try {
           await SecureStore.setItem(STORAGE_KEYS.ROLE, role);
-          console.log("SecureStore role storage successful");
         } catch (secureError) {
           console.warn(
             "SecureStore role failed, using memory storage fallback:",
             secureError,
           );
           await memoryStorage.setItem(STORAGE_KEYS.ROLE, role);
-          console.log("MemoryStorage role fallback completed");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -385,14 +329,12 @@ export const secureStorage = {
       if (Platform.OS !== "web") {
         try {
           await SecureStore.deleteItem(STORAGE_KEYS.TOKEN);
-          console.log("SecureStore token deletion successful");
         } catch (secureError) {
           console.warn(
             "SecureStore failed, using memory storage fallback:",
             secureError,
           );
           await memoryStorage.deleteItem(STORAGE_KEYS.TOKEN);
-          console.log("MemoryStorage token deletion successful");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -411,14 +353,12 @@ export const secureStorage = {
       if (Platform.OS !== "web") {
         try {
           await SecureStore.deleteItem(STORAGE_KEYS.USER_DATA);
-          console.log("SecureStore user data deletion successful");
         } catch (secureError) {
           console.warn(
             "SecureStore failed, using memory storage fallback:",
             secureError,
           );
           await memoryStorage.deleteItem(STORAGE_KEYS.USER_DATA);
-          console.log("MemoryStorage user data deletion successful");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -437,14 +377,12 @@ export const secureStorage = {
       if (Platform.OS !== "web") {
         try {
           await SecureStore.deleteItem(STORAGE_KEYS.ROLE);
-          console.log("SecureStore role deletion successful");
         } catch (secureError) {
           console.warn(
             "SecureStore role failed, using memory storage fallback:",
             secureError,
           );
           await memoryStorage.deleteItem(STORAGE_KEYS.ROLE);
-          console.log("MemoryStorage role deletion successful");
         }
       } else {
         // Web platform - use localStorage or memory storage
@@ -460,8 +398,6 @@ export const secureStorage = {
   // Clear all authentication data securely
   clearAll: async () => {
     try {
-      console.log("Clearing all authentication data...");
-
       if (Platform.OS !== "web") {
         try {
           const SecureStore = require("expo-secure-store").default;
@@ -470,7 +406,6 @@ export const secureStorage = {
             SecureStore.deleteItem(STORAGE_KEYS.USER_DATA),
             SecureStore.deleteItem(STORAGE_KEYS.ROLE),
           ]);
-          console.log("SecureStore: All data cleared successfully");
         } catch (secureError) {
           console.warn(
             "SecureStore clear failed, using memory storage fallback:",
@@ -479,14 +414,12 @@ export const secureStorage = {
           await memoryStorage.deleteItem(STORAGE_KEYS.TOKEN);
           await memoryStorage.deleteItem(STORAGE_KEYS.USER_DATA);
           await memoryStorage.deleteItem(STORAGE_KEYS.ROLE);
-          console.log("MemoryStorage: All data cleared");
         }
       } else {
         // Web platform - use localStorage or memory storage
         await webStorage.deleteItem(STORAGE_KEYS.TOKEN);
         await webStorage.deleteItem(STORAGE_KEYS.USER_DATA);
         await webStorage.deleteItem(STORAGE_KEYS.ROLE);
-        console.log("WebStorage: All data cleared successfully");
       }
 
       // Always clear memory storage as well
