@@ -18,7 +18,7 @@ import Jewelry from "@/modules/user/jewelry/Jewelry";
 import LabGrownJewelry from "@/modules/user/jewelry/LabGrownJewelry";
 import DiamondDetail from "@/modules/user/Diamond/DiamondDetail";
 import JewelryDetail from "@/modules/user/jewelry/JewelryDetail";
-
+import ManageSubscription from "@/modules/admin/ManageSubscription";
 
 export const router = createBrowserRouter([
   {
@@ -100,6 +100,10 @@ export const router = createBrowserRouter([
           {
             path: "",
             element: <AdminDashboard />,
+          },
+          {
+            path: "subscription",
+            element: <ManageSubscription />,
           },
           {
             path: "users",

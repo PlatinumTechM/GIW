@@ -1,5 +1,5 @@
 import { pool } from "../../config/db.js";
-  
+
 const verifyAdmin = async (password) => {
   const query = `SELECT id from users 
               WHERE role = 'admin'
@@ -17,7 +17,106 @@ const getAllUsers = async () => {
   return result.rows;
 };
 
+// Get all subscription plans
+const getSubscriptions = async () => {
+  const query = `SELECT id, name, duration_month, price, stock_limit, is_active, created_at
+                 FROM subscription_plans ORDER BY name ASC, duration_month ASC`;
+  const result = await pool.query(query);
+  return result.rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    durationMonth: row.duration_month,
+    price: parseFloat(row.price),
+    stockLimit: row.stock_limit,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+  }));
+};
+
+// Create subscription plan
+const createSubscription = async (data) => {
+  const { name, durationMonth, price, stockLimit } = data;
+  const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit)
+                 VALUES ($1, $2, $3, $4)
+                 RETURNING id, name, duration_month, price, stock_limit, is_active, created_at`;
+  const result = await pool.query(query, [
+    name,
+    durationMonth,
+    price,
+    stockLimit,
+  ]);
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    name: row.name,
+    durationMonth: row.duration_month,
+    price: parseFloat(row.price),
+    stockLimit: row.stock_limit,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+  };
+};
+
+// Update subscription plan
+const updateSubscription = async (id, data) => {
+  const { name, durationMonth, price, stockLimit, isActive } = data;
+  const query = `UPDATE subscription_plans
+                 SET name = $1, duration_month = $2, price = $3, stock_limit = $4, is_active = $5
+                 WHERE id = $6
+                 RETURNING id, name, duration_month, price, stock_limit, is_active, created_at`;
+  const result = await pool.query(query, [
+    name,
+    durationMonth,
+    price,
+    stockLimit,
+    isActive ?? true,
+    id,
+  ]);
+  if (result.rows.length === 0) {
+    throw new Error("Subscription not found");
+  }
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    name: row.name,
+    durationMonth: row.duration_month,
+    price: parseFloat(row.price),
+    stockLimit: row.stock_limit,
+    isActive: row.is_active,
+    createdAt: row.created_at,
+  };
+};
+
+// Delete subscription
+const deleteSubscription = async (id) => {
+  const query = `DELETE FROM subscription_plans WHERE id = $1 RETURNING id`;
+  const result = await pool.query(query, [id]);
+  if (result.rows.length === 0) {
+    throw new Error("Subscription not found");
+  }
+  return { success: true };
+};
+
+// Check if plan with same name and duration already exists
+const checkDuplicatePlan = async (name, durationMonth, excludeId = null) => {
+  let query = `SELECT id FROM subscription_plans WHERE name = $1 AND duration_month = $2`;
+  const params = [name, durationMonth];
+
+  if (excludeId) {
+    query += ` AND id != $3`;
+    params.push(excludeId);
+  }
+
+  const result = await pool.query(query, params);
+  return result.rows.length > 0;
+};
+
 export const adminRepo = {
   verifyAdmin,
-  getAllUsers
+  getAllUsers,
+  getSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscription,
+  checkDuplicatePlan,
 };
