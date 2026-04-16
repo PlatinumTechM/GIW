@@ -221,11 +221,6 @@ const Profile = () => {
       // Get authentication token from secure storage
       const token = await secureStorage.getToken();
 
-      console.log(
-        "Token retrieved for profile update:",
-        token ? "Token exists" : "No token found",
-      );
-
       if (!token) {
         throw new Error("Authentication required. Please login again.");
       }

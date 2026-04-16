@@ -23,9 +23,11 @@ api.interceptors.response.use(
       );
     }
 
-    // Only handle 401 as session expiration if NOT on login or verify-admin requests
-    if (status === 401 && !isLoginRequest && !isVerifyAdminRequest) {
-      notify.warning("Please try again.. Session Expired.");
+    // Only handle 401 as session expiration for authenticated users
+    // Check if user was logged in (has role in localStorage) before showing session expired
+    const isAuthenticated = !!localStorage.getItem("role");
+    if (status === 401 && isAuthenticated && !isLoginRequest && !isVerifyAdminRequest) {
+      notify.warning("Session Expired", "Your session has expired. Please login again.");
     }
     return Promise.reject(error);
   },

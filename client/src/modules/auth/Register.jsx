@@ -3,8 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Input from "../../components/ui/Input";
 import notify from "../../utils/notifications.jsx";
 import { formatFieldValue } from "../../utils/formatters.js";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import api from "@/services/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -86,17 +85,11 @@ const Register = () => {
 
     
       
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        body: submitData,
-      });
-
-      
-      
-      const data = await response.json();
+      const response = await api.post(`/auth/register`, submitData);
+      const data = response.data;
 
 
-      if (!response.ok) {
+      if (response.success === false) {
         notify.error("Registration Failed", data.error || "Please try again");
         throw new Error(data.error || "Registration failed");
       }

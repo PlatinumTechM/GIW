@@ -22,6 +22,7 @@ import {
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
 import notify from "../../utils/notifications";
+import api from "../../services/api";
 
 // Only stock_id is required to save to database
 // All other fields are optional - if data exists, save it; if not, save as null
@@ -682,28 +683,10 @@ const AddStock = () => {
       const validLengthRows = data.filter(r => r.length && r.length !== "0" && r.length !== 0).length;
       console.log(`Summary: ${zeroLengthRows} rows have length=0, ${validLengthRows} rows have valid length`);
 
-      const response = await fetch("/api/v1/stock/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stock: data }),
-      });
+      const response = await api.post("/stock/bulk", { stock: data });
+      const result = response.data;
 
-      let result;
-      const responseClone = response.clone();
-
-      try {
-        result = await response.json();
-      } catch (jsonError) {
-        const textError = await responseClone.text();
-        console.error("Response parse error:", textError);
-        notify.error(
-          "Submit Error",
-          `Server error ${response.status}: ${textError || "Invalid response"}`,
-        );
-        return;
-      }
-
-      if (response.ok) {
+      if (result.data) {
         setUploadResult(result.data);
         notify.success(
           "Success",
@@ -714,7 +697,7 @@ const AddStock = () => {
         console.error("Backend error:", result);
         notify.error(
           "Submit Error",
-          result.message || `Server error: ${response.status}`,
+          result.message || "Server error occurred",
         );
       }
     } catch (error) {

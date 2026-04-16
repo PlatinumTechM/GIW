@@ -15,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in on app start using cookie
@@ -25,10 +26,15 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         // Store role in localStorage for UI purposes only
         localStorage.setItem("role", userData.role || "user");
+        setSessionExpired(false);
       } catch (error) {
         // If API fails (401), user is not logged in
         setUser(null);
         localStorage.removeItem("role");
+        // Check if it was a session expiration (401 with existing role)
+        if (error.response?.status === 401 && localStorage.getItem("role")) {
+          setSessionExpired(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -73,8 +79,21 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await authAPI.logout();
     setUser(null);
+    setSessionExpired(false);
     localStorage.removeItem("role");
     notify.info("Logged Out", "You have been successfully logged out");
+  };
+
+  // Handle session expiration - call this when 401 received in protected routes
+  const handleSessionExpired = () => {
+    setUser(null);
+    setSessionExpired(true);
+    localStorage.removeItem("role");
+  };
+
+  // Clear session expired flag (call on login page mount)
+  const clearSessionExpired = () => {
+    setSessionExpired(false);
   };
 
   const value = {
@@ -83,8 +102,11 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    handleSessionExpired,
+    clearSessionExpired,
     isAuthenticated: !!user,
     loading,
+    sessionExpired,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

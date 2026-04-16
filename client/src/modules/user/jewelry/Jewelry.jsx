@@ -513,7 +513,7 @@ const Jewelry = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 type="natural"
-                onItemClick={(item) => navigate(`/jewelry/natural/${item.id}`)}
+                onItemClick={(item) => navigate(`/user/jewelry/natural/${item.id}`)}
                 onAddToCart={(item) => console.log("Add to cart:", item.name)}
                 onAddToWishlist={(item) =>
                   console.log("Add to wishlist:", item.name)

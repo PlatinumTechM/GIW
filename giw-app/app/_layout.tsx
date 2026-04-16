@@ -6,20 +6,25 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 export default function AuthLayout() {
   return (
     <SafeAreaProvider>
+      <StatusBar style="dark" translucent={false} />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: "#f8f9fa" }}
         edges={["bottom"]}
       >
-        <StatusBar style="inverted" backgroundColor="#f8f9fa" />
-
         <Stack
           screenOptions={{
             headerShown: false,
-            // contentStyle: {
-            //   backgroundColor: "#f8f9fa",
-            // },
+            contentStyle: {
+              backgroundColor: "#f8f9fa",
+            },
           }}
         >
+          <Stack.Screen
+            name="(auth)"
+            options={{
+              headerShown: false,
+            }}
+          />
           <Stack.Screen
             name="(user)"
             options={{

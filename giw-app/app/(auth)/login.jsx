@@ -212,43 +212,16 @@ const LoginScreen = () => {
     try {
       const result = await login(formData.identifier, formData.password);
       if (result.success) {
-        console.log("Storing user data:", result.data);
         const tokenStored = await secureStorage.setToken(result.token);
-        console.log(
-          "Token storage result:",
-          tokenStored ? "SUCCESS" : "FAILED",
-        );
         const userDataStored = await secureStorage.setUserData(result.data);
-        console.log(
-          "User data storage result:",
-          userDataStored ? "SUCCESS" : "FAILED",
-        );
         const roleStored = await secureStorage.setRole(
           result.data?.role || "user",
         );
-        console.log("Role storage result:", roleStored ? "SUCCESS" : "FAILED");
-
-        console.log("Verifying storage immediately after storing...");
         const verifyToken = await secureStorage.getToken();
         const verifyUserData = await secureStorage.getUserData();
-        console.log(
-          "Verification - Token:",
-          verifyToken ? "EXISTS" : "MISSING",
-        );
-        console.log(
-          "Verification - User Data:",
-          verifyUserData ? "EXISTS" : "MISSING",
-        );
-
         setTimeout(async () => {
-          console.log("Delayed verification after 500ms...");
           const delayedToken = await secureStorage.getToken();
           const delayedUserData = await secureStorage.getUserData();
-          console.log("Delayed - Token:", delayedToken ? "EXISTS" : "MISSING");
-          console.log(
-            "Delayed - User Data:",
-            delayedUserData ? "EXISTS" : "MISSING",
-          );
         }, 500);
 
         Toast.show({
@@ -260,7 +233,6 @@ const LoginScreen = () => {
         if (result.data?.role === "user") {
           router.push("/(user)/home");
         } else {
-          console.log("Regular user login - implement dashboard navigation");
         }
       } else {
         Toast.show({

@@ -13,7 +13,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
   const itemsPerPage = 9;
 
   const openDiamondDetail = (diamond) => {
-    navigate(`/diamond/${type}/${diamond.id}`);
+    navigate(`/user/diamond/${type}/${diamond.id}`);
   };
 
   useEffect(() => {

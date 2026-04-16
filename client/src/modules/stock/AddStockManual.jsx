@@ -21,6 +21,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import notify from "../../utils/notifications";
+import api from "../../services/api";
 
 const INITIAL_FORM_DATA = {
   stock_id: "",
@@ -280,32 +281,22 @@ const AddStockManual = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/stock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      await api.post("/stock", formData);
 
-      if (response.ok) {
-        notify.success("Success", "Stock item added successfully!");
-        setFormData(INITIAL_FORM_DATA);
-        setImagePreview({
-          diamond_image1: null,
-          diamond_image2: null,
-          diamond_image3: null,
-          diamond_image4: null,
-          diamond_image5: null,
-          diamond_video: null,
-          certificate_image: null,
-        });
-      } else {
-        const error = await response.json();
-        notify.error("Error", error.message || "Failed to add stock");
-      }
+      notify.success("Success", "Stock item added successfully!");
+      setFormData(INITIAL_FORM_DATA);
+      setImagePreview({
+        diamond_image1: null,
+        diamond_image2: null,
+        diamond_image3: null,
+        diamond_image4: null,
+        diamond_image5: null,
+        diamond_video: null,
+        certificate_image: null,
+      });
     } catch (error) {
       console.error("Submit error:", error);
-      notify.success("Demo Mode", "Stock data ready (API not connected)");
-      setFormData(INITIAL_FORM_DATA);
+      notify.error("Error", error.response?.data?.message || "Failed to add stock");
     } finally {
       setIsLoading(false);
     }

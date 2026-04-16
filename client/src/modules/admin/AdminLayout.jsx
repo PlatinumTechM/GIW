@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
-import { NavLink, Outlet, useLocation, Link } from "react-router-dom";
+import { NavLink, Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -111,7 +119,7 @@ const AdminLayout = () => {
         initial={{ x: -280 }}
         animate={{ x: isSidebarOpen ? 0 : -280 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-[#E2E8F0] shadow-xl shadow-[#0F172A]/5 flex flex-col`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-[#E2E8F0] shadow-xl shadow-[#0F172A]/5 flex flex-col overflow-hidden touch-none`}
       >
         {/* Logo Area */}
         <div className="p-6 border-b border-[#E2E8F0]">
@@ -143,7 +151,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-hidden">
           {menuItems.map((item, index) => (
             <motion.div
               key={item.path}
@@ -203,7 +211,9 @@ const AdminLayout = () => {
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
+              onClick={handleLogout}
               className="text-[#94A3B8] hover:text-[#1E3A8A]"
+              title="Logout"
             >
               <svg
                 className="w-5 h-5"
