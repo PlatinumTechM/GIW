@@ -62,7 +62,7 @@ const Navbar = () => {
       },
       isAuthenticated
         ? {
-            path: "/add-stock",
+            path: "user/add-stock",
             label: "Stock",
             icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
           }
@@ -81,11 +81,12 @@ const Navbar = () => {
     // if (user?.role === 'admin') {
     //   return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
 
-    // Hide Home, Pricing, Contact for admin users - only show Dashboard in dropdown
+    // Hide Home, Stock, Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === "admin") {
       return links.filter(
         (link) =>
           link.label !== "Home" &&
+          link.label !== "Stock" &&
           link.label !== "Pricing" &&
           link.label !== "Contact",
       );

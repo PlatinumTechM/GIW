@@ -1,8 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import notify from "@/utils/notifications.jsx";
 
 const ProtectedRoute = ({ children, requireAdmin = false, allowAdmin = false }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, loading, sessionExpired } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -20,8 +21,12 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowAdmin = false }) 
   }
 
   if (!isAuthenticated) {
+    // Show session expired message if applicable
+    if (sessionExpired) {
+      notify.warning("Session Expired", "Your session has expired. Please login again.");
+    }
     // Redirect to login, save intended location
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location, sessionExpired }} replace />;
   }
 
   if (requireAdmin && user?.role !== "admin") {
