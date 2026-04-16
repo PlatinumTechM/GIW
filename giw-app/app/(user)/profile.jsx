@@ -21,7 +21,6 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { secureStorage } from "../../src/utils/secureStorage.js";
 import { authAPI } from "../../src/api/api.js";
-import { authDebug } from "../../src/utils/authDebug.js";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -66,8 +65,6 @@ const Profile = () => {
     const loadUserData = async () => {
       try {
         setLoading(true);
-        await authDebug.debugAuthState();
-
         const userData = await secureStorage.getUserData();
 
         // Here
