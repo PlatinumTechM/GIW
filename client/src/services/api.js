@@ -17,7 +17,10 @@ api.interceptors.response.use(
 
     // Handle 404 - API endpoint not found
     if (status === 404) {
-      notify.error("Connection Error", "Server is not reachable. Please try again later.");
+      notify.error(
+        "Connection Error",
+        "Server is not reachable. Please try again later.",
+      );
     }
 
     // Only handle 401 as session expiration if NOT on login or verify-admin requests
@@ -30,7 +33,10 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: async (identifier, password) => {
-    const response = await api.post("/auth/login", { email: identifier, password });
+    const response = await api.post("/auth/login", {
+      email: identifier,
+      password,
+    });
     return response.data;
   },
 
@@ -77,6 +83,33 @@ export const authAPI = {
 
   verifyAdminPassword: async (password) => {
     const response = await api.post("/admin/verify-password", { password });
+    return response.data;
+  },
+
+  // Public subscription endpoint for pricing page (no auth required)
+  getPublicSubscriptions: async () => {
+    const response = await api.get("/admin/subscriptions/public");
+    return response.data;
+  },
+
+  // Subscription management (admin only)
+  getSubscriptions: async () => {
+    const response = await api.get("/admin/subscriptions");
+    return response.data;
+  },
+
+  createSubscription: async (data) => {
+    const response = await api.post("/admin/subscriptions", data);
+    return response.data;
+  },
+
+  updateSubscription: async (id, data) => {
+    const response = await api.put(`/admin/subscriptions/${id}`, data);
+    return response.data;
+  },
+
+  deleteSubscription: async (id) => {
+    const response = await api.delete(`/admin/subscriptions/${id}`);
     return response.data;
   },
 };

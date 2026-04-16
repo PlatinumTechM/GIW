@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { authAPI } from "../../services/api";
+import notify from "../../utils/notifications.jsx";
 import {
   Check,
   Sparkles,
@@ -15,95 +17,203 @@ import {
   ShieldCheck,
   Globe,
   BadgeDollarSign,
+  Package,
+  Gem,
+  Users,
+  ShoppingBag,
+  Leaf,
 } from "lucide-react";
 
 const Pricing = () => {
-  const [billingCycle, setBillingCycle] = useState("monthly");
   const [currency, setCurrency] = useState("USD");
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const exchangeRate = 83;
 
-  const getPrice = (usdPrice) => {
-    return currency === "USD" ? usdPrice : Math.round(usdPrice * exchangeRate);
+  // Convert INR price from backend to USD if needed
+  const getPrice = (inrPrice) => {
+    if (!inrPrice) return 0;
+    return currency === "USD" ? Math.round(inrPrice / exchangeRate) : inrPrice;
   };
 
   const getCurrencySymbol = () => {
     return currency === "USD" ? "$" : "₹";
   };
 
-  const plans = [
-    {
-      name: "Starter",
-      icon: Zap,
-      description:
-        "Perfect for small diamond businesses and new dealers entering the marketplace.",
-      monthlyPrice: 29,
-      yearlyPrice: 24,
-      features: [
-        "Up to 5 active listings",
-        "Basic dealer analytics",
-        "Email support",
-        "1GB secure storage",
-        "Standard marketplace access",
-      ],
-      notIncluded: [
-        "Priority support",
-        "Advanced analytics",
-        "Custom integrations",
-        "Dedicated manager",
-      ],
-      popular: false,
-      cta: "Get Started",
-      ctaLink: "/register",
-      badge: "For Small Businesses",
-    },
-    {
-      name: "Professional",
-      icon: Sparkles,
-      description:
-        "Built for growing diamond trading teams that need advanced visibility and trusted operations.",
-      monthlyPrice: 79,
-      yearlyPrice: 66,
-      features: [
-        "Unlimited active listings",
-        "Advanced analytics",
-        "Priority support",
-        "50GB secure storage",
-        "Full API access",
-        "Custom integrations",
-        "Team collaboration tools",
-      ],
-      notIncluded: ["Dedicated account manager"],
-      popular: true,
-      cta: "Start Free Trial",
-      ctaLink: "/register",
-      badge: "Most Popular",
-    },
-    {
-      name: "Enterprise",
-      icon: Crown,
-      description:
-        "Enterprise-grade infrastructure for large diamond companies with global trade requirements.",
-      monthlyPrice: 199,
-      yearlyPrice: 166,
-      features: [
-        "Unlimited everything",
-        "Custom enterprise analytics",
-        "24/7 phone & email support",
-        "Unlimited storage",
-        "Advanced API access",
-        "Custom integrations",
-        "Full team collaboration",
-        "Dedicated account manager",
-        "SLA guarantee",
-      ],
-      notIncluded: [],
-      popular: false,
-      cta: "Contact Sales",
-      ctaLink: "/contact",
-      badge: "For Enterprises",
-    },
-  ];
+  // Fetch subscriptions from backend
+  useEffect(() => {
+    fetchSubscriptions();
+  }, []);
+
+  const fetchSubscriptions = async () => {
+    try {
+      setLoading(true);
+      const response = await authAPI.getPublicSubscriptions();
+      if (response.success) {
+        setSubscriptions(response.subscriptions || []);
+      } else {
+        notify.error("Error", "Failed to fetch subscription plans");
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
+      notify.error("Error", "Failed to fetch subscription plans");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Icon mapping for plan types
+  const getTypeIcon = (planName) => {
+    const iconMap = {
+      basic: Zap,
+      silver: Sparkles,
+      gold: Crown,
+      pro: Diamond,
+      enterprise: Building2,
+    };
+    return iconMap[planName?.toLowerCase()] || Diamond;
+  };
+
+  // Group subscriptions by plan name and map to pricing cards
+  const getPlans = () => {
+    if (subscriptions.length === 0) {
+      // Fallback to default plans if no subscriptions
+      return [
+        {
+          name: "Basic",
+          icon: Zap,
+          description:
+            "Perfect for small diamond businesses and new dealers entering the marketplace.",
+          options: [
+            { duration: 1, durationLabel: "1 Month", price: 29, id: 1 },
+            { duration: 3, durationLabel: "3 Months", price: 79, id: 2 },
+            { duration: 6, durationLabel: "6 Months", price: 149, id: 3 },
+            { duration: 12, durationLabel: "12 Months", price: 279, id: 4 },
+          ],
+          features: [
+            "Up to 50 stock items",
+            "Email support",
+            "Standard marketplace access",
+          ],
+          notIncluded: ["Priority support", "Advanced analytics"],
+          popular: false,
+          cta: "Get Started",
+          ctaLink: "/register",
+          badge: "For Small Businesses",
+        },
+        {
+          name: "Silver",
+          icon: Sparkles,
+          description:
+            "Built for growing diamond trading teams that need advanced visibility.",
+          options: [
+            { duration: 1, durationLabel: "1 Month", price: 79, id: 5 },
+            { duration: 3, durationLabel: "3 Months", price: 229, id: 6 },
+            { duration: 6, durationLabel: "6 Months", price: 429, id: 7 },
+            { duration: 12, durationLabel: "12 Months", price: 799, id: 8 },
+          ],
+          features: [
+            "Up to 200 stock items",
+            "Priority support",
+            "Advanced analytics",
+            "Full API access",
+          ],
+          notIncluded: ["Dedicated account manager"],
+          popular: true,
+          cta: "Start Free Trial",
+          ctaLink: "/register",
+          badge: "Most Popular",
+        },
+        {
+          name: "Gold",
+          icon: Crown,
+          description:
+            "Enterprise-grade infrastructure for large diamond companies.",
+          options: [
+            { duration: 1, durationLabel: "1 Month", price: 199, id: 9 },
+            { duration: 3, durationLabel: "3 Months", price: 579, id: 10 },
+            { duration: 6, durationLabel: "6 Months", price: 1099, id: 11 },
+            { duration: 12, durationLabel: "12 Months", price: 2099, id: 12 },
+          ],
+          features: [
+            "Unlimited stock items",
+            "24/7 phone & email support",
+            "Unlimited storage",
+            "Advanced API access",
+            "Dedicated account manager",
+          ],
+          notIncluded: [],
+          popular: false,
+          cta: "Contact Sales",
+          ctaLink: "/contact",
+          badge: "For Enterprises",
+        },
+      ];
+    }
+
+    // Group active subscriptions by plan name
+    const grouped = subscriptions
+      .filter((sub) => sub.isActive !== false)
+      .reduce((acc, sub) => {
+        const name = sub.name?.toLowerCase();
+        if (!acc[name]) {
+          acc[name] = {
+            name:
+              sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Plan",
+            icon: getTypeIcon(name),
+            description: `${sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Subscription"} plan for diamond trading.`,
+            options: [],
+            features: [
+              `${sub.stockLimit} stock items limit`,
+              "Email support",
+              "Standard marketplace access",
+            ],
+            notIncluded:
+              name === "basic"
+                ? ["Priority support", "Advanced analytics"]
+                : name === "silver"
+                  ? ["Dedicated account manager"]
+                  : [],
+            popular: name === "silver",
+            cta: name === "gold" ? "Contact Sales" : "Get Started",
+            ctaLink: "/register",
+            badge:
+              name === "basic"
+                ? "For Small Businesses"
+                : name === "silver"
+                  ? "Most Popular"
+                  : "For Enterprises",
+          };
+        }
+        acc[name].options.push({
+          duration: sub.durationMonth,
+          durationLabel: `${sub.durationMonth} Month${sub.durationMonth > 1 ? "s" : ""}`,
+          price: sub.price,
+          stockLimit: sub.stockLimit,
+          id: sub.id,
+        });
+        return acc;
+      }, {});
+
+    // Sort options by duration within each plan
+    Object.values(grouped).forEach((plan) => {
+      plan.options.sort((a, b) => a.duration - b.duration);
+    });
+
+    // Return sorted by tier (basic, silver, gold)
+    const order = ["basic", "silver", "gold"];
+    return Object.values(grouped).sort((a, b) => {
+      const aIndex = order.indexOf(a.name.toLowerCase());
+      const bIndex = order.indexOf(b.name.toLowerCase());
+      if (aIndex === -1 && bIndex === -1) return a.name.localeCompare(b.name);
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
+  };
+
+  const plans = getPlans();
 
   const faqs = [
     {
@@ -170,91 +280,35 @@ const Pricing = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mt-4 text-[#475569] max-w-xl"
             >
-              Choose the perfect plan for your needs. All plans include a 14-day free trial.
+              Choose the perfect plan for your needs. All plans include a 14-day
+              free trial.
             </motion.p>
 
-            <div className="flex flex-col items-center gap-4 mt-10">
-              {/* Currency Toggle */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <div className="inline-flex items-center gap-1 rounded-xl border border-[#E2E8F0] bg-white p-1 shadow-sm">
-                  {["USD", "INR"].map((curr) => (
-                    <motion.button
-                      key={curr}
-                      onClick={() => setCurrency(curr)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
-                        currency === curr
-                          ? "bg-[#1E3A8A] text-white shadow-sm"
-                          : "text-[#64748B] hover:text-[#1E3A8A]"
-                      }`}
-                    >
-                      {curr} ({curr === "USD" ? "$" : "₹"})
-                    </motion.button>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Billing Toggle */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="flex items-center gap-3"
-              >
-                <motion.span
-                  animate={{
-                    color: billingCycle === "monthly" ? "#1E3A8A" : "#94A3B8",
-                  }}
-                  className="text-sm font-semibold"
-                >
-                  Monthly
-                </motion.span>
-
-                <motion.button
-                  onClick={() =>
-                    setBillingCycle(
-                      billingCycle === "monthly" ? "yearly" : "monthly"
-                    )
-                  }
-                  whileTap={{ scale: 0.95 }}
-                  className="relative h-7 w-14 rounded-full bg-[#1E3A8A] shadow-inner"
-                >
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      x: billingCycle === "monthly" ? 2 : 28,
-                    }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="absolute top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#BFDBFE] shadow-md"
+            {/* Currency Toggle */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-10"
+            >
+              <div className="inline-flex items-center gap-1 rounded-xl border border-[#E2E8F0] bg-white p-1 shadow-sm">
+                {["USD", "INR"].map((curr) => (
+                  <motion.button
+                    key={curr}
+                    onClick={() => setCurrency(curr)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                      currency === curr
+                        ? "bg-[#1E3A8A] text-white shadow-sm"
+                        : "text-[#64748B] hover:text-[#1E3A8A]"
+                    }`}
                   >
-                    <Star className="h-3 w-3 text-[#1E3A8A] fill-[#1E3A8A]" />
-                  </motion.div>
-                </motion.button>
-
-                <motion.span
-                  animate={{
-                    color: billingCycle === "yearly" ? "#1E3A8A" : "#94A3B8",
-                  }}
-                  className="text-sm font-semibold"
-                >
-                  Yearly
-                </motion.span>
-
-                <motion.span
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className="ml-1 rounded-full bg-[#DBEAFE] px-2 py-0.5 text-xs font-semibold text-[#1E3A8A]"
-                >
-                  Save more yearly
-                </motion.span>
-              </motion.div>
-            </div>
+                    {curr} ({curr === "USD" ? "$" : "₹"})
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -285,281 +339,298 @@ const Pricing = () => {
       {/* Pricing Cards */}
       <section className="relative bg-gradient-to-b from-[#F1F5F9] to-white py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 gap-8 md:grid-cols-3"
-          >
-            {plans.map((plan) => {
-              const Icon = plan.icon;
-              const usdPrice =
-                billingCycle === "monthly"
-                  ? plan.monthlyPrice
-                  : plan.yearlyPrice;
-              const price = getPrice(usdPrice);
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[#1E3A8A]"></div>
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              className="grid grid-cols-1 gap-8 md:grid-cols-3"
+            >
+              {plans.map((plan) => {
+                const Icon = plan.icon;
 
-              return (
-                <motion.div
-                  key={plan.name}
-                  variants={fadeInUp}
-                  whileHover={{
-                    y: -12,
-                    transition: { type: "spring", stiffness: 300, damping: 20 },
-                  }}
-                  className={`group relative rounded-[30px] border transition-all duration-500 ${
-                    plan.popular
-                      ? "border-[#3B82F6]/30 bg-gradient-to-b from-[#1E3A8A] to-[#2563EB] text-white shadow-[0_25px_80px_rgba(30,58,138,0.25)] md:-mt-6 md:mb-6"
-                      : "border-[#E2E8F0] bg-white shadow-[0_15px_50px_rgba(15,23,42,0.08)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.12)] hover:border-[#3B82F6]/20"
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 z-20 -translate-x-1/2">
-                      <motion.span
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#1E3A8A] shadow-lg"
-                      >
-                        <Star className="h-4 w-4 fill-current" />
-                        Most Popular
-                      </motion.span>
-                    </div>
-                  )}
-
-                  <div className="relative overflow-hidden rounded-[30px] p-8">
-                    {!plan.popular && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#EFF6FF] via-white to-[#F8FAFC] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                return (
+                  <motion.div
+                    key={plan.name}
+                    variants={fadeInUp}
+                    whileHover={{
+                      y: -12,
+                      transition: {
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      },
+                    }}
+                    className={`group relative rounded-[30px] border transition-all duration-500 ${
+                      plan.popular
+                        ? "border-[#3B82F6]/30 bg-gradient-to-b from-[#1E3A8A] to-[#2563EB] text-white shadow-[0_25px_80px_rgba(30,58,138,0.25)] md:-mt-6 md:mb-6"
+                        : "border-[#E2E8F0] bg-white shadow-[0_15px_50px_rgba(15,23,42,0.08)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.12)] hover:border-[#3B82F6]/20"
+                    }`}
+                  >
+                    {plan.popular && (
+                      <div className="absolute -top-4 left-1/2 z-20 -translate-x-1/2">
+                        <motion.span
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="inline-flex items-center gap-1 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#1E3A8A] shadow-lg"
+                        >
+                          <Star className="h-4 w-4 fill-current" />
+                          Most Popular
+                        </motion.span>
+                      </div>
                     )}
 
-                    <div className="relative z-10">
-                      <div className="mb-6">
-                        <div
-                          className={`mb-4 inline-flex rounded-2xl px-3 py-1 text-xs font-semibold ${
-                            plan.popular
-                              ? "bg-white/15 text-[#DBEAFE]"
-                              : "bg-[#DBEAFE] text-[#1E3A8A]"
-                          }`}
-                        >
-                          {plan.badge}
-                        </div>
+                    <div className="relative overflow-hidden rounded-[30px] p-8">
+                      {!plan.popular && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#EFF6FF] via-white to-[#F8FAFC] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                      )}
 
-                        <motion.div
-                          whileHover={{ rotate: 6, scale: 1.05 }}
-                          transition={{ duration: 0.3 }}
-                          className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${
-                            plan.popular
-                              ? "bg-white/15"
-                              : "bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] group-hover:from-[#DBEAFE] group-hover:to-[#BFDBFE]"
-                          }`}
-                        >
-                          <Icon
-                            className={`h-7 w-7 ${
-                              plan.popular ? "text-white" : "text-[#1E3A8A]"
-                            }`}
-                          />
-                        </motion.div>
-
-                        <h3
-                          className={`text-2xl font-bold ${
-                            plan.popular ? "text-white" : "text-[#0F172A]"
-                          }`}
-                        >
-                          {plan.name}
-                        </h3>
-
-                        <p
-                          className={`mt-2 text-sm leading-6 ${
-                            plan.popular
-                              ? "text-[#DBEAFE]/90"
-                              : "text-[#64748B]"
-                          }`}
-                        >
-                          {plan.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-8">
-                        <div className="flex items-end gap-2">
-                          <span
-                            className={`text-lg ${
+                      <div className="relative z-10">
+                        <div className="mb-6">
+                          <div
+                            className={`mb-4 inline-flex rounded-2xl px-3 py-1 text-xs font-semibold ${
                               plan.popular
-                                ? "text-[#93C5FD]"
-                                : "text-[#1E3A8A]"
+                                ? "bg-white/15 text-[#DBEAFE]"
+                                : "bg-[#DBEAFE] text-[#1E3A8A]"
                             }`}
                           >
-                            {getCurrencySymbol()}
-                          </span>
+                            {plan.badge}
+                          </div>
 
-                          <AnimatePresence mode="wait">
-                            <motion.span
-                              key={billingCycle + currency + plan.name}
-                              initial={{ opacity: 0, y: 12 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -12 }}
-                              transition={{ duration: 0.25 }}
-                              className={`text-5xl font-bold tracking-tight ${
-                                plan.popular
-                                  ? "text-white"
-                                  : "text-[#0F172A]"
-                              }`}
-                            >
-                              {price.toLocaleString()}
-                            </motion.span>
-                          </AnimatePresence>
-
-                          <span
-                            className={`pb-1 ${
+                          <motion.div
+                            whileHover={{ rotate: 6, scale: 1.05 }}
+                            transition={{ duration: 0.3 }}
+                            className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${
                               plan.popular
-                                ? "text-[#93C5FD]"
+                                ? "bg-white/15"
+                                : "bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] group-hover:from-[#DBEAFE] group-hover:to-[#BFDBFE]"
+                            }`}
+                          >
+                            <Icon
+                              className={`h-7 w-7 ${
+                                plan.popular ? "text-white" : "text-[#1E3A8A]"
+                              }`}
+                            />
+                          </motion.div>
+
+                          <h3
+                            className={`text-2xl font-bold ${
+                              plan.popular ? "text-white" : "text-[#0F172A]"
+                            }`}
+                          >
+                            {plan.name}
+                          </h3>
+
+                          <p
+                            className={`mt-2 text-sm leading-6 ${
+                              plan.popular
+                                ? "text-[#DBEAFE]/90"
                                 : "text-[#64748B]"
                             }`}
                           >
-                            /month
-                          </span>
+                            {plan.description}
+                          </p>
                         </div>
 
-                        {billingCycle === "yearly" && (
+                        {/* Multiple Duration Options */}
+                        <div className="mt-8">
                           <p
-                            className={`mt-2 text-sm ${
-                              plan.popular
-                                ? "text-[#93C5FD]"
-                                : "text-[#3B82F6]"
+                            className={`mb-3 text-xs font-semibold uppercase tracking-[0.18em] ${
+                              plan.popular ? "text-[#93C5FD]" : "text-[#1E3A8A]"
                             }`}
                           >
-                            Billed annually at {getCurrencySymbol()}
-                            {price.toLocaleString()}/year
+                            Choose duration
                           </p>
-                        )}
-                      </div>
+                          <div className="space-y-2">
+                            {plan.options?.map((option) => {
+                              const price = getPrice(option.price);
+                              return (
+                                <motion.div
+                                  key={option.id}
+                                  whileHover={{ scale: 1.02 }}
+                                  className={`flex items-center justify-between rounded-xl border px-4 py-3 cursor-pointer ${
+                                    plan.popular
+                                      ? "border-white/20 bg-white/10 hover:bg-white/20"
+                                      : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#3B82F6]/30 hover:bg-[#EFF6FF]"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span
+                                      className={`text-sm font-medium ${
+                                        plan.popular
+                                          ? "text-white"
+                                          : "text-[#0F172A]"
+                                      }`}
+                                    >
+                                      {option.durationLabel}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span
+                                      className={`text-sm ${
+                                        plan.popular
+                                          ? "text-[#93C5FD]"
+                                          : "text-[#64748B]"
+                                      }`}
+                                    >
+                                      {getCurrencySymbol()}
+                                    </span>
+                                    <span
+                                      className={`text-lg font-bold ${
+                                        plan.popular
+                                          ? "text-white"
+                                          : "text-[#0F172A]"
+                                      }`}
+                                    >
+                                      {price.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </div>
 
-                      <div className="mt-8">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Link
-                            to={plan.ctaLink}
-                            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
-                              plan.popular
-                                ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC]"
-                                : "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/25 hover:bg-[#1E40AF] hover:shadow-xl"
-                            }`}
+                        <div className="mt-8">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <span>{plan.cta}</span>
-                            <motion.span
-                              animate={{ x: [0, 5, 0] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
+                            <Link
+                              to={plan.ctaLink}
+                              className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
+                                plan.popular
+                                  ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC]"
+                                  : "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/25 hover:bg-[#1E40AF] hover:shadow-xl"
+                              }`}
                             >
-                              <ArrowRight className="h-4 w-4" />
-                            </motion.span>
-                          </Link>
-                        </motion.div>
-                      </div>
+                              <span>{plan.cta}</span>
+                              <motion.span
+                                animate={{ x: [0, 5, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </motion.span>
+                            </Link>
+                          </motion.div>
+                        </div>
 
-                      <div
-                        className={`mt-8 border-t pt-6 ${
-                          plan.popular
-                            ? "border-white/15"
-                            : "border-[#E2E8F0]"
-                        }`}
-                      >
-                        <p
-                          className={`mb-4 text-xs font-semibold uppercase tracking-[0.18em] ${
+                        <div
+                          className={`mt-8 border-t pt-6 ${
                             plan.popular
-                              ? "text-[#93C5FD]"
-                              : "text-[#1E3A8A]"
+                              ? "border-white/15"
+                              : "border-[#E2E8F0]"
                           }`}
                         >
-                          Included features
-                        </p>
+                          <p
+                            className={`mb-4 text-xs font-semibold uppercase tracking-[0.18em] ${
+                              plan.popular ? "text-[#93C5FD]" : "text-[#1E3A8A]"
+                            }`}
+                          >
+                            Included features
+                          </p>
 
-                        <ul className="space-y-3">
-                          {plan.features.map((feature) => (
-                            <li key={feature} className="flex items-start gap-3">
-                              <span
-                                className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
-                                  plan.popular
-                                    ? "bg-white/15"
-                                    : "bg-[#DBEAFE]"
-                                }`}
+                          <ul className="space-y-3">
+                            {plan.features.map((feature) => (
+                              <li
+                                key={feature}
+                                className="flex items-start gap-3"
                               >
-                                <Check
-                                  className={`h-3.5 w-3.5 ${
+                                <span
+                                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
                                     plan.popular
-                                      ? "text-white"
-                                      : "text-[#2563EB]"
+                                      ? "bg-white/15"
+                                      : "bg-[#DBEAFE]"
                                   }`}
-                                />
-                              </span>
-                              <span
-                                className={`text-sm ${
+                                >
+                                  <Check
+                                    className={`h-3.5 w-3.5 ${
+                                      plan.popular
+                                        ? "text-white"
+                                        : "text-[#2563EB]"
+                                    }`}
+                                  />
+                                </span>
+                                <span
+                                  className={`text-sm ${
+                                    plan.popular
+                                      ? "text-white/90"
+                                      : "text-[#475569]"
+                                  }`}
+                                >
+                                  {feature}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          {plan.notIncluded.length > 0 && (
+                            <>
+                              <div
+                                className={`my-6 border-t ${
                                   plan.popular
-                                    ? "text-white/90"
-                                    : "text-[#475569]"
+                                    ? "border-white/15"
+                                    : "border-[#E2E8F0]"
+                                }`}
+                              />
+                              <p
+                                className={`mb-4 text-xs font-semibold uppercase tracking-[0.18em] ${
+                                  plan.popular
+                                    ? "text-[#93C5FD]/80"
+                                    : "text-[#94A3B8]"
                                 }`}
                               >
-                                {feature}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
+                                Not included
+                              </p>
 
-                        {plan.notIncluded.length > 0 && (
-                          <>
-                            <div
-                              className={`my-6 border-t ${
-                                plan.popular
-                                  ? "border-white/15"
-                                  : "border-[#E2E8F0]"
-                              }`}
-                            />
-                            <p
-                              className={`mb-4 text-xs font-semibold uppercase tracking-[0.18em] ${
-                                plan.popular
-                                  ? "text-[#93C5FD]/80"
-                                  : "text-[#94A3B8]"
-                              }`}
-                            >
-                              Not included
-                            </p>
-
-                            <ul className="space-y-3">
-                              {plan.notIncluded.map((item) => (
-                                <li key={item} className="flex items-start gap-3">
-                                  <span
-                                    className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
-                                      plan.popular
-                                        ? "bg-white/10"
-                                        : "bg-[#EFF6FF]"
-                                    }`}
+                              <ul className="space-y-3">
+                                {plan.notIncluded.map((item) => (
+                                  <li
+                                    key={item}
+                                    className="flex items-start gap-3"
                                   >
-                                    <X
-                                      className={`h-3.5 w-3.5 ${
+                                    <span
+                                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
                                         plan.popular
-                                          ? "text-[#BFDBFE]"
-                                          : "text-[#93C5FD]"
+                                          ? "bg-white/10"
+                                          : "bg-[#EFF6FF]"
                                       }`}
-                                    />
-                                  </span>
-                                  <span
-                                    className={`text-sm ${
-                                      plan.popular
-                                        ? "text-[#93C5FD]/80"
-                                        : "text-[#94A3B8]"
-                                    }`}
-                                  >
-                                    {item}
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
+                                    >
+                                      <X
+                                        className={`h-3.5 w-3.5 ${
+                                          plan.popular
+                                            ? "text-[#BFDBFE]"
+                                            : "text-[#93C5FD]"
+                                        }`}
+                                      />
+                                    </span>
+                                    <span
+                                      className={`text-sm ${
+                                        plan.popular
+                                          ? "text-[#93C5FD]/80"
+                                          : "text-[#94A3B8]"
+                                      }`}
+                                    >
+                                      {item}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -670,7 +741,10 @@ const Pricing = () => {
                 variants={fadeInUp}
                 className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"
               >
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Link
                     to="/register"
                     className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 font-semibold text-[#1E3A8A] shadow-lg transition-all duration-300 hover:bg-[#EFF6FF]"
@@ -685,7 +759,10 @@ const Pricing = () => {
                   </Link>
                 </motion.div>
 
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Link
                     to="/contact"
                     className="rounded-2xl border border-white/30 px-8 py-4 font-semibold text-white transition-all duration-300 hover:bg-white/10"
