@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles, ChevronDown as ChevronDownIcon } from "lucide-react";
 import Input from "../../../components/ui/Input";
 
 // Constants
@@ -13,7 +13,16 @@ export const shapes = [
   { name: "MARQUISE", icon: "/diamond%20shap%20icon/marquise.svg" },
   { name: "HEART", icon: "/diamond%20shap%20icon/heart.svg" },
   { name: "RADIANT", icon: "/diamond%20shap%20icon/radiant.svg" },
+  { name: "BAGUETTE", icon: "/diamond%20shap%20icon/Baguette.svg" },
+  { name: "HEXAGONAL", icon: "/diamond%20shap%20icon/Hexagonal.svg" },
+  { name: "SQUARE EMERALD", icon: "/diamond%20shap%20icon/Square%20Emerald.svg" },
+  { name: "BRIOLETTE", icon: "/diamond%20shap%20icon/Briolette.svg" },
+  { name: "TRILLIANT", icon: "/diamond%20shap%20icon/Trilliant.svg" },
+  { name: "HALF MOON", icon: "/diamond%20shap%20icon/half%20moon.svg" },
+  { name: "ROSE CUT", icon: "/diamond%20shap%20icon/rose%20cut.svg" },
+  { name: "KITE", icon: "/diamond%20shap%20icon/kite.svg" },
   { name: "OTHER", icon: "/diamond%20shap%20icon/other.svg" },
+  
 ];
 
 export const whiteColors = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
@@ -67,6 +76,8 @@ export const useDiamondFilters = () => {
   const [pendingCertifications, setPendingCertifications] = useState([]);
   const [pendingCertificateType, setPendingCertificateType] = useState(null);
   const [pendingFluorescence, setPendingFluorescence] = useState([]);
+  const [visibleShapesCount, setVisibleShapesCount] = useState(8);
+  const SHAPES_BATCH_SIZE = 8;
 
   // Applied filter states (what's actually applied to results)
   const [selectedShapes, setSelectedShapes] = useState([]);
@@ -214,6 +225,14 @@ export const useDiamondFilters = () => {
 
   const toggleSection = useCallback((section) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  }, []);
+
+  const showMoreShapes = useCallback(() => {
+    setVisibleShapesCount((prev) => Math.min(prev + SHAPES_BATCH_SIZE, shapes.length));
+  }, []);
+
+  const resetVisibleShapes = useCallback(() => {
+    setVisibleShapesCount(7);
   }, []);
 
   // Apply pending filters to applied filters
@@ -755,6 +774,10 @@ export const useDiamondFilters = () => {
     toggleCertification,
     toggleFluorescence,
     toggleSection,
+    // Shape pagination
+    visibleShapesCount,
+    showMoreShapes,
+    resetVisibleShapes,
     // Actions
     applyFilters,
     syncPendingToApplied,
@@ -786,6 +809,7 @@ export const DiamondFilterContent = ({
     pendingPriceMin: priceMin,
     pendingPriceMax: priceMax,
     expandedSections,
+    visibleShapesCount,
     pendingLengthMin: lengthMin,
     pendingLengthMax: lengthMax,
     pendingWidthMin: widthMin,
@@ -856,28 +880,30 @@ export const DiamondFilterContent = ({
     toggleCertification,
     toggleFluorescence,
     toggleSection,
+    showMoreShapes,
   } = filters;
 
   return (
     <div className="space-y-4">
       {/* Shape Filter */}
       <FilterSection title="Shape" section="shape" expandedSections={expandedSections} toggleSection={toggleSection}>
-        <div className="grid grid-cols-3 gap-2">
-          {shapes.map((shape) => (
+        <div className="grid grid-cols-4 gap-2">
+          {shapes.slice(0, visibleShapesCount).map((shape) => (
             <button
               key={shape.name}
               onClick={() => toggleShape(shape.name)}
-              className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all duration-300 ${
+              className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-300 ${
                 selectedShapes.includes(shape.name)
                   ? "bg-[#DBEAFE] ring-2 ring-[#1E3A8A] scale-105"
                   : "hover:bg-[#F1F5F9]"
               }`}
             >
-              <div className="w-10 h-10 flex items-center justify-center bg-white rounded-lg">
+              <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg">
                 <img
                   src={shape.icon}
                   alt={shape.name}
-                  className="w-9 h-9 object-contain transition-all duration-300"
+                  loading="lazy"
+                  className="w-10 h-10 object-cover transition-all duration-300"
                   style={{
                     filter: selectedShapes.includes(shape.name)
                       ? 'brightness(0.3) contrast(1.8)'
@@ -886,7 +912,7 @@ export const DiamondFilterContent = ({
                 />
               </div>
               <span
-                className={`text-[10px] leading-tight text-center ${
+                className={`text-[9px] leading-tight text-center ${
                   selectedShapes.includes(shape.name)
                     ? "text-[#1E3A8A] font-medium"
                     : "text-[#475569]"
@@ -897,6 +923,15 @@ export const DiamondFilterContent = ({
             </button>
           ))}
         </div>
+        {visibleShapesCount < shapes.length && (
+          <button
+            onClick={showMoreShapes}
+            className="w-full mt-3 py-2 flex items-center justify-center gap-1 text-sm text-[#1E3A8A] font-medium hover:bg-[#DBEAFE] rounded-lg transition-colors duration-200"
+          >
+            More shape
+            <ChevronDownIcon className="w-4 h-4" />
+          </button>
+        )}
       </FilterSection>
 
       {/* Color Filter */}
