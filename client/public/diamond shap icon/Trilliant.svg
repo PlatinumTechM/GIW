@@ -1,0 +1,19 @@
+<svg width="200" height="200" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer Triangle -->
+  <polygon points="60,5 115,95 5,95" stroke="black" stroke-width="2" fill="none"></polygon>
+
+  <!-- Inner Facets -->
+  <polygon points="60,20 95,85 25,85" stroke="black" stroke-width="1.5" fill="none"></polygon>
+
+  <polygon points="60,35 80,75 40,75" stroke="black" stroke-width="1.5" fill="none"></polygon>
+
+  <!-- Center Lines -->
+  <line x1="60" y1="5" x2="60" y2="95" stroke="black" stroke-width="1"></line>
+  <line x1="5" y1="95" x2="115" y2="95" stroke="black" stroke-width="1"></line>
+
+  <!-- Diagonal Facets -->
+  <line x1="60" y1="20" x2="25" y2="85" stroke="black" stroke-width="1"></line>
+  <line x1="60" y1="20" x2="95" y2="85" stroke="black" stroke-width="1"></line>
+
+  <line x1="40" y1="75" x2="80" y2="75" stroke="black" stroke-width="1"></line>
+</svg>

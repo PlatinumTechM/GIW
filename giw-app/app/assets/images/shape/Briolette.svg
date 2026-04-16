@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer Pear Shape -->
+  <path d="M50 5 
+           C70 25, 90 50, 80 80 
+           C70 110, 50 135, 50 135 
+           C50 135, 30 110, 20 80 
+           C10 50, 30 25, 50 5 Z" stroke="black" stroke-width="2" fill="none"></path>
+
+  <!-- Inner Facets -->
+  <path d="M50 20 
+           C65 35, 75 55, 70 75 
+           C65 95, 50 115, 50 115 
+           C50 115, 35 95, 30 75 
+           C25 55, 35 35, 50 20 Z" stroke="black" stroke-width="1.5" fill="none"></path>
+
+  <!-- Center Lines -->
+  <line x1="50" y1="20" x2="50" y2="115" stroke="black" stroke-width="1"></line>
+
+  <line x1="30" y1="75" x2="70" y2="75" stroke="black" stroke-width="1"></line>
+
+  <!-- Diagonal Facets -->
+  <line x1="35" y1="35" x2="50" y2="75" stroke="black" stroke-width="1"></line>
+  <line x1="65" y1="35" x2="50" y2="75" stroke="black" stroke-width="1"></line>
+
+  <line x1="35" y1="95" x2="50" y2="75" stroke="black" stroke-width="1"></line>
+  <line x1="65" y1="95" x2="50" y2="75" stroke="black" stroke-width="1"></line>
+</svg>
