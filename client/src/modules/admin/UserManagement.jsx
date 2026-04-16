@@ -71,13 +71,13 @@ const UserManagement = () => {
   // Verify admin password and show user password
   const verifyAndShowPassword = async () => {
     try {
-      // Get current admin user from localStorage
-      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      // Get current admin user from API (cookie-based auth)
+      const currentUser = await authAPI.getCurrentUser();
       if (!currentUser.email) {
         notify.error("Error", "Admin session not found");
         return;
       }
-      
+
       // Verify admin password via dedicated API (only password needed)
       const response = await authAPI.verifyAdminPassword(adminPassword);
       console.log("verify response = ", response);
@@ -443,56 +443,138 @@ const UserManagement = () => {
         )}
 
         {/* Stats & Pagination */}
-        <div className="px-6 py-4 border-t border-[#1E3A8A]/10">
-          {/* Simple Text Stats */}
-          <div className="flex items-center gap-6 mb-4 text-sm text-[#1E3A8A]/70">
-          
-            <span className="text-emerald-600">Active: <strong>{users.filter(u => u.status === "active").length}</strong></span>
-            <span className="text-rose-600">Deactive: <strong>{users.filter(u => u.status === "inactive").length}</strong></span>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-[#1E3A8A]/60">
+        <div className="px-4 sm:px-6 py-4 border-t border-[#1E3A8A]/10">
+          {/* Stats Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex items-center gap-4 text-sm text-[#1E3A8A]/70">
+              <span className="text-emerald-600">Active: <strong>{users.filter(u => u.status === "active").length}</strong></span>
+              <span className="text-rose-600">Deactive: <strong>{users.filter(u => u.status === "inactive").length}</strong></span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#1E3A8A]/60">
               Showing {filteredUsers.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
             </p>
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </motion.button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <motion.button
-                  key={page}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                    currentPage === page
-                      ? "bg-[#1E3A8A] text-white"
-                      : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                  }`}
-                >
-                  {page}
-                </motion.button>
-              ))}
+          </div>
+
+          {/* Pagination - Mobile: Simple, Desktop: Full */}
+          <div className="flex items-center justify-between sm:justify-end gap-2">
+            {/* Mobile: Previous/Next only with page indicator */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ← Prev
+              </motion.button>
+              <span className="text-sm font-medium text-[#1E3A8A]/80 min-w-[60px] text-center">
+                {currentPage} / {totalPages || 1}
+              </span>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-3 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next →
+              </motion.button>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </motion.button>
+
+            {/* Desktop: Full pagination with page numbers */}
+            <div className="hidden sm:flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </motion.button>
+              <div className="flex items-center gap-1">
+                {totalPages <= 7 ? (
+                  // Show all pages if 7 or less
+                  Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <motion.button
+                      key={page}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === page
+                          ? "bg-[#1E3A8A] text-white"
+                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                      }`}
+                    >
+                      {page}
+                    </motion.button>
+                  ))
+                ) : (
+                  // Show truncated pagination for many pages
+                  <>
+                    {/* First page */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCurrentPage(1)}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === 1
+                          ? "bg-[#1E3A8A] text-white"
+                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                      }`}
+                    >
+                      1
+                    </motion.button>
+                    {/* Ellipsis or second page */}
+                    {currentPage > 3 && <span className="px-1 text-[#1E3A8A]/50">...</span>}
+                    {/* Pages around current */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => page !== 1 && page !== totalPages && page >= currentPage - 1 && page <= currentPage + 1)
+                      .map(page => (
+                        <motion.button
+                          key={page}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                            currentPage === page
+                              ? "bg-[#1E3A8A] text-white"
+                              : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                          }`}
+                        >
+                          {page}
+                        </motion.button>
+                      ))}
+                    {/* Ellipsis before last */}
+                    {currentPage < totalPages - 2 && <span className="px-1 text-[#1E3A8A]/50">...</span>}
+                    {/* Last page */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setCurrentPage(totalPages)}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                        currentPage === totalPages
+                          ? "bg-[#1E3A8A] text-white"
+                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                      }`}
+                    >
+                      {totalPages}
+                    </motion.button>
+                  </>
+                )}
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </motion.button>
+            </div>
           </div>
         </div>
-          </div>
-      </div>
       </motion.div>
 
       {/* User Details Modal */}

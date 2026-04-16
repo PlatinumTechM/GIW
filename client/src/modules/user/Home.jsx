@@ -28,7 +28,7 @@ const categories = [
   {
     id: "natural-diamond",
     title: "Natural Diamonds",
-    path: "/natural-diamonds",
+    path: "/user/natural-diamonds",
     icon: (
       <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M12 2L4 8L12 22L20 8L12 2Z" />
@@ -43,7 +43,7 @@ const categories = [
   {
     id: "lab-grown-diamond",
     title: "Lab-Grown Diamonds",
-    path: "/lab-grown-diamonds",
+    path: "/user/lab-grown-diamonds",
     icon: (
       <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12" cy="12" r="3" />
@@ -63,7 +63,7 @@ const categories = [
   {
     id: "jewelry",
     title: "Jewelry",
-    path: "/jewelry",
+    path: "/user/jewelry",
     icon: (
       <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12" cy="10" r="3" />
@@ -78,7 +78,7 @@ const categories = [
   {
     id: "lab-grown-jewelry",
     title: "Lab-Grown Jewelry",
-    path: "/lab-grown-jewelry",
+    path: "/user/lab-grown-jewelry",
     icon: (
       <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12" cy="10" r="3" />

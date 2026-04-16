@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import Input from "../../components/ui/Input";
 import notify from "../../utils/notifications.jsx";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, clearSessionExpired } = useAuth();
   const [formData, setFormData] = useState({
     identifier: "",
     password: "",
@@ -15,13 +15,20 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState("");
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     setIsLoaded(true);
-  }, []);
+    // Check if redirected from protected route due to session expiration
+    if (location.state?.sessionExpired) {
+      setSessionExpiredMessage("Your session has expired. Please login again.");
+      clearSessionExpired?.();
+    }
+  }, [location.state, clearSessionExpired]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -284,6 +291,12 @@ const Login = () => {
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {sessionExpiredMessage && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-700">{sessionExpiredMessage}</p>
               </div>
             )}
 

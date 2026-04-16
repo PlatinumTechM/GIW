@@ -568,7 +568,7 @@ const LabGrownJewelry = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 type="lab-grown"
-                onItemClick={(item) => navigate(`/jewelry/lab-grown/${item.id}`)}
+                onItemClick={(item) => navigate(`/user/jewelry/lab-grown/${item.id}`)}
                 onAddToCart={(item) => console.log("Add to cart:", item.name)}
                 onAddToWishlist={(item) =>
                   console.log("Add to wishlist:", item.name)

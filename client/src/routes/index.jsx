@@ -48,12 +48,20 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/natural-diamonds",
-        element: <NaturalDiamond />,
+        path: "user/natural-diamonds",
+        element: (
+          <ProtectedRoute>
+            <NaturalDiamond />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "/lab-grown-diamonds",
-        element: <LabGrownDiamond />,
+        path: "user/lab-grown-diamonds",
+        element: (
+          <ProtectedRoute>
+            <LabGrownDiamond />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/register",
@@ -76,23 +84,39 @@ export const router = createBrowserRouter([
         element: <Contact />,
       },
       {
-        path: "/jewelry",
-        element: <Jewelry />,
+        path: "user/jewelry",
+        element: (
+          <ProtectedRoute>
+            <Jewelry />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "/lab-grown-jewelry",
-        element: <LabGrownJewelry />,
+        path: "user/lab-grown-jewelry",
+        element: (
+          <ProtectedRoute>
+            <LabGrownJewelry />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "/diamond/:type/:id",
-        element: <DiamondDetail />,
+        path: "user/diamond/:type/:id",
+        element: (
+          <ProtectedRoute>
+            <DiamondDetail />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "/jewelry/:type/:id",
-        element: <JewelryDetail />,
+        path: "user/jewelry/:type/:id",
+        element: (
+          <ProtectedRoute>
+            <JewelryDetail />
+          </ProtectedRoute>
+        ),
       },
       {
-        path: "/add-stock",
+        path: "user/add-stock",
         element: (
           <ProtectedRoute>
             <AddStock />
@@ -100,7 +124,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/add-stock-manually",
+        path: "user/add-stock-manually",
         element: (
           <ProtectedRoute>
             <AddStockManual />
