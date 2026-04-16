@@ -6,7 +6,7 @@ const verifyAdminPassword = async (password) => {
   if (!admin) {
     throw new Error("Invalid admin password");
   }
-  return { 
+  return {
     success: true,
     message: "Password verified successfully",
   };
@@ -15,7 +15,7 @@ const verifyAdminPassword = async (password) => {
 // Get all users
 const getAllUsers = async () => {
   const users = await adminRepo.getAllUsers();
-  return users.map(user => ({
+  return users.map((user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
@@ -25,14 +25,66 @@ const getAllUsers = async () => {
     gst: user.gst,
     document: user.document,
     password: user.password,
-    role: user.role || 'user',
+    role: user.role || "user",
     isActive: user.is_active,
     createdAt: user.created_at,
   }));
 };
 
-export const adminService = {
-  verifyAdminPassword,
-  getAllUsers
+// Get all subscriptions
+const getSubscriptions = async () => {
+  const subscriptions = await adminRepo.getSubscriptions();
+  return subscriptions;
 };
 
+const VALID_DURATIONS = [1, 3, 6, 12];
+
+// Validate duration
+const validateDuration = (duration) => {
+  if (!VALID_DURATIONS.includes(parseInt(duration))) {
+    throw new Error(
+      `Duration must be one of: ${VALID_DURATIONS.join(", ")} months`,
+    );
+  }
+};
+
+// Validate price and stock limit
+const validatePricingData = (price, stockLimit) => {
+  if (price < 0) {
+    throw new Error("Price cannot be negative");
+  }
+  if (stockLimit < 0) {
+    throw new Error("Stock limit cannot be negative");
+  }
+};
+
+// Create subscription
+const createSubscription = async (data) => {
+  validateDuration(data.duration);
+  validatePricingData(data.price, data.stockLimit);
+  const subscription = await adminRepo.createSubscription(data);
+  return subscription;
+};
+
+// Update subscription
+const updateSubscription = async (id, data) => {
+  validateDuration(data.duration);
+  validatePricingData(data.price, data.stockLimit);
+  const subscription = await adminRepo.updateSubscription(id, data);
+  return subscription;
+};
+
+// Delete subscription
+const deleteSubscription = async (id) => {
+  await adminRepo.deleteSubscription(id);
+  return { success: true };
+};
+
+export const adminService = {
+  verifyAdminPassword,
+  getAllUsers,
+  getSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscription,
+};
