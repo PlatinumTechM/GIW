@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -126,7 +125,6 @@ const SettingsItem = ({
 // ─── Main Profile Component ─────────────────────────────────────
 const Profile = () => {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -330,7 +328,7 @@ const Profile = () => {
       .toUpperCase() || "A";
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View>

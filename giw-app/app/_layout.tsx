@@ -10,7 +10,7 @@ export default function AuthLayout() {
       <StatusBar style="dark" translucent={false} />
       <SafeAreaView
         style={{ flex: 1, backgroundColor: "#f8f9fa" }}
-        edges={["bottom"]}
+        edges={["top", "bottom"]}
       >
         <Stack
           screenOptions={{

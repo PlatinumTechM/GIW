@@ -1,13 +1,6 @@
 import { Tabs } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import {
-  View,
-  Text,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Animated,
-} from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRef, useEffect } from "react";
 
@@ -55,16 +48,6 @@ function TabButton({
       }),
     ]).start();
   }, [isFocused]);
-
-  const pillWidth = bgAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [44, 110],
-  });
-
-  const pillOpacity = bgAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
 
   return (
     <Pressable
