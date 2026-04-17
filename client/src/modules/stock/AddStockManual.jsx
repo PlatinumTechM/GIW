@@ -6,7 +6,6 @@ import {
   X,
   ChevronRight,
   Upload,
-  Download,
   Image as ImageIcon,
   FileText,
   Package,
@@ -19,16 +18,12 @@ import {
   MapPin,
   Gem,
   CheckCircle,
-  AlertCircle,
   FileSpreadsheet,
-  Table,
   LayoutGrid,
   List,
   Search,
   Trash2,
   ChevronLeft,
-  ChevronDown,
-  MoreVertical,
   Database,
   RotateCcw,
 } from "lucide-react";
@@ -194,7 +189,7 @@ const TREATMENT_OPTIONS = [
   "Fracture Filled",
 ];
 
-const DIAMOND_TYPE_OPTIONS = ["Natural", "Lab Grown", "Simulant"];
+const DIAMOND_TYPE_OPTIONS = ["Natural", "Lab Grown"];
 
 const FANCY_COLOR_OPTIONS = [
   "Yellow",
@@ -234,13 +229,9 @@ const FANCY_OVERTONE_OPTIONS = [
   "Pinkish",
 ];
 
-const STATUS_OPTIONS = ["Available", "Sold", "Reserved", "On Hold", "In Transit"];
+const STATUS_OPTIONS = ["Available", "Sold", "On Hold", "In Memo"];
 
-const GROWTH_TYPE_OPTIONS = [
-  "CVD",
-  "HPHT",
-  "Natural",
-];
+const GROWTH_TYPE_OPTIONS = ["CVD", "HPHT", "Natural"];
 
 const EYE_CLEAN_OPTIONS = ["Yes", "No", "VVS"];
 
@@ -249,38 +240,144 @@ const MILKY_OPTIONS = ["None", "Milky", "Slightly Milky", "Heavy Milky"];
 // Field mappings for Excel import - matches backend logic
 const FIELD_MAPPINGS = {
   type: ["type", "diamond type", "stone type"],
-  stock_id: ["stock id", "stockid", "stock_id", "stock no", "stockno", "stock #", "packet no", "packetno", "stoneno", "stone no", "stone #", "stone id", "pkt no", "pkt #", "ref no", "ref #", "reference"],
-  certificate_number: ["certificate number", "cert no", "cert_no", "certificate_no", "cert #", "cert.", "report no", "report #", "lab no", "lab #", "report", "certificate", "cert", "inscription", "insc"],
+  stock_id: [
+    "stock id",
+    "stockid",
+    "stock_id",
+    "stock no",
+    "stockno",
+    "stock #",
+    "packet no",
+    "packetno",
+    "stoneno",
+    "stone no",
+    "stone #",
+    "stone id",
+    "pkt no",
+    "pkt #",
+    "ref no",
+    "ref #",
+    "reference",
+  ],
+  certificate_number: [
+    "certificate number",
+    "cert no",
+    "cert_no",
+    "certificate_no",
+    "cert #",
+    "cert.",
+    "report no",
+    "report #",
+    "lab no",
+    "lab #",
+    "report",
+    "certificate",
+    "cert",
+    "inscription",
+    "insc",
+  ],
   weight: ["weight", "carat", "carat weight", "ct", "cts", "carats", "crt"],
   shape: ["shape", "shp", "diamond shape", "cut shape"],
   color: ["color", "colour", "col", "colors", "clr"],
-  fancy_color: ["fancy color", "fancycolor", "fncy color", "fncy clr", "fan color", "f color"],
-  fancy_color_intensity: ["fancy color intensity", "intensity", "fancy intensity", "clr intensity", "color intensity"],
-  fancy_color_overtone: ["fancy color overtone", "overtone", "fancy overtone", "color overtone"],
+  fancy_color: [
+    "fancy color",
+    "fancycolor",
+    "fncy color",
+    "fncy clr",
+    "fan color",
+    "f color",
+  ],
+  fancy_color_intensity: [
+    "fancy color intensity",
+    "intensity",
+    "fancy intensity",
+    "clr intensity",
+    "color intensity",
+  ],
+  fancy_color_overtone: [
+    "fancy color overtone",
+    "overtone",
+    "fancy overtone",
+    "color overtone",
+  ],
   clarity: ["clarity", "clar", "clr", "clarities", "purity"],
   cut: ["cut", "cut grade", "cut quality", "cutting"],
   polish: ["polish", "pol", "polish grade", "polishing"],
   symmetry: ["symmetry", "sym", "symm", "symmetry grade", "sym grade"],
   fluorescence: ["fluorescence", "fluor", "flr", "fl", "fluorescence grade"],
-  fluorescence_color: ["fluorescence color", "fl color", "fl. color", "fluor color"],
-  fluorescence_intensity: ["fluorescence intensity", "fl intensity", "fl. intensity", "fluor intensity"],
+  fluorescence_color: [
+    "fluorescence color",
+    "fl color",
+    "fl. color",
+    "fluor color",
+  ],
+  fluorescence_intensity: [
+    "fluorescence intensity",
+    "fl intensity",
+    "fl. intensity",
+    "fluor intensity",
+  ],
   measurements: ["measurements", "meas", "dimension", "dimensions"],
   length: ["length", "l", "mm length", "len"],
   width: ["width", "w", "mm width", "wid"],
   height: ["height", "h", "mm height", "depth", "ht", "dep"],
-  depth_percentage: ["depth %", "depth percentage", "depth", "dep", "depth pct", "depth%"],
-  table_percentage: ["table %", "table percentage", "table", "tbl", "table pct", "table%"],
+  depth_percentage: [
+    "depth %",
+    "depth percentage",
+    "depth",
+    "dep",
+    "depth pct",
+    "depth%",
+  ],
+  table_percentage: [
+    "table %",
+    "table percentage",
+    "table",
+    "tbl",
+    "table pct",
+    "table%",
+  ],
   rap_per_carat: ["rap per carat", "rap", "rap rate", "rap p/c", "rap/ct"],
-  price_per_carat: ["price per carat", "ppc", "per carat price", "rate per carat", "rate p/c", "$/ct", "price/carat"],
-  final_price: ["final price", "total price", "amount", "total", "value", "price", "cost", "net price"],
-  dollar_rate: ["dollar rate", "rate", "usd rate", "exchange rate", "$ rate", "usd"],
+  price_per_carat: [
+    "price per carat",
+    "ppc",
+    "per carat price",
+    "rate per carat",
+    "rate p/c",
+    "$/ct",
+    "price/carat",
+  ],
+  final_price: [
+    "final price",
+    "total price",
+    "amount",
+    "total",
+    "value",
+    "price",
+    "cost",
+    "net price",
+  ],
+  dollar_rate: [
+    "dollar rate",
+    "rate",
+    "usd rate",
+    "exchange rate",
+    "$ rate",
+    "usd",
+  ],
   rs_amount: ["rs amount", "inr amount", "rupee amount", "local amount", "inr"],
   discount: ["discount", "disc", "off", "disc %", "discount %"],
   shade: ["shade", "shd"],
   milky: ["milky", "milkiness", "milk"],
   eye_clean: ["eye clean", "eyeclean", "eye", "ec", "e/c"],
   lab: ["lab", "laboratory", "certificate lab", "lab name"],
-  certificate_comment: ["certificate comment", "cert comment", "comment", "comments", "remarks"],
+  certificate_comment: [
+    "certificate comment",
+    "cert comment",
+    "comment",
+    "comments",
+    "remarks",
+  ],
   city: ["city", "town"],
   state: ["state", "province"],
   country: ["country", "cntry", "nation"],
@@ -295,7 +392,12 @@ const FIELD_MAPPINGS = {
   culet_condition: ["culet condition", "culet cond"],
   gridle_thin: ["gridle thin", "girdle thin", "girdle min"],
   gridle_thick: ["gridle thick", "girdle thick", "girdle max"],
-  gridle_condition: ["gridle condition", "girdle condition", "girdle cond", "gridle cond"],
+  gridle_condition: [
+    "gridle condition",
+    "girdle condition",
+    "girdle cond",
+    "gridle cond",
+  ],
   gridle_per: ["gridle per", "girdle %", "girdle per"],
   crown_height: ["crown height"],
   crown_angle: ["crown angle"],
@@ -312,27 +414,36 @@ const FIELD_MAPPINGS = {
   certificate_image: ["certificate image", "cert image", "certificate scan"],
 };
 
-const CULET_SIZE_OPTIONS = ["None", "Very Small", "Small", "Medium", "Large", "Very Large"];
+const CULET_SIZE_OPTIONS = [
+  "None",
+  "Very Small",
+  "Small",
+  "Medium",
+  "Large",
+  "Very Large",
+];
 
 const CULET_CONDITION_OPTIONS = ["Pointed", "Chipped", "Abraded"];
 
 // Memoized SectionCard to prevent re-animation on every state change
-const SectionCard = React.memo(({ title, icon: Icon, children, className = "" }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    className={`bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden ${className}`}
-  >
-    <div className="px-6 py-4 border-b border-[#E2E8F0] bg-gradient-to-r from-[#F8FAFC] to-white">
-      <div className="flex items-center gap-2">
-        {Icon && <Icon className="w-5 h-5 text-[#1E3A8A]" />}
-        <h3 className="font-semibold text-[#0F172A]">{title}</h3>
+const SectionCard = React.memo(
+  ({ title, icon: Icon, children, className = "" }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden ${className}`}
+    >
+      <div className="px-6 py-4 border-b border-[#E2E8F0] bg-gradient-to-r from-[#F8FAFC] to-white">
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="w-5 h-5 text-[#1E3A8A]" />}
+          <h3 className="font-semibold text-[#0F172A]">{title}</h3>
+        </div>
       </div>
-    </div>
-    <div className="p-6">{children}</div>
-  </motion.div>
-));
+      <div className="p-6">{children}</div>
+    </motion.div>
+  ),
+);
 
 // InputField component defined outside to prevent re-creation on renders
 const InputField = ({
@@ -359,64 +470,62 @@ const InputField = ({
   };
 
   return (
-  <div className="space-y-1.5">
-    <label className="text-sm font-medium text-[#0F172A] flex items-center gap-1.5">
-      {label}
-      {required && <span className="text-red-500">*</span>}
-    </label>
-    <div className="relative">
-      {Icon && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] z-10">
-          <Icon className="w-4 h-4" />
-        </div>
-      )}
-      {options ? (
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          className={`w-full ${Icon ? "pl-10" : "px-4"} pr-4 py-2.5 rounded-xl border-2 border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#DBEAFE] transition-all appearance-none cursor-pointer`}
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 12px center",
-            backgroundSize: "16px",
-          }}
-        >
-          <option value="">Select {label}</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      ) : type === "textarea" ? (
-        <textarea
-          name={name}
-          value={value}
-          onChange={handleChange}
-          placeholder={placeholder}
-          rows={3}
-          className={`w-full px-4 py-2.5 rounded-xl border-2 border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#DBEAFE] transition-all resize-none`}
-        />
-      ) : (
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={handleChange}
-          placeholder={placeholder}
-          min={min}
-          max={max}
-          step={step}
-          className={`w-full ${Icon ? "pl-10" : "px-4"} pr-4 py-2.5 rounded-xl border-2 border-[#E2E8F0] bg-white text-[#0F172A] focus:outline-none focus:border-[#3B82F6] focus:ring-4 focus:ring-[#DBEAFE] transition-all`}
-        />
-      )}
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium text-[#0F172A] flex items-center gap-1.5">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] z-10">
+            <Icon className="w-4 h-4" />
+          </div>
+        )}
+        {options ? (
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            className={`w-full ${Icon ? "pl-10" : "px-4"} input-field`}
+            style={{
+              // backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 12px center",
+              backgroundSize: "16px",
+            }}
+          >
+            <option value="">Select {label}</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        ) : type === "textarea" ? (
+          <textarea
+            name={name}
+            value={value}
+            onChange={handleChange}
+            placeholder={placeholder}
+            rows={3}
+            className={`w-full input-field`}
+          />
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={handleChange}
+            placeholder={placeholder}
+            min={min}
+            max={max}
+            step={step}
+            className={`w-full ${Icon ? "pl-10" : "px-4"} input-field`}
+          />
+        )}
+      </div>
+      {helperText && <p className="text-xs text-[#64748B]">{helperText}</p>}
     </div>
-    {helperText && (
-      <p className="text-xs text-[#64748B]">{helperText}</p>
-    )}
-  </div>
   );
 };
 
@@ -440,17 +549,16 @@ const AddStockManual = () => {
   const [importData, setImportData] = useState([]);
   const [importColumns, setImportColumns] = useState([]);
   const [importLoading, setImportLoading] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
   const [importPreviewMode, setImportPreviewMode] = useState("grid");
   const [importSearchTerm, setImportSearchTerm] = useState("");
   const [importCurrentPage, setImportCurrentPage] = useState(1);
   const [importRowsPerPage] = useState(50);
-  const [importSortConfig, setImportSortConfig] = useState({ key: null, direction: "asc" });
+  const [importSortConfig, setImportSortConfig] = useState({
+    key: null,
+    direction: "asc",
+  });
   const [importResult, setImportResult] = useState(null);
-  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
-  const [duplicateInfo, setDuplicateInfo] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -459,24 +567,6 @@ const AddStockManual = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
-
-  const handleImageUpload = (e, fieldName) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview((prev) => ({
-          ...prev,
-          [fieldName]: reader.result,
-        }));
-        setFormData((prev) => ({
-          ...prev,
-          [fieldName]: file.name,
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -499,7 +589,10 @@ const AddStockManual = () => {
       });
     } catch (error) {
       console.error("Submit error:", error);
-      notify.error("Error", error.response?.data?.message || "Failed to add stock");
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to add stock",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -528,7 +621,9 @@ const AddStockManual = () => {
   const findMatchingField = (columnName) => {
     const normalized = normalizeColumnName(columnName);
     for (const [field, possibleNames] of Object.entries(FIELD_MAPPINGS)) {
-      if (possibleNames.some((name) => normalized.includes(name.toLowerCase()))) {
+      if (
+        possibleNames.some((name) => normalized.includes(name.toLowerCase()))
+      ) {
         return field;
       }
     }
@@ -593,7 +688,6 @@ const AddStockManual = () => {
 
   const processFile = async (file) => {
     setImportLoading(true);
-    setImportProgress(0);
     setImportResult(null);
 
     try {
@@ -616,8 +710,6 @@ const AddStockManual = () => {
         }
       }
 
-      setImportProgress(50);
-
       const mappedData = parsedData.map(mapRowToDb);
       const validData = mappedData.filter((row) => Object.keys(row).length > 0);
 
@@ -627,8 +719,10 @@ const AddStockManual = () => {
 
       setImportData(validData);
       setImportFile(file);
-      setImportProgress(100);
-      notify.success("File Loaded", `Loaded ${validData.length} rows from ${file.name}`);
+      notify.success(
+        "File Loaded",
+        `Loaded ${validData.length} rows from ${file.name}`,
+      );
     } catch (error) {
       console.error("File parsing error:", error);
       notify.error("Error", "Failed to parse file. Please check the format.");
@@ -651,7 +745,12 @@ const AddStockManual = () => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file && (file.name.endsWith(".csv") || file.name.endsWith(".xlsx") || file.name.endsWith(".xls"))) {
+    if (
+      file &&
+      (file.name.endsWith(".csv") ||
+        file.name.endsWith(".xlsx") ||
+        file.name.endsWith(".xls"))
+    ) {
       await processFile(file);
     } else {
       notify.error("Invalid File", "Please upload a CSV or Excel file.");
@@ -670,28 +769,6 @@ const AddStockManual = () => {
     }
   };
 
-  const checkDuplicates = async () => {
-    const stockIds = importData
-      .filter(hasStockId)
-      .map((row) => row.stock_id)
-      .filter((id) => id);
-
-    if (stockIds.length === 0) return;
-
-    try {
-      const response = await api.post("/stock/check-duplicates", { stockIds });
-      if (response.data.success && response.data.data.existing.length > 0) {
-        setDuplicateInfo(response.data.data);
-        setShowDuplicateWarning(true);
-      } else {
-        await handleImportSubmit();
-      }
-    } catch (error) {
-      console.error("Error checking duplicates:", error);
-      await handleImportSubmit();
-    }
-  };
-
   const handleImportSubmit = async () => {
     const { saveable } = getSaveStats();
     if (saveable === 0) {
@@ -702,13 +779,13 @@ const AddStockManual = () => {
     setImportLoading(true);
     try {
       const validRows = importData.filter(hasStockId);
-      const response = await api.post("/stock/bulk", validRows);
+      const response = await api.post("/stock/bulk", { stock: validRows });
 
       if (response.data.success) {
         setImportResult(response.data.data);
         notify.success(
           "Import Complete",
-          `Saved: ${response.data.data.insertedCount}, Skipped: ${response.data.data.skippedCount}`
+          `Saved: ${response.data.data.insertedCount}, Skipped: ${response.data.data.skippedCount}`,
         );
         setTimeout(() => {
           clearImportFile();
@@ -717,7 +794,10 @@ const AddStockManual = () => {
       }
     } catch (error) {
       console.error("Import error:", error);
-      notify.error("Import Failed", error.response?.data?.message || "Failed to import stock");
+      notify.error(
+        "Import Failed",
+        error.response?.data?.message || "Failed to import stock",
+      );
     } finally {
       setImportLoading(false);
     }
@@ -738,7 +818,7 @@ const AddStockManual = () => {
     if (!importSearchTerm) return true;
     const search = importSearchTerm.toLowerCase();
     return Object.values(row).some((val) =>
-      val?.toString().toLowerCase().includes(search)
+      val?.toString().toLowerCase().includes(search),
     );
   });
 
@@ -752,10 +832,12 @@ const AddStockManual = () => {
     return aVal < bVal ? 1 : -1;
   });
 
-  const importTotalPages = Math.ceil(sortedImportData.length / importRowsPerPage);
+  const importTotalPages = Math.ceil(
+    sortedImportData.length / importRowsPerPage,
+  );
   const paginatedImportData = sortedImportData.slice(
     (importCurrentPage - 1) * importRowsPerPage,
-    importCurrentPage * importRowsPerPage
+    importCurrentPage * importRowsPerPage,
   );
 
   const tabs = [
@@ -781,7 +863,9 @@ const AddStockManual = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[#0F172A]">Add Stock</h1>
-                <p className="text-sm text-[#64748B]">Manual stock entry form</p>
+                <p className="text-sm text-[#64748B]">
+                  Manual stock entry form
+                </p>
               </div>
             </div>
 
@@ -1242,7 +1326,11 @@ const AddStockManual = () => {
                 </SectionCard>
 
                 {/* Crown & Pavilion */}
-                <SectionCard title="Crown & Pavilion" icon={Building} className="lg:col-span-2">
+                <SectionCard
+                  title="Crown & Pavilion"
+                  icon={Building}
+                  className="lg:col-span-2"
+                >
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <InputField
                       label="Crown Height"
@@ -1289,7 +1377,11 @@ const AddStockManual = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <SectionCard title="Pricing Details" icon={DollarSign} className="max-w-3xl">
+              <SectionCard
+                title="Pricing Details"
+                icon={DollarSign}
+                className="max-w-3xl"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <InputField
                     label="RAP Price/Carat"
@@ -1389,7 +1481,11 @@ const AddStockManual = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <SectionCard title="Advanced Details" icon={Sparkles} className="max-w-3xl">
+              <SectionCard
+                title="Advanced Details"
+                icon={Sparkles}
+                className="max-w-3xl"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <InputField
                     label="Certificate Number"
@@ -1419,87 +1515,36 @@ const AddStockManual = () => {
               className="space-y-6"
             >
               <SectionCard title="Diamond Images" icon={ImageIcon}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {["diamond_image1", "diamond_image2", "diamond_image3", "diamond_image4", "diamond_image5"].map(
-                    (field, index) => (
-                      <div key={field} className="space-y-2">
-                        <label className="text-sm font-medium text-[#0F172A]">
-                          Image {index + 1}
-                        </label>
-                        <div className="relative">
-                          <div
-                            className={`aspect-square rounded-xl border-2 border-dashed ${
-                              imagePreview[field]
-                                ? "border-[#10B981] bg-[#D1FAE5]"
-                                : "border-[#CBD5E1] bg-[#F8FAFC] hover:border-[#94A3B8]"
-                            } flex items-center justify-center cursor-pointer transition-all overflow-hidden`}
-                            onClick={() =>
-                              document.getElementById(field).click()
-                            }
-                          >
-                            {imagePreview[field] ? (
-                              <img
-                                src={imagePreview[field]}
-                                alt={`Preview ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center p-4">
-                                <Upload className="w-6 h-6 text-[#94A3B8] mx-auto mb-1" />
-                                <span className="text-xs text-[#64748B]">
-                                  Upload
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <input
-                            id={field}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(e, field)}
-                            className="hidden"
-                          />
-                        </div>
-                      </div>
-                    )
-                  )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    "diamond_image1",
+                    "diamond_image2",
+                    "diamond_image3",
+                    "diamond_image4",
+                    "diamond_image5",
+                  ].map((field, index) => (
+                    <InputField
+                      key={field}
+                      label={`Image ${index + 1} URL`}
+                      name={field}
+                      type="url"
+                      value={formData[field]}
+                      onChange={handleInputChange}
+                      placeholder={`Enter image ${index + 1} URL`}
+                    />
+                  ))}
                 </div>
 
-                {/* Video Upload */}
+                {/* Video URL Input */}
                 <div className="mt-6">
-                  <label className="text-sm font-medium text-[#0F172A] block mb-2">
-                    Diamond Video
-                  </label>
-                  <div
-                    className={`relative h-32 rounded-xl border-2 border-dashed ${
-                      imagePreview.diamond_video
-                        ? "border-[#10B981] bg-[#D1FAE5]"
-                        : "border-[#CBD5E1] bg-[#F8FAFC] hover:border-[#94A3B8]"
-                    } flex items-center justify-center cursor-pointer transition-all`}
-                    onClick={() => document.getElementById("diamond_video").click()}
-                  >
-                    {imagePreview.diamond_video ? (
-                      <video
-                        src={imagePreview.diamond_video}
-                        className="h-full rounded-lg"
-                        controls
-                      />
-                    ) : (
-                      <div className="text-center">
-                        <Upload className="w-8 h-8 text-[#94A3B8] mx-auto mb-2" />
-                        <span className="text-sm text-[#64748B]">
-                          Upload Video
-                        </span>
-                      </div>
-                    )}
-                    <input
-                      id="diamond_video"
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => handleImageUpload(e, "diamond_video")}
-                      className="hidden"
-                    />
-                  </div>
+                  <InputField
+                    label="Diamond Video URL"
+                    name="diamond_video"
+                    type="url"
+                    value={formData.diamond_video}
+                    onChange={handleInputChange}
+                    placeholder="Enter video URL"
+                  />
                 </div>
               </SectionCard>
             </motion.div>
@@ -1515,41 +1560,14 @@ const AddStockManual = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <SectionCard title="Certificate Image" icon={FileText}>
                   <div className="space-y-4">
-                    <div
-                      className={`relative aspect-[3/4] rounded-xl border-2 border-dashed ${
-                        imagePreview.certificate_image
-                          ? "border-[#10B981] bg-[#D1FAE5]"
-                          : "border-[#CBD5E1] bg-[#F8FAFC] hover:border-[#94A3B8]"
-                      } flex items-center justify-center cursor-pointer transition-all overflow-hidden`}
-                      onClick={() =>
-                        document.getElementById("certificate_image").click()
-                      }
-                    >
-                      {imagePreview.certificate_image ? (
-                        <img
-                          src={imagePreview.certificate_image}
-                          alt="Certificate Preview"
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                        <div className="text-center p-8">
-                          <Upload className="w-12 h-12 text-[#94A3B8] mx-auto mb-3" />
-                          <span className="text-sm text-[#64748B]">
-                            Click to upload certificate image
-                          </span>
-                          <p className="text-xs text-[#94A3B8] mt-1">
-                            Supports JPG, PNG, PDF
-                          </p>
-                        </div>
-                      )}
-                      <input
-                        id="certificate_image"
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={(e) => handleImageUpload(e, "certificate_image")}
-                        className="hidden"
-                      />
-                    </div>
+                    <InputField
+                      label="Certificate Image URL"
+                      name="certificate_image"
+                      type="url"
+                      value={formData.certificate_image}
+                      onChange={handleInputChange}
+                      placeholder="Enter certificate image URL"
+                    />
                   </div>
                 </SectionCard>
 
@@ -1583,8 +1601,6 @@ const AddStockManual = () => {
               </div>
             </motion.div>
           )}
-
-        
         </div>
       </div>
 
@@ -1596,7 +1612,9 @@ const AddStockManual = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={(e) => e.target === e.currentTarget && setShowImportModal(false)}
+            onClick={(e) =>
+              e.target === e.currentTarget && setShowImportModal(false)
+            }
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -1611,8 +1629,12 @@ const AddStockManual = () => {
                     <FileSpreadsheet className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-[#0F172A]">Import from Excel</h2>
-                    <p className="text-sm text-[#64748B]">Upload CSV or Excel file with stock data</p>
+                    <h2 className="text-lg font-semibold text-[#0F172A]">
+                      Import from Excel
+                    </h2>
+                    <p className="text-sm text-[#64748B]">
+                      Upload CSV or Excel file with stock data
+                    </p>
                   </div>
                 </div>
                 <button
@@ -1677,9 +1699,12 @@ const AddStockManual = () => {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-medium text-[#0F172A]">{importFile.name}</h4>
+                          <h4 className="font-medium text-[#0F172A]">
+                            {importFile.name}
+                          </h4>
                           <p className="text-sm text-[#64748B]">
-                            {(importFile.size / 1024).toFixed(2)} KB • {importData.length} rows
+                            {(importFile.size / 1024).toFixed(2)} KB •{" "}
+                            {importData.length} rows
                           </p>
                         </div>
                       </div>
@@ -1744,13 +1769,16 @@ const AddStockManual = () => {
                     {importPreviewMode === "grid" ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
                         {paginatedImportData.map((row, idx) => {
-                          const actualIndex = (importCurrentPage - 1) * importRowsPerPage + idx;
+                          const actualIndex =
+                            (importCurrentPage - 1) * importRowsPerPage + idx;
                           const willBeSaved = hasStockId(row);
                           return (
                             <div
                               key={actualIndex}
                               className={`bg-[#F8FAFC] rounded-xl border p-4 ${
-                                willBeSaved ? "border-[#E2E8F0]" : "border-red-300 bg-red-50"
+                                willBeSaved
+                                  ? "border-[#E2E8F0]"
+                                  : "border-red-300 bg-red-50"
                               }`}
                             >
                               <div className="flex items-center justify-between mb-3">
@@ -1759,21 +1787,30 @@ const AddStockManual = () => {
                                 </span>
                                 <span
                                   className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    willBeSaved ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"
+                                    willBeSaved
+                                      ? "text-green-700 bg-green-100"
+                                      : "text-red-700 bg-red-100"
                                   }`}
                                 >
                                   {willBeSaved ? "Will Save" : "No stock_id"}
                                 </span>
                               </div>
                               <div className="space-y-1 text-sm">
-                                {Object.entries(row).slice(0, 5).map(([key, val]) => (
-                                  <div key={key} className="flex justify-between">
-                                    <span className="text-[#64748B]">{key}:</span>
-                                    <span className="font-medium text-[#0F172A] truncate max-w-[120px]">
-                                      {val || "-"}
-                                    </span>
-                                  </div>
-                                ))}
+                                {Object.entries(row)
+                                  .slice(0, 5)
+                                  .map(([key, val]) => (
+                                    <div
+                                      key={key}
+                                      className="flex justify-between"
+                                    >
+                                      <span className="text-[#64748B]">
+                                        {key}:
+                                      </span>
+                                      <span className="font-medium text-[#0F172A] truncate max-w-[120px]">
+                                        {val || "-"}
+                                      </span>
+                                    </div>
+                                  ))}
                                 {Object.keys(row).length > 5 && (
                                   <div className="text-xs text-[#94A3B8] text-center pt-2">
                                     +{Object.keys(row).length - 5} more fields
@@ -1789,7 +1826,9 @@ const AddStockManual = () => {
                         <table className="w-full text-sm">
                           <thead className="bg-[#F8FAFC] sticky top-0">
                             <tr>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-[#475569] uppercase">Status</th>
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-[#475569] uppercase">
+                                Status
+                              </th>
                               {importColumns.slice(0, 8).map((col) => (
                                 <th
                                   key={col}
@@ -1803,21 +1842,31 @@ const AddStockManual = () => {
                           </thead>
                           <tbody className="divide-y divide-[#E2E8F0]">
                             {paginatedImportData.map((row, idx) => {
-                              const actualIndex = (importCurrentPage - 1) * importRowsPerPage + idx;
+                              const actualIndex =
+                                (importCurrentPage - 1) * importRowsPerPage +
+                                idx;
                               const willBeSaved = hasStockId(row);
                               return (
-                                <tr key={actualIndex} className={!willBeSaved ? "bg-red-50" : ""}>
+                                <tr
+                                  key={actualIndex}
+                                  className={!willBeSaved ? "bg-red-50" : ""}
+                                >
                                   <td className="px-3 py-2">
                                     <span
                                       className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                        willBeSaved ? "text-green-700 bg-green-100" : "text-red-700 bg-red-100"
+                                        willBeSaved
+                                          ? "text-green-700 bg-green-100"
+                                          : "text-red-700 bg-red-100"
                                       }`}
                                     >
                                       {willBeSaved ? "Save" : "Skip"}
                                     </span>
                                   </td>
                                   {importColumns.slice(0, 8).map((col) => (
-                                    <td key={col} className="px-3 py-2 text-[#0F172A] whitespace-nowrap">
+                                    <td
+                                      key={col}
+                                      className="px-3 py-2 text-[#0F172A] whitespace-nowrap"
+                                    >
                                       {row[col] || "-"}
                                     </td>
                                   ))}
@@ -1837,13 +1886,18 @@ const AddStockManual = () => {
                         </p>
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleImportPageChange(importCurrentPage - 1)}
+                            onClick={() =>
+                              handleImportPageChange(importCurrentPage - 1)
+                            }
                             disabled={importCurrentPage === 1}
                             className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50"
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </button>
-                          {Array.from({ length: Math.min(5, importTotalPages) }, (_, i) => i + 1).map((page) => (
+                          {Array.from(
+                            { length: Math.min(5, importTotalPages) },
+                            (_, i) => i + 1,
+                          ).map((page) => (
                             <button
                               key={page}
                               onClick={() => handleImportPageChange(page)}
@@ -1857,7 +1911,9 @@ const AddStockManual = () => {
                             </button>
                           ))}
                           <button
-                            onClick={() => handleImportPageChange(importCurrentPage + 1)}
+                            onClick={() =>
+                              handleImportPageChange(importCurrentPage + 1)
+                            }
                             disabled={importCurrentPage === importTotalPages}
                             className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50"
                           >
@@ -1875,7 +1931,10 @@ const AddStockManual = () => {
                 <div className="text-sm text-[#64748B]">
                   {importFile && (
                     <span>
-                      <span className="font-medium text-[#0F172A]">{getSaveStats().saveable}</span> rows with stock_id will be imported
+                      <span className="font-medium text-[#0F172A]">
+                        {getSaveStats().saveable}
+                      </span>{" "}
+                      rows with stock_id will be imported
                     </span>
                   )}
                 </div>
@@ -1888,7 +1947,7 @@ const AddStockManual = () => {
                   </button>
                   {importFile && (
                     <button
-                      onClick={checkDuplicates}
+                      onClick={handleImportSubmit}
                       disabled={importLoading || getSaveStats().saveable === 0}
                       className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
                     >
@@ -1912,61 +1971,6 @@ const AddStockManual = () => {
         )}
       </AnimatePresence>
 
-      {/* Duplicate Warning Modal */}
-      <AnimatePresence>
-        {showDuplicateWarning && duplicateInfo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-amber-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">Duplicate Stock IDs Found</h3>
-              </div>
-              <p className="text-sm text-[#64748B] mb-4">
-                The following stock IDs already exist in the database and will be replaced:
-              </p>
-              <div className="bg-amber-50 rounded-xl p-4 mb-4 max-h-40 overflow-y-auto">
-                <div className="flex flex-wrap gap-2">
-                  {duplicateInfo.existing.map((id) => (
-                    <span key={id} className="px-2 py-1 bg-amber-100 text-amber-800 rounded-lg text-sm font-medium">
-                      {id}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDuplicateWarning(false)}
-                  className="flex-1 px-4 py-2.5 border border-[#E2E8F0] text-[#64748B] rounded-xl font-medium hover:bg-[#F8FAFC] transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDuplicateWarning(false);
-                    handleImportSubmit();
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-xl font-medium hover:bg-amber-600 transition-colors"
-                >
-                  Replace & Continue
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Import Result Toast */}
       <AnimatePresence>
         {importResult && (
@@ -1981,10 +1985,18 @@ const AddStockManual = () => {
                 <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h4 className="font-semibold text-[#0F172A]">Import Complete</h4>
+                <h4 className="font-semibold text-[#0F172A]">
+                  Import Complete
+                </h4>
                 <p className="text-sm text-[#64748B]">
-                  Saved: <span className="text-green-700 font-medium">{importResult.insertedCount}</span> •{" "}
-                  Skipped: <span className="text-red-600 font-medium">{importResult.skippedCount}</span>
+                  Saved:{" "}
+                  <span className="text-green-700 font-medium">
+                    {importResult.insertedCount}
+                  </span>{" "}
+                  • Skipped:{" "}
+                  <span className="text-red-600 font-medium">
+                    {importResult.skippedCount}
+                  </span>
                 </p>
               </div>
               <button

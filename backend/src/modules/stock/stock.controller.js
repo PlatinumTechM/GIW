@@ -1,6 +1,6 @@
-import { stockService } from "./stock.service.js";
+import * as stockService from "./stock.service.js";
 
-const bulkUpload = async (req, res) => {
+export const bulkUpload = async (req, res) => {
   try {
     const { stock } = req.body;
 
@@ -34,29 +34,19 @@ const bulkUpload = async (req, res) => {
   }
 };
 
-const getAllStocks = async (req, res) => {
+export const getAllStocks = async (req, res) => {
   try {
     const {
       page = 1,
-
       limit = 50,
-
       shape,
-
       color,
-
       clarity,
-
       minCarat,
-
       maxCarat,
-
       minPrice,
-
       maxPrice,
-
       availability,
-
       search,
     } = req.query;
 
@@ -104,7 +94,7 @@ const getAllStocks = async (req, res) => {
   }
 };
 
-const getStockById = async (req, res) => {
+export const getStockById = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -126,7 +116,7 @@ const getStockById = async (req, res) => {
   }
 };
 
-const createStock = async (req, res) => {
+export const createStock = async (req, res) => {
   try {
     const stockData = req.body;
 
@@ -152,7 +142,7 @@ const createStock = async (req, res) => {
   }
 };
 
-const updateStock = async (req, res) => {
+export const updateStock = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -178,7 +168,7 @@ const updateStock = async (req, res) => {
   }
 };
 
-const deleteStock = async (req, res) => {
+export const deleteStock = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -200,7 +190,7 @@ const deleteStock = async (req, res) => {
   }
 };
 
-const getFieldMapping = async (req, res) => {
+export const getFieldMapping = async (req, res) => {
   try {
     const mapping = stockService.getFieldMapping();
 
@@ -220,37 +210,7 @@ const getFieldMapping = async (req, res) => {
   }
 };
 
-const checkDuplicates = async (req, res) => {
-  try {
-    const { stockIds } = req.body;
-
-    if (!stockIds || !Array.isArray(stockIds) || stockIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-
-        message: "No stock_ids provided",
-      });
-    }
-
-    const result = await stockService.checkDuplicates(stockIds);
-
-    res.status(200).json({
-      success: true,
-
-      data: result,
-    });
-  } catch (error) {
-    console.error("Error at checkDuplicates = ", error);
-
-    res.status(500).json({
-      success: false,
-
-      message: error.message || "Failed to check duplicates",
-    });
-  }
-};
-
-const getMyStocks = async (req, res) => {
+export const getMyStocks = async (req, res) => {
   try {
     const userId = req.user?.id;
 
@@ -286,24 +246,4 @@ const getMyStocks = async (req, res) => {
       message: error.message || "Failed to fetch your stock",
     });
   }
-};
-
-export const stockController = {
-  bulkUpload,
-
-  getAllStocks,
-
-  getMyStocks,
-
-  getStockById,
-
-  createStock,
-
-  updateStock,
-
-  deleteStock,
-
-  getFieldMapping,
-
-  checkDuplicates,
 };
