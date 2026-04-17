@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
   FileSpreadsheet,
@@ -18,11 +18,40 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Eye,
+  CloudUpload,
+  MoreVertical,
+  Upload as UploadIcon,
+  Globe,
+  Pause,
+  ShoppingCart,
+  Send,
+  RotateCcw,
+  AlertTriangle,
+  X,
+  Grid3X3,
+  FileUp,
+  ArrowDownToLine,
+  RefreshCw,
+  SlidersHorizontal,
+  FileJson,
+  Layers,
+  Box,
+  TrendingUp,
+  DollarSign,
+  Gem,
+  Hash,
+  Scale,
+  Palette,
+  Sparkles,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
 import notify from "../../utils/notifications";
 import api from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import AddStockManual from "./AddStockManual";
 
 // Only stock_id is required to save to database
 // All other fields are optional - if data exists, save it; if not, save as null
@@ -295,10 +324,35 @@ const FIELD_MAPPINGS = {
 };
 
 const AddStock = () => {
+  const { user } = useAuth();
+
+  // View mode: 'show' | 'import' | 'manual'
+  const [viewMode, setViewMode] = useState("show");
+
+  // UI States
+  const [showFilters, setShowFilters] = useState(false);
+  const [showImportMenu, setShowImportMenu] = useState(false);
+  const importMenuRef = useRef(null);
+
+  // User stock state
+  const [userStock, setUserStock] = useState([]);
+  const [userStockLoading, setUserStockLoading] = useState(false);
+  const [userStockPage, setUserStockPage] = useState(1);
+  const [userStockTotalPages, setUserStockTotalPages] = useState(1);
+  const [userStockSearch, setUserStockSearch] = useState("");
+  const [userStockTotal, setUserStockTotal] = useState(0);
+
+  // Filter states
+  const [filterShape, setFilterShape] = useState("");
+  const [filterColor, setFilterColor] = useState("");
+  const [filterClarity, setFilterClarity] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+  // File upload state
   const [file, setFile] = useState(null);
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
+  const [previewMode, setPreviewMode] = useState("grid");
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -306,9 +360,63 @@ const AddStock = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [validationErrors, setValidationErrors] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(100);
+  const [rowsPerPage] = useState(50);
   const [uploadResult, setUploadResult] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Stats
+  const [stats, setStats] = useState({
+    total: 0,
+    available: 0,
+    sold: 0,
+    onHold: 0,
+    totalValue: 0,
+  });
+
+  // Fetch user stock on mount and when page changes
+  useEffect(() => {
+    fetchUserStock();
+    fetchStats();
+  }, [userStockPage]);
+
+  // Close import menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (importMenuRef.current && !importMenuRef.current.contains(event.target)) {
+        setShowImportMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const fetchUserStock = async () => {
+    setUserStockLoading(true);
+    try {
+      const response = await api.get(`/stock/my?page=${userStockPage}&limit=50`);
+      if (response.data.success) {
+        setUserStock(response.data.data.stocks);
+        setUserStockTotalPages(response.data.data.pagination.totalPages);
+        setUserStockTotal(response.data.data.pagination.total);
+      }
+    } catch (error) {
+      console.error("Error fetching user stock:", error);
+      notify.error("Error", "Failed to fetch your stock");
+    } finally {
+      setUserStockLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await api.get("/stock/stats");
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
 
   // Normalize field name: first convert to lowercase, trim, remove special chars, then match
   const normalizeFieldName = (field) => {
@@ -662,7 +770,10 @@ const AddStock = () => {
     );
   });
 
-  const handleSubmit = async () => {
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateInfo, setDuplicateInfo] = useState(null);
+
+  const checkAndSubmit = async (skipCheck = false) => {
     if (data.length === 0) {
       notify.error("No Data", "Please upload a file first");
       return;
@@ -674,42 +785,68 @@ const AddStock = () => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-   
-      
-      // Check if any row has length as "0" or 0
-      const zeroLengthRows = data.filter(r => r.length === "0" || r.length === 0).length;
-      const validLengthRows = data.filter(r => r.length && r.length !== "0" && r.length !== 0).length;
-      console.log(`Summary: ${zeroLengthRows} rows have length=0, ${validLengthRows} rows have valid length`);
+    // Get all stock_ids from data
+    const stockIds = data
+      .filter(row => row.stock_id && String(row.stock_id).trim() !== "")
+      .map(row => row.stock_id);
 
+    // Step 1: Check for duplicates (unless skipped)
+    if (!skipCheck && stockIds.length > 0) {
+      try {
+        const checkResponse = await api.post("/stock/check-duplicates", { stockIds });
+        const checkResult = checkResponse.data;
+        
+        if (checkResult.data && checkResult.data.hasDuplicates) {
+          // Show warning
+          setDuplicateInfo({
+            count: checkResult.data.existingCount,
+            ids: checkResult.data.existingIds.slice(0, 10), // Show first 10
+            total: checkResult.data.existingIds.length,
+          });
+          setShowDuplicateWarning(true);
+          return; // Stop here, wait for user confirmation
+        }
+      } catch (error) {
+        console.error("Duplicate check failed:", error);
+        // Continue with upload even if check fails
+      }
+    }
+
+    // Step 2: Proceed with upload
+    await doUpload();
+  };
+
+  const doUpload = async () => {
+    setIsLoading(true);
+    setShowDuplicateWarning(false);
+    
+    try {
       const response = await api.post("/stock/bulk", { stock: data });
       const result = response.data;
 
       if (result.data) {
         setUploadResult(result.data);
+        const replaceMsg = result.data.replacedCount 
+          ? `, replaced ${result.data.replacedCount} existing` 
+          : "";
         notify.success(
           "Success",
-          `Saved ${result.data.insertedCount} rows, skipped ${result.data.skippedCount} rows (missing stock_id)`,
+          `Saved ${result.data.insertedCount} rows${replaceMsg}, skipped ${result.data.skippedCount} rows`,
         );
         clearFile();
       } else {
         console.error("Backend error:", result);
-        notify.error(
-          "Submit Error",
-          result.message || "Server error occurred",
-        );
+        notify.error("Submit Error", result.message || "Server error occurred");
       }
     } catch (error) {
       console.error("Submit error:", error);
-      notify.error(
-        "Network Error",
-        error.message || "Failed to connect to server",
-      );
+      notify.error("Network Error", error.message || "Failed to connect to server");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = () => checkAndSubmit(false);
 
   const downloadTemplate = () => {
     const headers = [
@@ -798,464 +935,608 @@ const AddStock = () => {
     setCurrentPage(page);
   };
 
+  // Filter user stock based on search and filters
+  const filteredUserStock = userStock.filter((item) => {
+    const matchesSearch = !userStockSearch ||
+      (item.stock_id && item.stock_id.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+      (item.shape && item.shape.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+      (item.certificate_number && item.certificate_number.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+      (item.color && item.color.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+      (item.clarity && item.clarity.toLowerCase().includes(userStockSearch.toLowerCase()));
+
+    const matchesShape = !filterShape || item.shape === filterShape;
+    const matchesColor = !filterColor || item.color === filterColor;
+    const matchesClarity = !filterClarity || item.clarity === filterClarity;
+    const matchesStatus = !filterStatus || item.status === filterStatus;
+
+    return matchesSearch && matchesShape && matchesColor && matchesClarity && matchesStatus;
+  });
+
+  // Get unique values for filters
+  const uniqueShapes = [...new Set(userStock.map(s => s.shape).filter(Boolean))];
+  const uniqueColors = [...new Set(userStock.map(s => s.color).filter(Boolean))];
+  const uniqueClarities = [...new Set(userStock.map(s => s.clarity).filter(Boolean))];
+  const uniqueStatuses = [...new Set(userStock.map(s => s.status).filter(Boolean))];
+
+  const clearFilters = () => {
+    setFilterShape("");
+    setFilterColor("");
+    setFilterClarity("");
+    setFilterStatus("");
+    setUserStockSearch("");
+  };
+
+  // All columns from the database
+  const ALL_DB_FIELDS = [
+    "stock_id", "certificate_number", "weight", "shape", "color",
+    "fancy_color", "fancy_color_intensity", "fancy_color_overtone",
+    "clarity", "cut", "polish", "symmetry",
+    "fluorescence", "fluorescence_color", "fluorescence_intensity",
+    "measurements", "length", "width", "height",
+    "depth_percentage", "table_percentage",
+    "crown_height", "crown_angle", "pavilion_depth", "pavilion_angle",
+    "gridle_thin", "gridle_thick", "gridle_condition", "gridle_per",
+    "culet_size", "culet_condition",
+    "shade", "milky", "eye_clean", "lab", "certificate_comment",
+    "city", "state", "country", "treatment",
+    "rap_per_carat", "price_per_carat", "final_price", "discount",
+    "dollar_rate", "rs_amount",
+    "heart_arrow", "star_length", "laser_description", "growth_type",
+    "key_to_symbol", "lw_ratio",
+    "diamond_type", "type", "status",
+    "diamond_image1", "diamond_image2", "diamond_image3", "diamond_image4", "diamond_image5",
+    "diamond_video", "certificate_image"
+  ];
+
+  // Field groups for the expanded view
+  const FIELD_GROUPS = {
+    "Stock ID": ["stock_id"],
+    "Certificate": ["certificate_number", "lab"],
+    "Basic": ["shape", "weight", "color", "fancy_color", "fancy_color_intensity", "fancy_color_overtone"],
+    "Grading": ["clarity", "cut", "polish", "symmetry", "fluorescence", "fluorescence_color", "fluorescence_intensity"],
+    "Measurements": ["measurements", "length", "width", "height", "depth_percentage", "table_percentage", "lw_ratio"],
+    "Proportions": ["crown_height", "crown_angle", "pavilion_depth", "pavilion_angle"],
+    "Girdle": ["gridle_thin", "gridle_thick", "gridle_condition", "gridle_per"],
+    "Culet": ["culet_size", "culet_condition"],
+    "Properties": ["shade", "milky", "eye_clean", "treatment", "heart_arrow", "star_length"],
+    "Other": ["growth_type", "key_to_symbol", "laser_description"],
+    "Location": ["city", "state", "country"],
+    "Pricing": ["rap_per_carat", "price_per_carat", "final_price", "discount", "dollar_rate", "rs_amount"],
+    "Media": ["diamond_image1", "diamond_image2", "diamond_image3", "diamond_image4", "diamond_image5", "diamond_video", "certificate_image"],
+    "Status": ["diamond_type", "type", "status"],
+    "Comments": ["certificate_comment"]
+  };
+
+  // Helper to get value or "-"
+  const getValue = (item, field) => {
+    if (item[field] === null || item[field] === undefined || item[field] === "") return "-";
+    return item[field];
+  };
+
+  // Simple Table Row - All fields in one horizontal row
+  const SimpleTableRow = ({ item, index, page }) => {
+    // Calculate continuous row number: (page - 1) * 50 + index + 1
+    const rowNumber = (page - 1) * 50 + index + 1;
+
+    return (
+      <tr className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}>
+        {/* Row Number - Continuous across pages */}
+        <td className="px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 bg-inherit z-10 w-10 font-medium">
+          {rowNumber}
+        </td>
+
+        {/* All Database Fields */}
+        {ALL_DB_FIELDS.map((field) => {
+          const value = getValue(item, field);
+          const isEmpty = value === "-";
+
+          return (
+            <td
+              key={field}
+              className={`px-3 py-3 border-r border-[#E2E8F0] whitespace-nowrap ${
+                isEmpty ? 'text-[#94A3B8]' : 'text-[#374151]'
+              }`}
+            >
+              {field === "stock_id" && !isEmpty ? (
+                <span className="font-semibold text-[#1E3A8A]">{value}</span>
+              ) : field === "color" && !isEmpty ? (
+                <span className="px-2 py-0.5 bg-[#EFF6FF] text-[#1E3A8A] rounded text-xs font-semibold">
+                  {value}
+                </span>
+              ) : field === "clarity" && !isEmpty ? (
+                <span className="px-2 py-0.5 bg-[#F0FDF4] text-[#059669] rounded text-xs font-semibold">
+                  {value}
+                </span>
+              ) : field === "status" ? (
+                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                  item.status === "AVAILABLE" || !item.status ? "bg-green-100 text-green-700 border border-green-200" :
+                  item.status === "SOLD" ? "bg-red-100 text-red-700 border border-red-200" :
+                  "bg-amber-100 text-amber-700 border border-amber-200"
+                }`}>
+                  {value}
+                </span>
+              ) : field === "final_price" && !isEmpty ? (
+                <span className="font-semibold text-green-700">
+                  ${parseFloat(value).toLocaleString()}
+                </span>
+              ) : field === "weight" && !isEmpty ? (
+                <span className="font-medium">{value} </span>
+              ) : (
+                value
+              )}
+            </td>
+          );
+        })}
+      </tr>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header */}
-      <div className="bg-white border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center shadow-lg">
-                <Database className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#0F172A]">Add Stock</h1>
-                <p className="text-[#64748B]">
-                  Bulk import diamonds via CSV or Excel
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center gap-2 px-4 py-2 text-[#1E3A8A] bg-[#EFF6FF] rounded-lg hover:bg-[#DBEAFE] transition-colors"
+ 
+      {/* Main Action Bar - Left: Filter, Right: Add/Show Stock + Import Features */}
+      <div className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Filter Toggle Button */}
+            {/* <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                showFilters
+                  ? "bg-[#1E3A8A] text-white shadow-md"
+                  : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] border border-[#E2E8F0]"
+              }`}
             >
-              <Download className="w-4 h-4" />
-              Template
-            </button>
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {(filterShape || filterColor || filterClarity || filterStatus) && (
+                <span className="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                  {[filterShape, filterColor, filterClarity, filterStatus].filter(Boolean).length}
+                </span>
+              )}
+            </button> */}
+
+            {/* Right: View Mode Toggle - 3 Options */}
+            <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl">
+              <button
+                onClick={() => setViewMode("show")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === "show"
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Table className="w-4 h-4" />
+                Show Stock
+              </button>
+              <button
+                onClick={() => setViewMode("import")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === "import"
+                    ? "bg-emerald-600 text-white shadow-md"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                Imports
+              </button>
+              <button
+                onClick={() => setViewMode("manual")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === "manual"
+                    ? "bg-[#fab34f] text-white shadow-md"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Plus className="w-4 h-4" />
+                Manual Entry
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left/Main Area - Data Display */}
-          <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
-            {/* Data Preview Section */}
-            {data.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden"
+      {/* Filters Panel */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-[#F8FAFC] border-b border-[#E2E8F0] overflow-hidden"
+          >
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-[#64748B] mb-1">Shape</label>
+                  <select
+                    value={filterShape}
+                    onChange={(e) => setFilterShape(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  >
+                    <option value="">All Shapes</option>
+                    {uniqueShapes.map(shape => (
+                      <option key={shape} value={shape}>{shape}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-[#64748B] mb-1">Color</label>
+                  <select
+                    value={filterColor}
+                    onChange={(e) => setFilterColor(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  >
+                    <option value="">All Colors</option>
+                    {uniqueColors.map(color => (
+                      <option key={color} value={color}>{color}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-[#64748B] mb-1">Clarity</label>
+                  <select
+                    value={filterClarity}
+                    onChange={(e) => setFilterClarity(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  >
+                    <option value="">All Clarities</option>
+                    {uniqueClarities.map(clarity => (
+                      <option key={clarity} value={clarity}>{clarity}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-[#64748B] mb-1">Status</label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  >
+                    <option value="">All Status</option>
+                    {uniqueStatuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content Area - 3 View Modes */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* VIEW 1: Show Stock - Only Table */}
+        {viewMode === "show" && (
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
+                <input
+                  type="text"
+                  placeholder="Search stock..."
+                  value={userStockSearch}
+                  onChange={(e) => setUserStockSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  showFilters ? "bg-[#1E3A8A] text-white" : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
+                }`}
               >
-                {/* Table Header with View Toggle */}
-                <div className="p-4 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <Table className="w-5 h-5 text-[#1E3A8A]" />
-                    <h3 className="font-semibold text-[#0F172A]">
-                      Preview Data
-                    </h3>
-                    <span className="px-2 py-1 bg-[#F1F5F9] text-[#64748B] rounded-full text-xs">
-                      {filteredData.length} of {data.length}
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+              </button>
+            </div>
+
+            {/* User Stock List - Full Width Table */}
+            {userStockLoading ? (
+              <div className="flex items-center justify-center py-12 bg-white rounded-xl border border-[#E2E8F0]">
+                <div className="w-8 h-8 border-4 border-[#E2E8F0] border-t-[#1E3A8A] rounded-full animate-spin" />
+              </div>
+            ) : filteredUserStock.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#E2E8F0] p-12 text-center">
+                <div className="w-16 h-16 rounded-xl bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
+                  <Database className="w-8 h-8 text-[#94A3B8]" />
+                </div>
+                <h3 className="text-lg font-semibold text-[#0F172A] mb-2">
+                  No Stock Found
+                </h3>
+                <p className="text-[#64748B] mb-4">
+                  {userStockSearch
+                    ? "No items match your search criteria"
+                    : "You haven't added any stock yet."}
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => setViewMode("import")}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                  >
+                    Import Data
+                  </button>
+                  <button
+                    onClick={() => setViewMode("manual")}
+                    className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E40AF] transition-colors font-medium"
+                  >
+                    Manual Entry
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Results Summary */}
+                <div className="bg-white rounded-lg border border-[#E2E8F0] p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-[#64748B]">
+                      Showing <span className="font-semibold text-[#0F172A]">{filteredUserStock.length}</span> items
+                      (Page <span className="font-semibold text-[#0F172A]">{userStockPage}</span> of <span className="font-semibold text-[#0F172A]">{userStockTotalPages}</span>)
                     </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {/* View Toggle */}
-                    <div className="flex bg-[#F1F5F9] rounded-lg p-1">
-                      <button
-                        onClick={() => setViewMode("grid")}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                          viewMode === "grid"
-                            ? "bg-white text-[#1E3A8A] shadow-sm"
-                            : "text-[#64748B] hover:text-[#0F172A]"
-                        }`}
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                        Grid
-                      </button>
-                      <button
-                        onClick={() => setViewMode("list")}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                          viewMode === "list"
-                            ? "bg-white text-[#1E3A8A] shadow-sm"
-                            : "text-[#64748B] hover:text-[#0F172A]"
-                        }`}
-                      >
-                        <List className="w-4 h-4" />
-                        List
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 pr-4 py-2 border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6] w-48"
-                      />
-                    </div>
                   </div>
                 </div>
 
-                {/* Data Display - Grid or List View */}
-                {viewMode === "grid" ? (
-                  // Grid View
-                  <div className="overflow-y-auto max-h-[600px] p-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {paginatedData.map((row, idx) => {
-                        const actualIndex =
-                          (currentPage - 1) * rowsPerPage + idx;
-                        const willBeSaved = hasStockId(row);
-                        return (
-                          <div
-                            key={actualIndex}
-                            className={`bg-[#F8FAFC] rounded-xl border p-4 hover:border-[#3B82F6] transition-colors ${
-                              willBeSaved
-                                ? "border-[#E2E8F0]"
-                                : "border-red-300 bg-red-50"
-                            }`}
+                {/* Full Width Table */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-x-auto max-h-[70vh]">
+                  <table className="w-full text-sm border-collapse">
+                    <thead className="sticky top-0 z-30">
+                      <tr className="bg-gradient-to-r from-slate-700 to-slate-600 text-white">
+                        <th className="px-2 py-3 text-center font-semibold border-r border-slate-500/30 sticky left-0 bg-gradient-to-r from-slate-700 to-slate-700 z-40 w-10">#</th>
+                        {ALL_DB_FIELDS.map((field) => (
+                          <th
+                            key={field}
+                            className="px-3 py-3 text-left font-semibold border-r border-slate-500/30 whitespace-nowrap bg-gradient-to-r from-slate-700 to-slate-600"
                           >
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-xs font-medium text-[#64748B] bg-white px-2 py-1 rounded-full border border-[#E2E8F0]">
-                                #{actualIndex + 1}
-                              </span>
-                              <span
-                                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  willBeSaved
-                                    ? "text-green-700 bg-green-100"
-                                    : "text-red-700 bg-red-100"
-                                }`}
-                              >
-                                {willBeSaved
-                                  ? "Will Save"
-                                  : "Skip (no stock_id)"}
-                              </span>
-                            </div>
-                            <div className="space-y-2">
-                              {columns.slice(0, 6).map((col) => (
-                                <div
-                                  key={col}
-                                  className="flex justify-between text-sm"
-                                >
-                                  <span className="text-[#64748B] capitalize">
-                                    {col}:
-                                  </span>
-                                  <span className="font-medium text-[#0F172A]">
-                                    {row[col] || "-"}
-                                  </span>
-                                </div>
-                              ))}
-                              {columns.length > 6 && (
-                                <div className="text-xs text-[#94A3B8] text-center pt-2 border-t border-[#E2E8F0]">
-                                  +{columns.length - 6} more fields
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : (
-                  // List View (Table)
-                  <div className="overflow-x-auto max-h-[600px]">
-                    <table className="w-full">
-                      <thead className="bg-[#F8FAFC] sticky top-0">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-[#475569] uppercase tracking-wider">
-                            Status
+                            {field.replace(/_/g, ' ').toUpperCase()}
                           </th>
-                          {columns.map((col) => (
-                            <th
-                              key={col}
-                              className="px-4 py-3 text-left text-xs font-semibold text-[#475569] uppercase tracking-wider cursor-pointer hover:bg-[#F1F5F9]"
-                              onClick={() => handleSort(col)}
-                            >
-                              <div className="flex items-center gap-1">
-                                {col}
-                                {sortConfig.key === col && (
-                                  <ArrowUpDown className="w-3 h-3" />
-                                )}
-                              </div>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#E2E8F0]">
-                        {paginatedData.map((row, idx) => {
-                          const actualIndex =
-                            (currentPage - 1) * rowsPerPage + idx;
-                          const willBeSaved = hasStockId(row);
-                          return (
-                            <tr
-                              key={actualIndex}
-                              className={`hover:bg-[#F8FAFC] ${!willBeSaved ? "bg-red-50" : ""}`}
-                            >
-                              <td className="px-4 py-3 text-sm whitespace-nowrap">
-                                <span
-                                  className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    willBeSaved
-                                      ? "text-green-700 bg-green-100"
-                                      : "text-red-700 bg-red-100"
-                                  }`}
-                                >
-                                  {willBeSaved ? "Save" : "Skip"}
-                                </span>
-                              </td>
-                              {columns.map((col) => (
-                                <td
-                                  key={col}
-                                  className="px-4 py-3 text-sm text-[#0F172A] whitespace-nowrap"
-                                >
-                                  {row[col] || "-"}
-                                </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="overflow-y-auto">
+                      {filteredUserStock.map((item, index) => (
+                        <SimpleTableRow key={item.id} item={item} index={index} page={userStockPage} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="p-4 border-t border-[#E2E8F0] flex items-center justify-between">
-                    <div className="text-sm text-[#64748B]">
-                      Showing {(currentPage - 1) * rowsPerPage + 1} to{" "}
-                      {Math.min(currentPage * rowsPerPage, filteredData.length)}{" "}
-                      of {filteredData.length} rows
-                    </div>
+                {userStockTotalPages > 1 && (
+                  <div className="px-4 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
+                    <p className="text-sm text-[#64748B]">
+                      Showing page <span className="font-semibold text-[#0F172A]">{userStockPage}</span> of <span className="font-semibold text-[#0F172A]">{userStockTotalPages}</span>
+                    </p>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setUserStockPage(p => Math.max(1, p - 1))}
+                        disabled={userStockPage === 1}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" />
+                        Previous
                       </button>
-                      {Array.from(
-                        { length: Math.min(5, totalPages) },
-                        (_, i) => {
-                          const page = i + 1;
-                          return (
-                            <button
-                              key={page}
-                              onClick={() => handlePageChange(page)}
-                              className={`px-3 py-1 rounded-lg text-sm ${
-                                currentPage === page
-                                  ? "bg-[#1E3A8A] text-white"
-                                  : "border border-[#E2E8F0] hover:bg-[#F1F5F9]"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          );
-                        },
-                      )}
-                      {totalPages > 5 && (
-                        <span className="text-[#64748B]">...</span>
-                      )}
                       <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setUserStockPage(p => Math.min(userStockTotalPages, p + 1))}
+                        disabled={userStockPage === userStockTotalPages}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
+                        Next
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 )}
-              </motion.div>
-            )}
-
-            {/* Empty State */}
-            {data.length === 0 && !file && (
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
-                  <Table className="w-8 h-8 text-[#94A3B8]" />
-                </div>
-                <h3 className="text-lg font-medium text-[#0F172A] mb-2">
-                  No Data Imported
-                </h3>
-                <p className="text-[#64748B]">
-                  Select a file or add stock manually to see preview
-                </p>
               </div>
             )}
           </div>
+        )}
 
-          {/* Right Sidebar - Upload Controls */}
-          <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
-            {/* Upload Area */}
-            {!file && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`border-2 border-dashed rounded-xl p-6 text-center transition-all ${
-                  isDragging
-                    ? "border-[#3B82F6] bg-[#EFF6FF]"
-                    : "border-[#CBD5E1] bg-white hover:border-[#94A3B8]"
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+        {/* VIEW 2: Imports - File Upload + Preview + Duplicate Modal */}
+        {viewMode === "import" && (
+          <div className="space-y-6">
+            {/* Import Options Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Excel/CSV Import */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-white rounded-xl border-2 border-dashed border-emerald-300 hover:border-emerald-500 p-6 cursor-pointer transition-all hover:shadow-lg"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A8A]/10 to-[#3B82F6]/10 flex items-center justify-center mx-auto mb-4">
-                  <Upload className="w-6 h-6 text-[#1E3A8A]" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center mb-3">
+                    <FileSpreadsheet className="w-7 h-7 text-emerald-600" />
+                  </div>
+                  <h3 className="font-semibold text-[#0F172A] mb-1">Excel / CSV</h3>
+                  <p className="text-sm text-[#64748B]">Upload .xlsx, .xls, or .csv files</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={(e) => e.target.files?.[0] && processFile(e.target.files[0])}
+                    className="hidden"
+                  />
                 </div>
-                <p className="text-sm text-[#64748B] mb-4">
-                  Drop file or click to browse
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.xlsx,.xls"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full px-4 py-2 bg-[#1E3A8A] text-white rounded-lg font-medium hover:bg-[#1E40AF] transition-colors text-sm"
-                  >
-                    Select File
-                  </button>
-                </div>
+              </div>
 
-                {/* Required Fields Info */}
-                <div className="mt-4 pt-4 border-t border-[#E2E8F0]">
-                  <p className="text-xs text-[#64748B] mb-2">
-                    <span className="font-semibold text-[#1E3A8A]">
-                      Required for save:
-                    </span>{" "}
-                    stock_id
-                  </p>
-                  <p className="text-xs text-[#94A3B8]">
-                    All other fields are optional. Rows without stock_id will be
-                    skipped.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* File Info & Progress */}
-            {file && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl border border-[#E2E8F0] p-6"
+              {/* API Import */}
+              <div
+                onClick={() => notify.info("Coming Soon", "API import will be available soon!")}
+                className="bg-white rounded-xl border-2 border-dashed border-blue-300 hover:border-blue-500 p-6 cursor-pointer transition-all hover:shadow-lg"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center">
-                      {file.name.endsWith(".csv") ? (
-                        <FileText className="w-7 h-7 text-green-600" />
-                      ) : (
-                        <FileSpreadsheet className="w-7 h-7 text-green-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-[#0F172A]">
-                        {file.name}
-                      </h4>
-                      <p className="text-sm text-[#64748B]">
-                        {(file.size / 1024).toFixed(2)} KB • {data.length}{" "}
-                        records
-                      </p>
-                    </div>
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center mb-3">
+                    <Database className="w-7 h-7 text-blue-600" />
                   </div>
-                  <button
-                    onClick={clearFile}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  <h3 className="font-semibold text-[#0F172A] mb-1">API Import</h3>
+                  <p className="text-sm text-[#64748B]">Connect external data source</p>
                 </div>
+              </div>
 
-                {/* Progress Bar */}
-                {uploadProgress < 100 && (
-                  <div className="w-full bg-[#F1F5F9] rounded-full h-2 mb-4">
-                    <div
-                      className="bg-[#3B82F6] h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
+              {/* Download Template */}
+              <div
+                onClick={() => notify.info("Coming Soon", "Template download will be available soon!")}
+                className="bg-white rounded-xl border-2 border-dashed border-amber-300 hover:border-amber-500 p-6 cursor-pointer transition-all hover:shadow-lg"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-xl bg-amber-100 flex items-center justify-center mb-3">
+                    <Download className="w-7 h-7 text-amber-600" />
                   </div>
-                )}
+                  <h3 className="font-semibold text-[#0F172A] mb-1">Template</h3>
+                  <p className="text-sm text-[#64748B]">Download sample CSV format</p>
+                </div>
+              </div>
+            </div>
 
-                {/* Save Stats */}
-                {data.length > 0 && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Database className="w-5 h-5 text-blue-600" />
-                      <span className="font-semibold text-blue-700">
-                        Import Summary
-                      </span>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-blue-900">
-                        <span className="font-medium">Total rows:</span>{" "}
-                        {getSaveStats().total}
-                      </p>
-                      <p className="text-green-700">
-                        <span className="font-medium">Will be saved:</span>{" "}
-                        {getSaveStats().saveable} (have stock_id)
-                      </p>
-                      <p className="text-red-600">
-                        <span className="font-medium">Will be skipped:</span>{" "}
-                        {getSaveStats().skipped} (missing stock_id)
-                      </p>
-                    </div>
-                  </div>
-                )}
+            {/* Drag & Drop Zone */}
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                isDragging
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-[#E2E8F0] bg-white hover:border-emerald-300"
+              }`}
+            >
+              <div className="w-16 h-16 rounded-full bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
+                <Upload className={`w-8 h-8 ${isDragging ? "text-emerald-500" : "text-[#94A3B8]"}`} />
+              </div>
+              <p className="text-lg font-medium text-[#0F172A] mb-2">
+                Drop your file here, or <span className="text-emerald-600 cursor-pointer" onClick={() => fileInputRef.current?.click()}>browse</span>
+              </p>
+              <p className="text-sm text-[#64748B]">Supports CSV, XLSX, XLS files up to 10MB</p>
+            </div>
 
-                {/* Upload Result */}
-                {uploadResult && (
-                  <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-700">
-                        Upload Complete
-                      </span>
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-green-900">
-                        <span className="font-medium">Saved:</span>{" "}
-                        {uploadResult.insertedCount} rows
-                      </p>
-                      <p className="text-orange-600">
-                        <span className="font-medium">Skipped:</span>{" "}
-                        {uploadResult.skippedCount} rows (no stock_id)
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* Submit Button */}
+            {/* File Preview & Data Table */}
             {data.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading || getSaveStats().saveable === 0}
-                  className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg font-semibold text-sm transition-all ${
-                    isLoading || getSaveStats().saveable === 0
-                      ? "bg-[#94A3B8] text-white cursor-not-allowed"
-                      : "bg-[#10B981] text-white hover:bg-[#059669]"
-                  }`}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      Add Stock ({getSaveStats().saveable})
-                    </>
+              <div className="space-y-4">
+                {/* File Info Bar */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <FileSpreadsheet className="w-8 h-8 text-emerald-600" />
+                    <div>
+                      <p className="font-medium text-[#0F172A]">{file?.name}</p>
+                      <p className="text-sm text-[#64748B]">{data.length} rows ready to import</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={clearFile}
+                      className="px-4 py-2 text-[#64748B] hover:text-red-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => checkAndSubmit(false)}
+                      disabled={isLoading}
+                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all disabled:opacity-50"
+                    >
+                      {isLoading ? "Checking..." : "Check & Upload"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Data Preview Table */}
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-x-auto max-h-[60vh]">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-20 bg-slate-700 text-white">
+                      <tr>
+                        {columns.map((col) => (
+                          <th key={col} className="px-3 py-2 text-left font-semibold whitespace-nowrap">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.slice(0, 10).map((row, idx) => (
+                        <tr key={idx} className="border-b border-[#E2E8F0] hover:bg-[#F8FAFC]">
+                          {columns.map((col) => (
+                            <td key={col} className="px-3 py-2 whitespace-nowrap">
+                              {row[col] || "-"}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {data.length > 10 && (
+                    <div className="p-3 text-center text-sm text-[#64748B] bg-[#F8FAFC]">
+                      + {data.length - 10} more rows
+                    </div>
                   )}
-                </button>
-              </motion.div>
+                </div>
+              </div>
             )}
           </div>
-        </div>
+        )}
+
+        {/* VIEW 3: Manual Entry */}
+        {viewMode === "manual" && <AddStockManual />}
       </div>
+
+      {/* Duplicate Warning Modal */}
+      {showDuplicateWarning && duplicateInfo && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Duplicate Stock IDs Found</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-4">
+              {duplicateInfo.count} stock ID{duplicateInfo.count > 1 ? 's' : ''} already exist{duplicateInfo.count === 1 ? 's' : ''} in the database.
+              Uploading will <strong>replace</strong> the existing data with new data.
+            </p>
+            
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 max-h-32 overflow-y-auto">
+              <p className="text-xs text-gray-500 mb-2">Existing IDs:</p>
+              <div className="flex flex-wrap gap-1">
+                {duplicateInfo.ids.map((id, i) => (
+                  <span key={i} className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded">
+                    {id}
+                  </span>
+                ))}
+                {duplicateInfo.total > 10 && (
+                  <span className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">
+                    +{duplicateInfo.total - 10} more
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDuplicateWarning(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => doUpload()}
+                className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+              >
+                Replace & Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
