@@ -19,8 +19,6 @@ import {
   BadgeDollarSign,
   Package,
   Gem,
-  Users,
-  ShoppingBag,
   Leaf,
 } from "lucide-react";
 
@@ -75,6 +73,14 @@ const Pricing = () => {
     return iconMap[planName?.toLowerCase()] || Diamond;
   };
 
+  // Get plan type display info
+  const getPlanTypeInfo = (sub) => {
+    const types = [];
+    if (sub.hasDiamonds) types.push({ label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" });
+    if (sub.hasJewellery) types.push({ label: "Jewellery", icon: Gem, color: "from-amber-400 to-orange-300" });
+    return types;
+  };
+
   // Group subscriptions by plan name and map to pricing cards
   const getPlans = () => {
     if (subscriptions.length === 0) {
@@ -85,6 +91,7 @@ const Pricing = () => {
           icon: Zap,
           description:
             "Perfect for small diamond businesses and new dealers entering the marketplace.",
+          planTypes: [{ label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" }],
           options: [
             { duration: 1, durationLabel: "1 Month", price: 29, id: 1 },
             { duration: 3, durationLabel: "3 Months", price: 79, id: 2 },
@@ -107,6 +114,10 @@ const Pricing = () => {
           icon: Sparkles,
           description:
             "Built for growing diamond trading teams that need advanced visibility.",
+          planTypes: [
+            { label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" },
+            { label: "Jewellery", icon: Gem, color: "from-amber-400 to-orange-300" },
+          ],
           options: [
             { duration: 1, durationLabel: "1 Month", price: 79, id: 5 },
             { duration: 3, durationLabel: "3 Months", price: 229, id: 6 },
@@ -130,6 +141,10 @@ const Pricing = () => {
           icon: Crown,
           description:
             "Enterprise-grade infrastructure for large diamond companies.",
+          planTypes: [
+            { label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" },
+            { label: "Jewellery", icon: Gem, color: "from-amber-400 to-orange-300" },
+          ],
           options: [
             { duration: 1, durationLabel: "1 Month", price: 199, id: 9 },
             { duration: 3, durationLabel: "3 Months", price: 579, id: 10 },
@@ -157,33 +172,39 @@ const Pricing = () => {
       .filter((sub) => sub.isActive !== false)
       .reduce((acc, sub) => {
         const name = sub.name?.toLowerCase();
+        const planTypes = getPlanTypeInfo(sub);
+        
         if (!acc[name]) {
+          // Build features based on plan type
+          const baseFeatures = [`${sub.stockLimit} stock items limit`];
+          if (sub.hasDiamonds) baseFeatures.push("Diamond marketplace access");
+          if (sub.hasJewellery) baseFeatures.push("Jewellery marketplace access");
+          baseFeatures.push("Email support");
+          
           acc[name] = {
-            name:
-              sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Plan",
+            name: sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Plan",
             icon: getTypeIcon(name),
-            description: `${sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Subscription"} plan for diamond trading.`,
+            description: sub.description || `${sub.name?.charAt(0).toUpperCase() + sub.name?.slice(1) || "Subscription"} plan for diamond and jewellery trading.`,
+            planTypes: planTypes,
             options: [],
-            features: [
-              `${sub.stockLimit} stock items limit`,
-              "Email support",
-              "Standard marketplace access",
-            ],
+            features: baseFeatures,
             notIncluded:
               name === "basic"
-                ? ["Priority support", "Advanced analytics"]
+                ? ["Priority support", "Advanced analytics", "Dedicated account manager"]
                 : name === "silver"
-                  ? ["Dedicated account manager"]
+                  ? ["Dedicated account manager", "White-label options"]
                   : [],
             popular: name === "silver",
-            cta: name === "gold" ? "Contact Sales" : "Get Started",
+            cta: name === "gold" || name === "enterprise" ? "Contact Sales" : "Get Started",
             ctaLink: "/register",
             badge:
               name === "basic"
                 ? "For Small Businesses"
                 : name === "silver"
                   ? "Most Popular"
-                  : "For Enterprises",
+                  : name === "gold"
+                    ? "For Enterprises"
+                    : "Premium Plan",
           };
         }
         acc[name].options.push({
@@ -201,8 +222,8 @@ const Pricing = () => {
       plan.options.sort((a, b) => a.duration - b.duration);
     });
 
-    // Return sorted by tier (basic, silver, gold)
-    const order = ["basic", "silver", "gold"];
+    // Return sorted by tier (basic, silver, gold, then others)
+    const order = ["basic", "silver", "gold", "enterprise", "pro", "premium"];
     return Object.values(grouped).sort((a, b) => {
       const aIndex = order.indexOf(a.name.toLowerCase());
       const bIndex = order.indexOf(b.name.toLowerCase());
@@ -214,29 +235,6 @@ const Pricing = () => {
   };
 
   const plans = getPlans();
-
-  const faqs = [
-    {
-      q: "Can I upgrade my plan later?",
-      a: "Yes, you can upgrade or downgrade your subscription anytime without losing your dealer data or listings.",
-      icon: Diamond,
-    },
-    {
-      q: "Is there a trial available?",
-      a: "Yes, all premium plans come with a 14-day free trial so you can explore the platform confidently.",
-      icon: Sparkles,
-    },
-    {
-      q: "Do you support enterprise invoicing?",
-      a: "Yes, enterprise customers can access custom billing, invoicing, and account-based payment support.",
-      icon: Building2,
-    },
-    {
-      q: "How secure is my trading data?",
-      a: "Your business data is protected with secure infrastructure, encrypted storage, and role-based access controls.",
-      icon: ShieldCheck,
-    },
-  ];
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 40 },
@@ -254,54 +252,125 @@ const Pricing = () => {
     },
   };
 
+  // Floating animation for decorative elements
+  const floatingAnimation = {
+    y: [0, -15, 0],
+    rotate: [0, 5, -5, 0],
+    transition: {
+      y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+      rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] overflow-x-hidden">
       {/* Header with Title and Toggles */}
-      <section className="border-b border-[#E2E8F0] bg-gradient-to-br from-[#F1F5F9] to-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden border-b border-[#E2E8F0] bg-gradient-to-br from-[#F1F5F9] via-white to-[#EFF6FF] py-20">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            animate={floatingAnimation}
+            className="absolute top-10 left-[10%] opacity-20"
+          >
+            <Diamond className="h-16 w-16 text-[#3B82F6]" />
+          </motion.div>
+          <motion.div
+            animate={{
+              y: [0, 20, 0],
+              rotate: [0, -10, 10, 0],
+              transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+            }}
+            className="absolute top-20 right-[15%] opacity-15"
+          >
+            <Gem className="h-20 w-20 text-[#F59E0B]" />
+          </motion.div>
+          <motion.div
+            animate={{
+              y: [0, -12, 0],
+              rotate: [0, 8, -8, 0],
+              transition: { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 1 },
+            }}
+            className="absolute bottom-10 left-[20%] opacity-10"
+          >
+            <Sparkles className="h-12 w-12 text-[#1E3A8A]" />
+          </motion.div>
+          <motion.div
+            animate={{
+              y: [0, 15, 0],
+              transition: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+            }}
+            className="absolute top-32 right-[8%] opacity-10"
+          >
+            <Crown className="h-14 w-14 text-[#1E3A8A]" />
+          </motion.div>
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center text-center"
           >
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#3B82F6]/20 bg-white/80 backdrop-blur-sm px-4 py-2 shadow-sm"
+            >
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles className="h-4 w-4 text-[#3B82F6]" />
+              </motion.div>
+              <span className="text-sm font-semibold text-[#1E3A8A]">Premium Diamond Trading Plans</span>
+            </motion.div>
+
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-3xl sm:text-4xl font-bold text-[#0F172A]"
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-4xl sm:text-5xl font-bold text-[#0F172A] tracking-tight"
             >
-              Simple, transparent pricing
+              Choose Your Perfect{" "}
+              <span className="bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] bg-clip-text text-transparent">
+                Plan
+              </span>
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-4 text-[#475569] max-w-xl"
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-5 text-lg text-[#64748B] max-w-2xl leading-relaxed"
             >
-              Choose the perfect plan for your needs. All plans include a 14-day
-              free trial.
+              Flexible pricing for diamond and jewellery dealers. All plans include a{" "}
+              <span className="font-semibold text-[#1E3A8A]">14-day free trial</span>.
             </motion.p>
 
             {/* Currency Toggle */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
               className="mt-10"
             >
-              <div className="inline-flex items-center gap-1 rounded-xl border border-[#E2E8F0] bg-white p-1 shadow-sm">
-                {["USD", "INR"].map((curr) => (
+              <div className="inline-flex items-center gap-1 rounded-2xl border border-[#E2E8F0] bg-white p-1.5 shadow-lg shadow-[#1E3A8A]/5">
+                {["USD", "INR"].map((curr, idx) => (
                   <motion.button
                     key={curr}
                     onClick={() => setCurrency(curr)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                    initial={{ opacity: 0, x: idx === 0 ? -20 : 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + idx * 0.1 }}
+                    className={`rounded-xl px-5 py-2 text-sm font-semibold transition-all duration-300 ${
                       currency === curr
-                        ? "bg-[#1E3A8A] text-white shadow-sm"
-                        : "text-[#64748B] hover:text-[#1E3A8A]"
+                        ? "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-md"
+                        : "text-[#64748B] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
                     }`}
                   >
                     {curr} ({curr === "USD" ? "$" : "₹"})
@@ -313,35 +382,32 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Trust Strip */}
-      <section className="border-b border-[#E2E8F0] bg-white py-6">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 px-4 sm:grid-cols-4 sm:px-6 lg:px-8">
-          {[
-            { icon: Globe, title: "150+ Countries" },
-            { icon: ShieldCheck, title: "Trusted Security" },
-            { icon: BadgeDollarSign, title: "Transparent Plans" },
-            { icon: Diamond, title: "Premium Experience" },
-          ].map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className="flex items-center justify-center gap-2 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 text-[#0F172A]"
-              >
-                <Icon className="h-5 w-5 text-[#3B82F6]" />
-                <span className="text-sm font-semibold">{item.title}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
 
       {/* Pricing Cards */}
       <section className="relative bg-gradient-to-b from-[#F1F5F9] to-white py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-[#1E3A8A]"></div>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="rounded-[30px] border border-[#E2E8F0] bg-white p-8 shadow-lg"
+                >
+                  <div className="animate-pulse space-y-6">
+                    <div className="h-4 w-24 rounded-lg bg-[#E2E8F0]" />
+                    <div className="h-14 w-14 rounded-2xl bg-[#E2E8F0]" />
+                    <div className="h-8 w-32 rounded-lg bg-[#E2E8F0]" />
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4].map((j) => (
+                        <div key={j} className="h-12 rounded-xl bg-[#F1F5F9]" />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           ) : (
             <motion.div
@@ -369,9 +435,17 @@ const Pricing = () => {
                     className={`group relative rounded-[30px] border transition-all duration-500 ${
                       plan.popular
                         ? "border-[#3B82F6]/30 bg-gradient-to-b from-[#1E3A8A] to-[#2563EB] text-white shadow-[0_25px_80px_rgba(30,58,138,0.25)] md:-mt-6 md:mb-6"
-                        : "border-[#E2E8F0] bg-white shadow-[0_15px_50px_rgba(15,23,42,0.08)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.12)] hover:border-[#3B82F6]/20"
+                        : "border-[#E2E8F0] bg-white shadow-[0_15px_50px_rgba(15,23,42,0.08)] hover:shadow-[0_25px_60px_rgba(30,58,138,0.15)] hover:border-[#3B82F6]/30"
                     }`}
                   >
+                    {/* Glow Effect for Popular Plan */}
+                    {plan.popular && (
+                      <div className="absolute -inset-px rounded-[30px] bg-gradient-to-b from-[#60A5FA]/20 to-transparent blur-xl opacity-50" />
+                    )}
+                    {/* Hover Glow for Non-Popular */}
+                    {!plan.popular && (
+                      <div className="absolute -inset-px rounded-[30px] bg-gradient-to-b from-[#3B82F6]/10 to-transparent opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+                    )}
                     {plan.popular && (
                       <div className="absolute -top-4 left-1/2 z-20 -translate-x-1/2">
                         <motion.span
@@ -435,6 +509,42 @@ const Pricing = () => {
                           >
                             {plan.description}
                           </p>
+
+                          {/* Plan Type Badges */}
+                          {plan.planTypes && plan.planTypes.length > 0 && (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              {plan.planTypes.map((type, idx) => {
+                                const TypeIcon = type.icon;
+                                return (
+                                  <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1, duration: 0.3 }}
+                                    whileHover={{ scale: 1.05, y: -2 }}
+                                    className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                                      plan.popular
+                                        ? "bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm"
+                                        : "bg-gradient-to-r from-[#DBEAFE] to-[#BFDBFE] text-[#1E3A8A] ring-1 ring-[#3B82F6]/20"
+                                    }`}
+                                  >
+                                    <span className={`flex h-5 w-5 items-center justify-center rounded-md ${
+                                      plan.popular
+                                        ? "bg-white/20"
+                                        : "bg-[#3B82F6]/15"
+                                    }`}>
+                                      <TypeIcon className={`h-3 w-3 ${
+                                        plan.popular
+                                          ? "text-white"
+                                          : "text-[#2563EB]"
+                                      }`} />
+                                    </span>
+                                    <span>{type.label}</span>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
 
                         {/* Multiple Duration Options */}
@@ -446,20 +556,54 @@ const Pricing = () => {
                           >
                             Choose duration
                           </p>
-                          <div className="space-y-2">
-                            {plan.options?.map((option) => {
+                          <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            variants={{
+                              hidden: {},
+                              visible: { transition: { staggerChildren: 0.08 } },
+                            }}
+                            className="space-y-2"
+                          >
+                            {plan.options?.map((option, idx) => {
                               const price = getPrice(option.price);
                               return (
                                 <motion.div
                                   key={option.id}
-                                  whileHover={{ scale: 1.02 }}
-                                  className={`flex items-center justify-between rounded-xl border px-4 py-3 cursor-pointer ${
+                                  variants={{
+                                    hidden: { opacity: 0, x: -20 },
+                                    visible: { opacity: 1, x: 0 },
+                                  }}
+                                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                                  whileHover={{
+                                    scale: 1.02,
+                                    x: 4,
+                                    transition: { type: "spring", stiffness: 400 },
+                                  }}
+                                  className={`group/duration flex items-center justify-between rounded-xl border px-4 py-3 cursor-pointer transition-all duration-300 ${
                                     plan.popular
-                                      ? "border-white/20 bg-white/10 hover:bg-white/20"
-                                      : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#3B82F6]/30 hover:bg-[#EFF6FF]"
+                                      ? "border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/30"
+                                      : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#3B82F6]/40 hover:bg-[#EFF6FF] hover:shadow-md"
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
+                                    <motion.div
+                                      initial={false}
+                                      className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+                                        plan.popular
+                                          ? "border-white/40 group-hover/duration:border-white"
+                                          : "border-[#CBD5E1] group-hover/duration:border-[#3B82F6]"
+                                      }`}
+                                    >
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        whileHover={{ scale: 1 }}
+                                        className={`h-2.5 w-2.5 rounded-full ${
+                                          plan.popular ? "bg-white" : "bg-[#3B82F6]"
+                                        }`}
+                                      />
+                                    </motion.div>
                                     <span
                                       className={`text-sm font-medium ${
                                         plan.popular
@@ -480,7 +624,8 @@ const Pricing = () => {
                                     >
                                       {getCurrencySymbol()}
                                     </span>
-                                    <span
+                                    <motion.span
+                                      whileHover={{ scale: 1.1 }}
                                       className={`text-lg font-bold ${
                                         plan.popular
                                           ? "text-white"
@@ -488,12 +633,12 @@ const Pricing = () => {
                                       }`}
                                     >
                                       {price.toLocaleString()}
-                                    </span>
+                                    </motion.span>
                                   </div>
                                 </motion.div>
                               );
                             })}
-                          </div>
+                          </motion.div>
                         </div>
 
                         <div className="mt-8">
@@ -503,19 +648,31 @@ const Pricing = () => {
                           >
                             <Link
                               to={plan.ctaLink}
-                              className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
+                              className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
                                 plan.popular
-                                  ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC]"
-                                  : "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/25 hover:bg-[#1E40AF] hover:shadow-xl"
+                                  ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC] hover:shadow-xl"
+                                  : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30"
                               }`}
                             >
-                              <span>{plan.cta}</span>
+                              <span className="relative z-10">{plan.cta}</span>
                               <motion.span
                                 animate={{ x: [0, 5, 0] }}
                                 transition={{ duration: 1.5, repeat: Infinity }}
+                                className="relative z-10"
                               >
                                 <ArrowRight className="h-4 w-4" />
                               </motion.span>
+                              {/* Shine effect on hover */}
+                              <motion.div
+                                initial={{ x: "-100%" }}
+                                whileHover={{ x: "100%" }}
+                                transition={{ duration: 0.6 }}
+                                className={`absolute inset-0 ${
+                                  plan.popular
+                                    ? "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                    : "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                }`}
+                              />
                             </Link>
                           </motion.div>
                         </div>
@@ -535,39 +692,55 @@ const Pricing = () => {
                             Included features
                           </p>
 
-                          <ul className="space-y-3">
-                            {plan.features.map((feature) => (
-                              <li
+                          <motion.ul
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true }}
+                            variants={{
+                              hidden: {},
+                              visible: { transition: { staggerChildren: 0.05 } },
+                            }}
+                            className="space-y-3"
+                          >
+                            {plan.features.map((feature, idx) => (
+                              <motion.li
                                 key={feature}
-                                className="flex items-start gap-3"
+                                variants={{
+                                  hidden: { opacity: 0, x: -10 },
+                                  visible: { opacity: 1, x: 0 },
+                                }}
+                                transition={{ duration: 0.3, delay: idx * 0.03 }}
+                                whileHover={{ x: 4 }}
+                                className="group/feature flex items-start gap-3 cursor-default"
                               >
-                                <span
-                                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
+                                <motion.span
+                                  whileHover={{ scale: 1.2, rotate: 10 }}
+                                  className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
                                     plan.popular
-                                      ? "bg-white/15"
-                                      : "bg-[#DBEAFE]"
+                                      ? "bg-white/15 group-hover/feature:bg-white/25"
+                                      : "bg-[#DBEAFE] group-hover/feature:bg-[#3B82F6]"
                                   }`}
                                 >
                                   <Check
-                                    className={`h-3.5 w-3.5 ${
+                                    className={`h-3.5 w-3.5 transition-colors ${
                                       plan.popular
                                         ? "text-white"
-                                        : "text-[#2563EB]"
+                                        : "text-[#2563EB] group-hover/feature:text-white"
                                     }`}
                                   />
-                                </span>
+                                </motion.span>
                                 <span
-                                  className={`text-sm ${
+                                  className={`text-sm transition-colors ${
                                     plan.popular
-                                      ? "text-white/90"
-                                      : "text-[#475569]"
+                                      ? "text-white/90 group-hover/feature:text-white"
+                                      : "text-[#475569] group-hover/feature:text-[#0F172A]"
                                   }`}
                                 >
                                   {feature}
                                 </span>
-                              </li>
+                              </motion.li>
                             ))}
-                          </ul>
+                          </motion.ul>
 
                           {plan.notIncluded.length > 0 && (
                             <>
@@ -588,10 +761,24 @@ const Pricing = () => {
                                 Not included
                               </p>
 
-                              <ul className="space-y-3">
-                                {plan.notIncluded.map((item) => (
-                                  <li
+                              <motion.ul
+                                initial="hidden"
+                                whileInView="visible"
+                                viewport={{ once: true }}
+                                variants={{
+                                  hidden: {},
+                                  visible: { transition: { staggerChildren: 0.05 } },
+                                }}
+                                className="space-y-3"
+                              >
+                                {plan.notIncluded.map((item, idx) => (
+                                  <motion.li
                                     key={item}
+                                    variants={{
+                                      hidden: { opacity: 0, x: -10 },
+                                      visible: { opacity: 1, x: 0 },
+                                    }}
+                                    transition={{ duration: 0.3, delay: idx * 0.03 }}
                                     className="flex items-start gap-3"
                                   >
                                     <span
@@ -618,9 +805,9 @@ const Pricing = () => {
                                     >
                                       {item}
                                     </span>
-                                  </li>
+                                  </motion.li>
                                 ))}
-                              </ul>
+                              </motion.ul>
                             </>
                           )}
                         </div>
@@ -634,147 +821,6 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="relative bg-[#F8FAFC] py-24 border-t border-[#E2E8F0]">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-          >
-            <motion.div variants={fadeInUp} className="mb-14 text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm text-[#1E3A8A] shadow-sm">
-                <HelpCircle className="h-4 w-4 text-[#3B82F6]" />
-                FAQ
-              </span>
-
-              <h2 className="mt-6 text-3xl font-bold text-[#0F172A] sm:text-4xl">
-                Frequently asked questions
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-[#64748B]">
-                Everything you need to know before selecting the right pricing
-                plan for your diamond business.
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {faqs.map((faq, index) => {
-                const Icon = faq.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    variants={fadeInUp}
-                    whileHover={{
-                      y: -5,
-                      transition: { type: "spring", stiffness: 300 },
-                    }}
-                    className="group rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-[#3B82F6]/20"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 8, scale: 1.08 }}
-                      transition={{ duration: 0.3 }}
-                      className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] shadow-sm"
-                    >
-                      <Icon className="h-5 w-5 text-[#1E3A8A]" />
-                    </motion.div>
-                    <h3 className="text-lg font-semibold text-[#0F172A]">
-                      {faq.q}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#64748B]">
-                      {faq.a}
-                    </p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E3A8A] via-[#1E40AF] to-[#2563EB] py-24">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.08)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.08)_50%,rgba(255,255,255,0.08)_75%,transparent_75%,transparent)] bg-[length:140px_140px]" />
-        </div>
-
-        <div className="absolute left-10 top-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-52 w-52 rounded-full bg-[#93C5FD]/20 blur-3xl" />
-
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="relative rounded-[32px] border border-white/15 bg-white/10 p-10 text-center shadow-2xl backdrop-blur-xl md:p-16"
-          >
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="relative z-10"
-            >
-              <motion.div variants={fadeInUp} className="mb-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15">
-                  <Diamond className="h-8 w-8 text-white" />
-                </div>
-              </motion.div>
-
-              <motion.h2
-                variants={fadeInUp}
-                className="text-3xl font-bold text-white md:text-4xl"
-              >
-                Ready to grow your diamond business?
-              </motion.h2>
-
-              <motion.p
-                variants={fadeInUp}
-                className="mx-auto mt-4 max-w-2xl text-lg text-[#93C5FD]"
-              >
-                Join trusted dealers and start trading with confidence on a
-                secure, transparent, and premium diamond exchange platform.
-              </motion.p>
-
-              <motion.div
-                variants={fadeInUp}
-                className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link
-                    to="/register"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-8 py-4 font-semibold text-[#1E3A8A] shadow-lg transition-all duration-300 hover:bg-[#EFF6FF]"
-                  >
-                    Get Started Free
-                    <motion.span
-                      animate={{ x: [0, 5, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <ArrowRight className="h-5 w-5" />
-                    </motion.span>
-                  </Link>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link
-                    to="/contact"
-                    className="rounded-2xl border border-white/30 px-8 py-4 font-semibold text-white transition-all duration-300 hover:bg-white/10"
-                  >
-                    Contact Sales
-                  </Link>
-                </motion.div>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 };
