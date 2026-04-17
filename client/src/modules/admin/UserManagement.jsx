@@ -13,7 +13,7 @@ const UserManagement = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [showUserModal, setShowUserModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordUser, setPasswordUser] = useState(null);
   const [adminPassword, setAdminPassword] = useState("");
@@ -25,40 +25,85 @@ const UserManagement = () => {
     if (!sortConfig.key) return 0;
     const aVal = a[sortConfig.key];
     const bVal = b[sortConfig.key];
-    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
     return 0;
   });
 
   // Filter users
-  const filteredUsers = sortedUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || user.status === filterStatus;
+  const filteredUsers = sortedUsers.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      filterStatus === "all" || user.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
   // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   // Handle sort click
   const handleSort = (key) => {
-    setSortConfig(prev => ({
+    setSortConfig((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
   // Sort indicator icon
   const SortIcon = ({ columnKey }) => {
     if (sortConfig.key !== columnKey) {
-      return <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>;
+      return (
+        <svg
+          className="w-3 h-3 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+          />
+        </svg>
+      );
     }
-    return sortConfig.direction === 'asc' ?
-      <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg> :
-      <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>;
+    return sortConfig.direction === "asc" ? (
+      <svg
+        className="w-3 h-3 text-blue-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"
+        />
+      </svg>
+    ) : (
+      <svg
+        className="w-3 h-3 text-blue-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    );
   };
 
   // Handle password view
@@ -80,18 +125,23 @@ const UserManagement = () => {
 
       // Verify admin password via dedicated API (only password needed)
       const response = await authAPI.verifyAdminPassword(adminPassword);
-      console.log("verify response = ", response);
       if (response.success) {
         setRevealedPassword(passwordUser.id);
         setShowPasswordModal(false);
         setAdminPassword("");
         notify.success("Access Granted", "User password is now visible");
       } else {
-        notify.error("Access Denied", response.message || "Incorrect admin password");
+        notify.error(
+          "Access Denied",
+          response.message || "Incorrect admin password",
+        );
       }
     } catch (error) {
       console.error("Password verification error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Incorrect admin password";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Incorrect admin password";
       notify.error("Access Denied", errorMessage);
     }
   };
@@ -108,8 +158,8 @@ const UserManagement = () => {
       if (response.success) {
         // Format users for display - filter out admin users (only show users with role 'user')
         const formattedUsers = response.users
-          .filter(user => user.role === 'user')
-          .map(user => ({
+          .filter((user) => user.role === "user")
+          .map((user) => ({
             id: user.id,
             name: user.name,
             email: user.email,
@@ -119,15 +169,19 @@ const UserManagement = () => {
             address: user.address,
             gst: user.gst,
             document: user.document,
-            status: user.isActive ? 'active' : 'inactive',
-            joined: new Date(user.createdAt).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
+            status: user.isActive ? "active" : "inactive",
+            joined: new Date(user.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
             }),
-            avatar: user.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U',
+            avatar:
+              user.name
+                ?.split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase() || "U",
           }));
-        console.log('Formatted users:', formattedUsers);
         setUsers(formattedUsers);
       } else {
         console.error("Failed to load users:", response.message);
@@ -148,18 +202,20 @@ const UserManagement = () => {
 
   const toggleUserStatus = async (userId) => {
     // TODO: Add API call to toggle user status
-    const user = users.find(u => u.id === userId);
+    const user = users.find((u) => u.id === userId);
     if (!user) return;
-    
+
     const newStatus = user.status === "active" ? "inactive" : "active";
-    
-    setUsers(prev => prev.map(u => {
-      if (u.id === userId) {
-        return { ...u, status: newStatus };
-      }
-      return u;
-    }));
-    
+
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.id === userId) {
+          return { ...u, status: newStatus };
+        }
+        return u;
+      }),
+    );
+
     notify.success("Status Updated", `User ${user.name} is now ${newStatus}`);
   };
 
@@ -199,13 +255,23 @@ const UserManagement = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               autoComplete="off"
               icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
                 </svg>
               }
             />
           </div>
-          
+
           {/* Status Filter */}
           <select
             value={filterStatus}
@@ -231,61 +297,117 @@ const UserManagement = () => {
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 sticky top-0 z-10">
               <tr>
                 <th
-                  onClick={() => handleSort('name')}
+                  onClick={() => handleSort("name")}
                   className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-200/50 transition-colors sticky top-0 group"
                 >
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
                     </svg>
                     <span>Name</span>
                     <SortIcon columnKey="name" />
                   </div>
                 </th>
                 <th
-                  onClick={() => handleSort('email')}
+                  onClick={() => handleSort("email")}
                   className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-200/50 transition-colors sticky top-0"
                 >
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <svg
+                      className="w-4 h-4 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
                     </svg>
                     <span>Email</span>
                     <SortIcon columnKey="email" />
                   </div>
                 </th>
-                <th
-                  className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0"
-                >
+                <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    <svg
+                      className="w-4 h-4 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      />
                     </svg>
                     <span>Phone</span>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
                   <div className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <svg
+                      className="w-4 h-4 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
                     </svg>
                     <span>Password</span>
                   </div>
                 </th>
-                <th
-                  className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0"
-                >
+                <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
                   <div className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-4 h-4 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <span>Status</span>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
                   <div className="flex items-center justify-center gap-2">
-                    <svg className="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-4 h-4 text-cyan-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <span>Details</span>
                   </div>
@@ -309,119 +431,185 @@ const UserManagement = () => {
                   </td>
                 </tr>
               ) : (
-              <AnimatePresence mode="popLayout">
-                {paginatedUsers.map((user, index) => (
-                  <motion.tr
-                    key={user.id}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit={{ opacity: 0, x: -100 }}
-                    layout
-                    className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
-                  >
-                    {/* Name */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <motion.div
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-md"
-                        >
-                          {user.avatar}
-                        </motion.div>
-                        <div>
-                          <p className="font-semibold text-slate-900">{user.name}</p>
-                        </div>
-                      </div>
-                    </td>
-                    {/* Email */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                        </svg>
-                        <p className="text-sm text-slate-600">{user.email}</p>
-                      </div>
-                    </td>
-                    {/* Phone */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <p className="text-sm text-slate-600">{user.phone || "N/A"}</p>
-                      </div>
-                    </td>
-                    {/* Password */}
-                    <td className="px-4 py-4 text-center">
-                      {revealedPassword === user.id ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <code className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-mono">{user.password || 'N/A'}</code>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setRevealedPassword(null)}
-                            className="p-1 text-slate-400 hover:text-slate-600"
+                <AnimatePresence mode="popLayout">
+                  {paginatedUsers.map((user, index) => (
+                    <motion.tr
+                      key={user.id}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit={{ opacity: 0, x: -100 }}
+                      layout
+                      className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
+                    >
+                      {/* Name */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-md"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            {user.avatar}
+                          </motion.div>
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              {user.name}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      {/* Email */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4 text-slate-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                            />
+                          </svg>
+                          <p className="text-sm text-slate-600">{user.email}</p>
+                        </div>
+                      </td>
+                      {/* Phone */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4 text-green-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                          <p className="text-sm text-slate-600">
+                            {user.phone || "N/A"}
+                          </p>
+                        </div>
+                      </td>
+                      {/* Password */}
+                      <td className="px-4 py-4 text-center">
+                        {revealedPassword === user.id ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <code className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-mono">
+                              {user.password || "N/A"}
+                            </code>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => setRevealedPassword(null)}
+                              className="p-1 text-slate-400 hover:text-slate-600"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                                />
+                              </svg>
+                            </motion.button>
+                          </div>
+                        ) : (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleViewPassword(user)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm"
+                          >
+                            <svg
+                              className="w-3.5 h-3.5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
                             </svg>
+                            View
+                          </motion.button>
+                        )}
+                      </td>
+                      {/* Status */}
+                      <td className="px-4 py-4 text-center">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => toggleUserStatus(user.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
+                            user.status === "active"
+                              ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200"
+                              : "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-rose-200"
+                          }`}
+                        >
+                          <motion.span
+                            animate={{
+                              scale: user.status === "active" ? [1, 1.2, 1] : 1,
+                            }}
+                            transition={{ duration: 0.3 }}
+                            className={`w-2 h-2 rounded-full ${user.status === "active" ? "bg-white" : "bg-white/80"}`}
+                          />
+                          {user.status === "active" ? "Active" : "Inactive"}
+                        </motion.button>
+                      </td>
+                      {/* Details */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-center">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowUserModal(true);
+                            }}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md shadow-cyan-200"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            Details
                           </motion.button>
                         </div>
-                      ) : (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleViewPassword(user)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all shadow-sm"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          View
-                        </motion.button>
-                      )}
-                    </td>
-                    {/* Status */}
-                    <td className="px-4 py-4 text-center">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => toggleUserStatus(user.id)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm ${
-                          user.status === "active"
-                            ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200"
-                            : "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-rose-200"
-                        }`}
-                      >
-                        <motion.span
-                          animate={{ scale: user.status === "active" ? [1, 1.2, 1] : 1 }}
-                          transition={{ duration: 0.3 }}
-                          className={`w-2 h-2 rounded-full ${user.status === "active" ? "bg-white" : "bg-white/80"}`}
-                        />
-                        {user.status === "active" ? "Active" : "Inactive"}
-                      </motion.button>
-                    </td>
-                    {/* Details */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => { setSelectedUser(user); setShowUserModal(true); }}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all shadow-md shadow-cyan-200"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Details
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               )}
             </tbody>
           </table>
@@ -434,11 +622,23 @@ const UserManagement = () => {
             className="p-12 text-center"
           >
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#F1F5F9] flex items-center justify-center">
-              <svg className="w-8 h-8 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="w-8 h-8 text-[#94A3B8]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
-            <p className="text-[#64748B]">No users found matching your criteria</p>
+            <p className="text-[#64748B]">
+              No users found matching your criteria
+            </p>
           </motion.div>
         )}
 
@@ -447,11 +647,23 @@ const UserManagement = () => {
           {/* Stats Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div className="flex items-center gap-4 text-sm text-[#1E3A8A]/70">
-              <span className="text-emerald-600">Active: <strong>{users.filter(u => u.status === "active").length}</strong></span>
-              <span className="text-rose-600">Deactive: <strong>{users.filter(u => u.status === "inactive").length}</strong></span>
+              <span className="text-emerald-600">
+                Active:{" "}
+                <strong>
+                  {users.filter((u) => u.status === "active").length}
+                </strong>
+              </span>
+              <span className="text-rose-600">
+                Deactive:{" "}
+                <strong>
+                  {users.filter((u) => u.status === "inactive").length}
+                </strong>
+              </span>
             </div>
             <p className="text-xs sm:text-sm text-[#1E3A8A]/60">
-              Showing {filteredUsers.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} users
+              Showing {filteredUsers.length > 0 ? startIndex + 1 : 0} -{" "}
+              {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
+              {filteredUsers.length} users
             </p>
           </div>
 
@@ -461,7 +673,7 @@ const UserManagement = () => {
             <div className="flex items-center gap-2 sm:hidden">
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -472,7 +684,9 @@ const UserManagement = () => {
               </span>
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages || totalPages === 0}
                 className="px-3 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -485,7 +699,7 @@ const UserManagement = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -494,21 +708,23 @@ const UserManagement = () => {
               <div className="flex items-center gap-1">
                 {totalPages <= 7 ? (
                   // Show all pages if 7 or less
-                  Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <motion.button
-                      key={page}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === page
-                          ? "bg-[#1E3A8A] text-white"
-                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                      }`}
-                    >
-                      {page}
-                    </motion.button>
-                  ))
+                  Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <motion.button
+                        key={page}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                          currentPage === page
+                            ? "bg-[#1E3A8A] text-white"
+                            : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                        }`}
+                      >
+                        {page}
+                      </motion.button>
+                    ),
+                  )
                 ) : (
                   // Show truncated pagination for many pages
                   <>
@@ -526,11 +742,19 @@ const UserManagement = () => {
                       1
                     </motion.button>
                     {/* Ellipsis or second page */}
-                    {currentPage > 3 && <span className="px-1 text-[#1E3A8A]/50">...</span>}
+                    {currentPage > 3 && (
+                      <span className="px-1 text-[#1E3A8A]/50">...</span>
+                    )}
                     {/* Pages around current */}
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(page => page !== 1 && page !== totalPages && page >= currentPage - 1 && page <= currentPage + 1)
-                      .map(page => (
+                      .filter(
+                        (page) =>
+                          page !== 1 &&
+                          page !== totalPages &&
+                          page >= currentPage - 1 &&
+                          page <= currentPage + 1,
+                      )
+                      .map((page) => (
                         <motion.button
                           key={page}
                           whileHover={{ scale: 1.05 }}
@@ -546,7 +770,9 @@ const UserManagement = () => {
                         </motion.button>
                       ))}
                     {/* Ellipsis before last */}
-                    {currentPage < totalPages - 2 && <span className="px-1 text-[#1E3A8A]/50">...</span>}
+                    {currentPage < totalPages - 2 && (
+                      <span className="px-1 text-[#1E3A8A]/50">...</span>
+                    )}
                     {/* Last page */}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -566,7 +792,9 @@ const UserManagement = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages || totalPages === 0}
                 className="px-4 py-2 text-sm font-medium text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -603,8 +831,18 @@ const UserManagement = () => {
                   onClick={() => setShowUserModal(false)}
                   className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-all"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </motion.button>
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -626,7 +864,13 @@ const UserManagement = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       toggleUserStatus(selectedUser.id);
-                      setSelectedUser({ ...selectedUser, status: selectedUser.status === "active" ? "inactive" : "active" });
+                      setSelectedUser({
+                        ...selectedUser,
+                        status:
+                          selectedUser.status === "active"
+                            ? "inactive"
+                            : "active",
+                      });
                     }}
                     className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg ${
                       selectedUser.status === "active"
@@ -634,7 +878,9 @@ const UserManagement = () => {
                         : "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-rose-200 hover:from-rose-600 hover:to-rose-700"
                     }`}
                   >
-                    {selectedUser.status === "active" ? "Deactivate" : "Activate"}
+                    {selectedUser.status === "active"
+                      ? "Deactivate"
+                      : "Activate"}
                   </motion.button>
                 </div>
 
@@ -644,7 +890,9 @@ const UserManagement = () => {
                   transition={{ delay: 0.2 }}
                   className="text-center mb-6"
                 >
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedUser.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {selectedUser.name}
+                  </h2>
                   <p className="text-gray-500 mt-1">{selectedUser.email}</p>
                 </motion.div>
 
@@ -659,66 +907,141 @@ const UserManagement = () => {
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 uppercase">Phone</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Phone
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900">{selectedUser.phone || "N/A"}</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedUser.phone || "N/A"}
+                    </p>
                   </div>
 
                   {/* Company */}
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 uppercase">Company</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Company
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900">{selectedUser.company || "N/A"}</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedUser.company || "N/A"}
+                    </p>
                   </div>
 
                   {/* GST Number */}
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 uppercase">GST Number</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        GST Number
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900">{selectedUser.gst || "N/A"}</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedUser.gst || "N/A"}
+                    </p>
                   </div>
 
                   {/* Joined Date */}
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 uppercase">Joined Date</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Joined Date
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900">{selectedUser.joined}</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedUser.joined}
+                    </p>
                   </div>
 
                   {/* Address - Full Width */}
                   <div className="col-span-2 bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                       </div>
-                      <p className="text-xs font-medium text-gray-500 uppercase">Address</p>
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Address
+                      </p>
                     </div>
-                    <p className="font-semibold text-gray-900">{selectedUser.address || "N/A"}</p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedUser.address || "N/A"}
+                    </p>
                   </div>
 
                   {/* Document - Full Width */}
@@ -726,11 +1049,23 @@ const UserManagement = () => {
                     <div className="col-span-2 bg-gray-50 rounded-xl p-4 border border-gray-100">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                         </div>
-                        <p className="text-xs font-medium text-gray-500 uppercase">Document</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">
+                          Document
+                        </p>
                       </div>
                       <a
                         href={`${import.meta.env.VITE_API_BASE_URL}/uploads/${selectedUser.document}`}
@@ -738,9 +1073,24 @@ const UserManagement = () => {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-md shadow-red-200"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                         View Document
                       </a>
@@ -774,28 +1124,56 @@ const UserManagement = () => {
               {/* Header */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Admin Verification</h3>
-                  <p className="text-sm text-gray-500">Enter your admin password to view user password</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Admin Verification
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Enter your admin password to view user password
+                  </p>
                 </div>
               </div>
 
               {/* Password Input */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Admin Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Admin Password
+                </label>
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                   <input
                     type="password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && verifyAndShowPassword()}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && verifyAndShowPassword()
+                    }
                     placeholder="Enter your admin password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     autoFocus
@@ -803,8 +1181,18 @@ const UserManagement = () => {
                   />
                 </div>
                 <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
                   </svg>
                   Your admin password is required for security
                 </p>

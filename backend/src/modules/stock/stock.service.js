@@ -1,36 +1,98 @@
-import { stockRepo, ALL_COLUMNS } from "./stock.repo.js";
-
-
+import * as stockRepo from "./stock.repo.js";
+import { ALL_COLUMNS } from "./stock.repo.js";
+import { pool } from "../../config/db.js";
 
 // Field mapping configuration - File columns to DB fields (diamond_stock table)
 
 const FIELD_MAPPINGS = {
-
   // Basic fields
 
   type: ["type", "diamond type", "stone type"],
 
-  stock_id: ["stock id", "stockid", "stock_id", "stock no", "stockno", "stock #", "packet no", "packetno", "stoneno", "stone no", "stone #", "stone id", "stoneno", "stone", "pkt no", "pkt #", "ref no", "ref #", "reference"],
+  stock_id: [
+    "stock id",
+    "stockid",
+    "stock_id",
+    "stock no",
+    "stockno",
+    "stock #",
+    "packet no",
+    "packetno",
+    "stoneno",
+    "stone no",
+    "stone #",
+    "stone id",
+    "stoneno",
+    "stone",
+    "pkt no",
+    "pkt #",
+    "ref no",
+    "ref #",
+    "reference",
+  ],
 
-  certificate_number: ["certificate number", "cert no", "cert_no", "certificate_no", "cert #", "cert.", "certificate #", "report no", "report #", "lab no", "lab #", "report", "certificate", "cert", "inscription", "insc", "cert num", "report num"],
+  certificate_number: [
+    "certificate number",
+    "cert no",
+    "cert_no",
+    "certificate_no",
+    "cert #",
+    "cert.",
+    "certificate #",
+    "report no",
+    "report #",
+    "lab no",
+    "lab #",
+    "report",
+    "certificate",
+    "cert",
+    "inscription",
+    "insc",
+    "cert num",
+    "report num",
+  ],
 
-  weight: ["weight", "carat", "carat weight", "ct", "cts", "carats", "crt", "carat wt"],
+  weight: [
+    "weight",
+    "carat",
+    "carat weight",
+    "ct",
+    "cts",
+    "carats",
+    "crt",
+    "carat wt",
+  ],
 
   shape: ["shape", "shp", "diamond shape", "cut shape"],
 
   color: ["color", "colour", "col", "colors", "clr"],
 
-  
-
   // Fancy color fields
 
-  fancy_color: ["fancy color", "fancycolor", "fncy color", "fncy clr", "fan color", "f color"],
+  fancy_color: [
+    "fancy color",
+    "fancycolor",
+    "fncy color",
+    "fncy clr",
+    "fan color",
+    "f color",
+  ],
 
-  fancy_color_intensity: ["fancy color intensity", "intensity", "fancy intensity", "clr intensity", "color intensity", "fancy int"],
+  fancy_color_intensity: [
+    "fancy color intensity",
+    "intensity",
+    "fancy intensity",
+    "clr intensity",
+    "color intensity",
+    "fancy int",
+  ],
 
-  fancy_color_overtone: ["fancy color overtone", "overtone", "fancy overtone", "color overtone"],
-
-  
+  fancy_color_overtone: [
+    "fancy color overtone",
+    "overtone",
+    "fancy overtone",
+    "color overtone",
+  ],
 
   // Grading fields
 
@@ -42,25 +104,55 @@ const FIELD_MAPPINGS = {
 
   symmetry: ["symmetry", "sym", "symm", "symmetry grade", "sym grade", "sym q"],
 
-  fluorescence: ["fluorescence", "fluor", "flr", "fl", "fluorescence grade", "fluor grade", "fl. grade"],
+  fluorescence: [
+    "fluorescence",
+    "fluor",
+    "flr",
+    "fl",
+    "fluorescence grade",
+    "fluor grade",
+    "fl. grade",
+  ],
 
-  fluorescence_color: ["fluorescence color", "fl color", "fl. color", "fluor color", "fluor. color"],
+  fluorescence_color: [
+    "fluorescence color",
+    "fl color",
+    "fl. color",
+    "fluor color",
+    "fluor. color",
+  ],
 
-  fluorescence_intensity: ["fluorescence intensity", "fl intensity", "fl. intensity", "fluor intensity", "fl. int"],
-
-  
+  fluorescence_intensity: [
+    "fluorescence intensity",
+    "fl intensity",
+    "fl. intensity",
+    "fluor intensity",
+    "fl. int",
+  ],
 
   // Measurements
 
-  measurements: ["measurements", "meas", "dimension", "dimensions", "measurement"],
+  measurements: [
+    "measurements",
+    "meas",
+    "dimension",
+    "dimensions",
+    "measurement",
+  ],
 
-  length: ["length", "l", "mm length", "len", "lngth" ,"measurements length"],
+  length: ["length", "l", "mm length", "len", "lngth", "measurements length"],
 
   width: ["width", "w", "mm width", "wid", "measurements width"],
 
-  height: ["height", "h", "mm height", "depth", "ht", "dep", "measurements depth"],
-
-  
+  height: [
+    "height",
+    "h",
+    "mm height",
+    "depth",
+    "ht",
+    "dep",
+    "measurements depth",
+  ],
 
   // Additional properties
 
@@ -72,9 +164,14 @@ const FIELD_MAPPINGS = {
 
   lab: ["lab", "laboratory", "certificate lab", "lab name", "certificate by"],
 
-  certificate_comment: ["certificate comment", "cert comment", "comment", "comments", "cert comments", "remarks"],
-
-  
+  certificate_comment: [
+    "certificate comment",
+    "cert comment",
+    "comment",
+    "comments",
+    "cert comments",
+    "remarks",
+  ],
 
   // Location
 
@@ -84,39 +181,89 @@ const FIELD_MAPPINGS = {
 
   country: ["country", "cntry", "nation"],
 
-  
-
   // Treatment
 
   treatment: ["treatment", "treated", "treat", "trt"],
 
-  
-
   // Percentages
 
-  depth_percentage: ["depth %", "depth percentage", "depth", "dep", "depth pct", "depth%", "tbl depth"],
+  depth_percentage: [
+    "depth %",
+    "depth percentage",
+    "depth",
+    "dep",
+    "depth pct",
+    "depth%",
+    "tbl depth",
+  ],
 
-  table_percentage: ["table %", "table percentage", "table", "tbl", "table pct", "table%", "tbl%"],
-
-  
+  table_percentage: [
+    "table %",
+    "table percentage",
+    "table",
+    "tbl",
+    "table pct",
+    "table%",
+    "tbl%",
+  ],
 
   // Pricing
 
   rap_price: ["rap price", "rap", "list price", "rap list", "base price"],
 
-  rap_per_carat: ["rap per carat", "rap", "rap rate", "rap p/c", "rap/ct", "rap $/ct"],
+  rap_per_carat: [
+    "rap per carat",
+    "rap",
+    "rap rate",
+    "rap p/c",
+    "rap/ct",
+    "rap $/ct",
+  ],
 
-  price_per_carat: ["price per carat", "ppc", "per carat price", "rate per carat", "rate p/c", "$/ct", "price/carat", "price/ct", "$ per ct", "per ct price"],
+  price_per_carat: [
+    "price per carat",
+    "ppc",
+    "per carat price",
+    "rate per carat",
+    "rate p/c",
+    "$/ct",
+    "price/carat",
+    "price/ct",
+    "$ per ct",
+    "per ct price",
+  ],
 
-  final_price: ["final price", "total price", "amount", "total", "value", "price", "cost", "net price", "total amt"],
+  final_price: [
+    "final price",
+    "total price",
+    "amount",
+    "total",
+    "value",
+    "price",
+    "cost",
+    "net price",
+    "total amt",
+  ],
 
-  dollar_rate: ["dollar rate", "rate", "usd rate", "exchange rate", "$ rate", "usd"],
+  dollar_rate: [
+    "dollar rate",
+    "rate",
+    "usd rate",
+    "exchange rate",
+    "$ rate",
+    "usd",
+  ],
 
-  rs_amount: ["rs amount", "inr amount", "rupee amount", "local amount", "inr", "rs"],
+  rs_amount: [
+    "rs amount",
+    "inr amount",
+    "rupee amount",
+    "local amount",
+    "inr",
+    "rs",
+  ],
 
   discount: ["discount", "disc", "off", "disc %", "discount %", "less", "comm"],
-
-  
 
   // Special features
 
@@ -130,9 +277,13 @@ const FIELD_MAPPINGS = {
 
   key_to_symbol: ["key to symbol", "key to symbols", "symbols"],
 
-  lw_ratio: ["lw ratio", "l/w ratio", "length width ratio", "ratio", "l-w ratio"],
-
-  
+  lw_ratio: [
+    "lw ratio",
+    "l/w ratio",
+    "length width ratio",
+    "ratio",
+    "l-w ratio",
+  ],
 
   // Culet
 
@@ -140,19 +291,20 @@ const FIELD_MAPPINGS = {
 
   culet_condition: ["culet condition", "culet cond"],
 
-  
-
   // Gridle/Girdle
 
   gridle_thin: ["gridle thin", "girdle thin", "girdle min"],
 
   gridle_thick: ["gridle thick", "girdle thick", "girdle max"],
 
-  gridle_condition: ["gridle condition", "girdle condition", "girdle cond", "gridle cond"],
+  gridle_condition: [
+    "gridle condition",
+    "girdle condition",
+    "girdle cond",
+    "gridle cond",
+  ],
 
   gridle_per: ["gridle per", "girdle %", "girdle per"],
-
-  
 
   // Crown
 
@@ -160,23 +312,17 @@ const FIELD_MAPPINGS = {
 
   crown_angle: ["crown angle"],
 
-  
-
   // Pavilion
 
   pavilion_depth: ["pavilion depth"],
 
   pavilion_angle: ["pavilion angle"],
 
-  
-
   // Status
 
   status: ["status", "availability", "available", "avail"],
 
   diamond_type: ["diamond type", "stone type", "stone", "growth type"],
-
-  
 
   // Media
 
@@ -193,10 +339,7 @@ const FIELD_MAPPINGS = {
   diamond_video: ["video", "diamond video", "video link"],
 
   certificate_image: ["certificate image", "cert image", "certificate scan"],
-
 };
-
-
 
 // Only stock_id is required to identify a row for saving
 
@@ -204,108 +347,76 @@ const FIELD_MAPPINGS = {
 
 const REQUIRED_FOR_SAVE = ["stock_id"];
 
-
-
 // Normalize field name: convert to lowercase, clean, then match
 
 const normalizeFieldName = (field) => {
-
   if (!field) return "";
-
-  
 
   // Step 1: Convert to lowercase, trim, remove underscores/dashes, normalize spaces
 
-  const normalized = String(field).toLowerCase().trim().replace(/[_-]/g, " ").replace(/\s+/g, " ");
-
-  
+  const normalized = String(field)
+    .toLowerCase()
+    .trim()
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ");
 
   // Step 2: Check against field mappings (variations already in lowercase)
 
   // First pass: check for exact matches (higher priority)
 
   for (const [standard, variations] of Object.entries(FIELD_MAPPINGS)) {
-
     for (const variation of variations) {
-
       if (normalized === variation) {
-
         return standard;
-
       }
-
     }
-
   }
-
-  
 
   // Second pass: check for contains (lower priority, but be careful with generic terms)
 
   for (const [standard, variations] of Object.entries(FIELD_MAPPINGS)) {
-
     for (const variation of variations) {
-
       // For 'measurements', require exact match only (already checked above)
 
       // This prevents 'measurements length' from matching with 'measurements'
 
       if (standard === "measurements") continue;
 
-      
-
       if (normalized.includes(variation)) {
-
         return standard;
-
       }
-
     }
-
   }
-
-  
 
   // Return cleaned version if no match
 
   return normalized.replace(/\s+/g, "_");
-
 };
-
-
 
 // Map file data to database format
 
 const mapFileToDb = (fileData) => {
-
   const mapped = {};
 
-  
-
   for (const [key, value] of Object.entries(fileData)) {
-
     const normalizedKey = normalizeFieldName(key);
 
-    if (normalizedKey && value !== undefined && value !== null && value !== "") {
-
+    if (
+      normalizedKey &&
+      value !== undefined &&
+      value !== null &&
+      value !== ""
+    ) {
       mapped[normalizedKey] = value;
-
     }
-
   }
 
-  
-
   return mapped;
-
 };
-
-
 
 // Parse numeric value safely
 
 const parseNumeric = (value, decimals = 3) => {
-
   if (value === null || value === undefined || value === "") return null;
 
   // Handle boolean values (Excel sometimes returns true/false for numeric cells)
@@ -315,70 +426,50 @@ const parseNumeric = (value, decimals = 3) => {
   const parsed = parseFloat(value);
 
   return isNaN(parsed) ? null : parsed;
-
 };
-
-
 
 // Parse string value safely
 
 const parseString = (value) => {
-
   if (value === null || value === undefined) return null;
 
   return String(value).trim();
-
 };
-
-
 
 // Parse boolean value safely
 
 const parseBoolean = (value) => {
-
   if (value === null || value === undefined || value === "") return null;
 
   const str = String(value).toLowerCase().trim();
 
-  if (str === "true" || str === "yes" || str === "1" || str === "y") return true;
+  if (str === "true" || str === "yes" || str === "1" || str === "y")
+    return true;
 
-  if (str === "false" || str === "no" || str === "0" || str === "n") return false;
+  if (str === "false" || str === "no" || str === "0" || str === "n")
+    return false;
 
   return null;
-
 };
-
-
 
 // Check if row has stock_id (required for saving to DB)
 
 const hasStockId = (data) => {
-
   return data.stock_id && String(data.stock_id).trim() !== "";
-
 };
-
-
 
 // Parse measurements string like "7.87-7.93*4.91" into length, width, height
 
 // Format: length-width*height
 
 const parseMeasurements = (measurementsStr) => {
-
   if (!measurementsStr || typeof measurementsStr !== "string") {
-
     return { length: null, width: null, height: null };
-
   }
-
-
 
   // Remove any whitespace
 
   const cleanStr = measurementsStr.trim();
-
-
 
   // Match pattern: number-number*number
 
@@ -386,23 +477,15 @@ const parseMeasurements = (measurementsStr) => {
 
   const match = cleanStr.match(/^(\d+\.?\d*)-(\d+\.?\d*)\*(\d+\.?\d*)$/);
 
-
-
   if (match) {
-
     return {
-
       length: parseFloat(match[1]),
 
       width: parseFloat(match[2]),
 
       height: parseFloat(match[3]),
-
     };
-
   }
-
-
 
   // Try alternative patterns if main pattern doesn't match
 
@@ -411,53 +494,36 @@ const parseMeasurements = (measurementsStr) => {
   const altMatch = cleanStr.match(/^(\d+\.?\d*)\*(\d+\.?\d*)\*(\d+\.?\d*)$/);
 
   if (altMatch) {
-
     return {
-
       length: parseFloat(altMatch[1]),
 
       width: parseFloat(altMatch[2]),
 
       height: parseFloat(altMatch[3]),
-
     };
-
   }
-
-
 
   // Pattern: number-number-number (all dashes)
 
   const dashMatch = cleanStr.match(/^(\d+\.?\d*)-(\d+\.?\d*)-(\d+\.?\d*)$/);
 
   if (dashMatch) {
-
     return {
-
       length: parseFloat(dashMatch[1]),
 
       width: parseFloat(dashMatch[2]),
 
       height: parseFloat(dashMatch[3]),
-
     };
-
   }
 
-
-
   return { length: null, width: null, height: null };
-
 };
-
-
 
 // Convert mapped data to DB format with proper types
 
 const convertToDbFormat = (mappedData, userId = null) => {
-
   return {
-
     // Basic fields
 
     type: parseString(mappedData.type),
@@ -475,105 +541,79 @@ const convertToDbFormat = (mappedData, userId = null) => {
     // Color logic: single char = color field, multiple words = split to fancy_color fields
 
     ...(() => {
-
       const rawColor = mappedData.color;
 
       const colorValue = parseString(rawColor)?.toUpperCase();
 
-      
-
-      // DEBUG
-
-      console.log("DEBUG color processing - raw:", rawColor, "parsed:", colorValue, "length:", colorValue?.length);
-
-      
-
       if (!colorValue) {
-
         // No color value, check if fancy color fields are provided separately
 
         const result = {
-
           color: null,
 
           fancy_color: parseString(mappedData.fancy_color)?.toUpperCase(),
 
-          fancy_color_intensity: parseString(mappedData.fancy_color_intensity)?.toUpperCase(),
+          fancy_color_intensity: parseString(
+            mappedData.fancy_color_intensity,
+          )?.toUpperCase(),
 
-          fancy_color_overtone: parseString(mappedData.fancy_color_overtone)?.toUpperCase(),
-
+          fancy_color_overtone: parseString(
+            mappedData.fancy_color_overtone,
+          )?.toUpperCase(),
         };
 
-        console.log("DEBUG color result (no color):", result);
-
         return result;
-
       }
-
-      
 
       // Check if single character (D, E, F, G, etc.)
 
       if (colorValue.length === 1) {
-
         const result = {
-
           color: colorValue,
 
           fancy_color: parseString(mappedData.fancy_color)?.toUpperCase(),
 
-          fancy_color_intensity: parseString(mappedData.fancy_color_intensity)?.toUpperCase(),
+          fancy_color_intensity: parseString(
+            mappedData.fancy_color_intensity,
+          )?.toUpperCase(),
 
-          fancy_color_overtone: parseString(mappedData.fancy_color_overtone)?.toUpperCase(),
-
+          fancy_color_overtone: parseString(
+            mappedData.fancy_color_overtone,
+          )?.toUpperCase(),
         };
 
-        console.log("DEBUG color result (single char):", result);
-
         return result;
-
       }
-
-      
 
       // Multiple words - split by space for fancy color
 
-      const parts = colorValue.split(/\s+/).filter(p => p.length > 0);
-
-      console.log("DEBUG color parts:", parts);
-
-      
+      const parts = colorValue.split(/\s+/).filter((p) => p.length > 0);
 
       if (parts.length === 1) {
-
         // Single word but not single char (like "COLORLESS")
 
         const result = {
-
           color: colorValue,
 
           fancy_color: parseString(mappedData.fancy_color)?.toUpperCase(),
 
-          fancy_color_intensity: parseString(mappedData.fancy_color_intensity)?.toUpperCase(),
+          fancy_color_intensity: parseString(
+            mappedData.fancy_color_intensity,
+          )?.toUpperCase(),
 
-          fancy_color_overtone: parseString(mappedData.fancy_color_overtone)?.toUpperCase(),
-
+          fancy_color_overtone: parseString(
+            mappedData.fancy_color_overtone,
+          )?.toUpperCase(),
         };
 
-        console.log("DEBUG color result (single word):", result);
-
         return result;
-
       }
-
-      
 
       // Multiple words - assign to fancy color fields
 
       // First word -> fancy_color, Second -> fancy_color_intensity, Third -> fancy_color_overtone
 
       const result = {
-
         color: null, // Not a standard color, it's fancy
 
         fancy_color: parts[0] || null,
@@ -581,16 +621,10 @@ const convertToDbFormat = (mappedData, userId = null) => {
         fancy_color_intensity: parts[1] || null,
 
         fancy_color_overtone: parts[2] || null,
-
       };
 
-      console.log("DEBUG color result (multi-word):", result);
-
       return result;
-
     })(),
-
-    
 
     // Grading
 
@@ -608,8 +642,6 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     fluorescence_intensity: parseString(mappedData.fluorescence_intensity),
 
-    
-
     // Measurements logic:
 
     // 1. If individual length/width/height are provided, use them and build measurements string
@@ -617,7 +649,6 @@ const convertToDbFormat = (mappedData, userId = null) => {
     // 2. Otherwise, try to parse measurements string to extract length/width/height
 
     ...(() => {
-
       // First, check for individual length/width/height values (PRIORITY)
 
       const l = parseNumeric(mappedData.length);
@@ -626,16 +657,12 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
       const h = parseNumeric(mappedData.height);
 
-
-
       // If all three individual values are provided, use them and build measurements string
 
       if (l !== null && w !== null && h !== null) {
-
         const measurementsValue = `${l}-${w}*${h}`;
 
         return {
-
           measurements: measurementsValue,
 
           length: l,
@@ -643,41 +670,31 @@ const convertToDbFormat = (mappedData, userId = null) => {
           width: w,
 
           height: h,
-
         };
-
       }
-
-
 
       // Otherwise, try to parse measurements string if available
 
       const measurementsStr = parseString(mappedData.measurements);
 
       if (measurementsStr) {
-
         const parsedFromMeasurements = parseMeasurements(measurementsStr);
 
-      if (parsedFromMeasurements && parsedFromMeasurements.length !== null) {
+        if (parsedFromMeasurements && parsedFromMeasurements.length !== null) {
+          return {
+            measurements: measurementsStr,
 
-        return {
+            length: parsedFromMeasurements.length,
 
-          measurements: measurementsStr,
+            width: parsedFromMeasurements.width,
 
-          length: parsedFromMeasurements.length,
-
-          width: parsedFromMeasurements.width,
-
-          height: parsedFromMeasurements.height,
-
-        };
-
-      }
+            height: parsedFromMeasurements.height,
+          };
+        }
 
         // If parsing failed but measurements string exists, keep it as-is
 
         return {
-
           measurements: measurementsStr,
 
           length: l,
@@ -685,17 +702,12 @@ const convertToDbFormat = (mappedData, userId = null) => {
           width: w,
 
           height: h,
-
         };
-
       }
-
-
 
       // No measurements string and incomplete individual values
 
       return {
-
         measurements: null,
 
         length: l,
@@ -703,12 +715,8 @@ const convertToDbFormat = (mappedData, userId = null) => {
         width: w,
 
         height: h,
-
       };
-
     })(),
-
-    
 
     // Additional properties
 
@@ -722,8 +730,6 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     certificate_comment: parseString(mappedData.certificate_comment),
 
-    
-
     // Location
 
     city: parseString(mappedData.city),
@@ -732,21 +738,15 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     country: parseString(mappedData.country),
 
-    
-
     // Treatment
 
     treatment: parseString(mappedData.treatment),
-
-    
 
     // Percentages
 
     depth_percentage: parseNumeric(mappedData.depth_percentage),
 
     table_percentage: parseNumeric(mappedData.table_percentage),
-
-    
 
     // Pricing
 
@@ -764,8 +764,6 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     discount: parseNumeric(mappedData.discount),
 
-    
-
     // Special features
 
     heart_arrow: parseBoolean(mappedData.heart_arrow),
@@ -780,15 +778,11 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     lw_ratio: parseString(mappedData.lw_ratio),
 
-    
-
     // Culet
 
     culet_size: parseString(mappedData.culet_size),
 
     culet_condition: parseString(mappedData.culet_condition),
-
-    
 
     // Gridle/Girdle
 
@@ -800,15 +794,11 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     gridle_per: parseString(mappedData.gridle_per),
 
-    
-
     // Crown
 
     crown_height: parseString(mappedData.crown_height),
 
     crown_angle: parseString(mappedData.crown_angle),
-
-    
 
     // Pavilion
 
@@ -816,37 +806,25 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     pavilion_angle: parseString(mappedData.pavilion_angle),
 
-    
-
     // Status - convert "YES" to "AVAILABLE", keep "available" as-is
 
     ...(() => {
-
       const statusValue = parseString(mappedData.status)?.toLowerCase();
 
       let finalStatus = "AVAILABLE"; // default
 
       if (statusValue === "AVAILABLE" || statusValue === "avail") {
-
         finalStatus = "AVAILABLE";
-
       } else if (statusValue === "yes") {
-
         finalStatus = "AVAILABLE";
-
       } else if (statusValue) {
-
         finalStatus = statusValue;
-
       }
 
       return { status: finalStatus };
-
     })(),
 
     diamond_type: parseString(mappedData.diamond_type),
-
-    
 
     // Media URLs
 
@@ -863,273 +841,141 @@ const convertToDbFormat = (mappedData, userId = null) => {
     diamond_video: parseString(mappedData.diamond_video),
 
     certificate_image: parseString(mappedData.certificate_image),
-
   };
-
 };
 
-
-
-const bulkUpload = async (stockDataArray, userId = null) => {
-
+export const bulkUpload = async (stockDataArray, userId = null) => {
   const results = {
-
     insertedCount: 0,
-
+    replacedCount: 0,
     skippedCount: 0,
-
     totalRows: stockDataArray.length,
-
-    validRows: [],      // Rows with stock_id that will be saved
-
-    skippedRows: [],    // Rows without stock_id that will be skipped
-
+    validRows: [], // Rows with stock_id that will be saved
+    skippedRows: [], // Rows without stock_id that will be skipped
   };
 
-
-
   for (let i = 0; i < stockDataArray.length; i++) {
-
     const row = stockDataArray[i];
-
-    
-
-    // DEBUG: Log first row to check received values
-
-    if (i === 0) {
-
-      console.log("DEBUG backend row[0]:", JSON.stringify(row, null, 2));
-
-      // Check all color-related keys
-
-      const colorKeys = Object.keys(row).filter(k => 
-
-        k.toLowerCase().includes('color') || k.toLowerCase().includes('colour') || k.toLowerCase().includes('clr')
-
-      );
-
-      console.log("DEBUG color-related keys in row[0]:", colorKeys);
-
-      colorKeys.forEach(k => console.log(`  ${k}: "${row[k]}"`));
-
-    }
-
-    
-
     const mappedData = mapFileToDb(row);
 
-    
-
-    // DEBUG: Log mapped data for first row
-
-    if (i === 0) {
-
-      console.log("DEBUG backend mappedData[0]:", JSON.stringify(mappedData, null, 2));
-
-      console.log("DEBUG mappedData.color:", mappedData.color);
-
-      console.log("DEBUG mappedData.fancy_color:", mappedData.fancy_color);
-
-    }
-
-
-
     // Only rows with stock_id will be saved to DB
-
     if (hasStockId(mappedData)) {
-
       const dbData = convertToDbFormat(mappedData, userId);
-
-      
-
-      // DEBUG: Log converted data for first row
-
-      if (i === 0) {
-
-        console.log("DEBUG backend dbData[0] measurements:", dbData.measurements, "length:", dbData.length, "width:", dbData.width, "height:", dbData.height);
-
-      }
-
-      
-
       results.validRows.push(dbData);
-
     } else {
-
       results.skippedRows.push({
-
         row: i + 1,
-
         reason: "Missing stock_id",
-
         data: row,
-
       });
-
     }
-
   }
-
-
 
   results.skippedCount = results.skippedRows.length;
 
-
-
-  // Save only rows with stock_id
-
+  // Save only rows with stock_id using transaction
   if (results.validRows.length > 0) {
+    const client = await pool.connect();
 
-    // Step 1: Get all stock_ids from incoming data
+    try {
+      await client.query("BEGIN");
 
-    const incomingStockIds = results.validRows.map(row => row.stock_id).filter(id => id);
+      // Step 1: Get all stock_ids from incoming data
+      const incomingStockIds = results.validRows
+        .map((row) => row.stock_id)
+        .filter((id) => id);
 
-    
+      // Step 2: Delete existing records with same stock_ids (replace behavior)
+      if (incomingStockIds.length > 0) {
+        const deletedCount = await stockRepo.deleteByStockIds(
+          incomingStockIds,
+          client,
+        );
+        results.replacedCount = deletedCount;
+      }
 
-    // Step 2: Delete existing records with same stock_ids (replace behavior)
+      // Step 3: Insert new data
+      const inserted = await stockRepo.bulkInsert(results.validRows, client);
+      results.insertedCount = inserted;
 
-    if (incomingStockIds.length > 0) {
-
-      const deletedCount = await stockRepo.deleteByStockIds(incomingStockIds);
-
-      console.log(`[bulkUpload] Deleted ${deletedCount} existing records with same stock_ids`);
-
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
     }
-
-    
-
-    // Step 3: Insert new data
-
-    const inserted = await stockRepo.bulkInsert(results.validRows);
-
-    results.insertedCount = inserted;
-
   }
 
-
-
   return results;
-
 };
 
-
-
-const getAllStocks = async (page, limit, filters) => {
-
+export const getAllStocks = async (page, limit, filters) => {
   return await stockRepo.getAll(page, limit, filters);
-
 };
 
-
-
-const getStocksByUserId = async (userId, page, limit) => {
-
+export const getStocksByUserId = async (userId, page, limit) => {
   return await stockRepo.getByUserId(userId, page, limit);
-
 };
 
-
-
-const getStockById = async (id) => {
-
+export const getStockById = async (id) => {
   const stock = await stockRepo.getById(id);
 
   if (!stock) {
-
     throw new Error("Stock not found");
-
   }
 
   return stock;
-
 };
 
-
-
-const createStock = async (stockData, userId = null) => {
-
+export const createStock = async (stockData, userId = null) => {
   const mappedData = mapFileToDb(stockData);
 
-
-
   if (!hasStockId(mappedData)) {
-
     throw new Error("stock_id is required");
-
   }
-
-
 
   const dbData = convertToDbFormat(mappedData, userId);
 
   return await stockRepo.create(dbData);
-
 };
 
-
-
-const updateStock = async (id, stockData) => {
-
+export const updateStock = async (id, stockData) => {
   const existingStock = await stockRepo.getById(id);
 
   if (!existingStock) {
-
     throw new Error("Stock not found");
-
   }
-
-
 
   const mappedData = mapFileToDb(stockData);
 
   const dbData = convertToDbFormat(mappedData);
-
-  
 
   // Remove null values for partial update
 
   const updateData = {};
 
   for (const [key, value] of Object.entries(dbData)) {
-
     if (value !== null && value !== undefined) {
-
       updateData[key] = value;
-
     }
-
   }
 
-
-
   return await stockRepo.update(id, updateData);
-
 };
 
-
-
-const deleteStock = async (id) => {
-
+export const deleteStock = async (id) => {
   const existingStock = await stockRepo.getById(id);
 
   if (!existingStock) {
-
     throw new Error("Stock not found");
-
   }
 
-
-
   return await stockRepo.delete(id);
-
 };
 
-
-
-const getFieldMapping = () => {
-
+export const getFieldMapping = () => {
   return {
-
     requiredForSave: REQUIRED_FOR_SAVE,
 
     fieldMappings: FIELD_MAPPINGS,
@@ -1137,52 +983,5 @@ const getFieldMapping = () => {
     dbTable: "diamond_stock",
 
     dbFields: ALL_COLUMNS,
-
   };
-
 };
-
-
-
-// Check for duplicate stock_ids before upload
-
-const checkDuplicates = async (stockIds) => {
-
-  const existingIds = await stockRepo.checkExistingStockIds(stockIds);
-
-  return {
-
-    hasDuplicates: existingIds.length > 0,
-
-    existingCount: existingIds.length,
-
-    existingIds: existingIds,
-
-  };
-
-};
-
-
-
-export const stockService = {
-
-  bulkUpload,
-
-  getAllStocks,
-
-  getStocksByUserId,
-
-  getStockById,
-
-  createStock,
-
-  updateStock,
-
-  deleteStock,
-
-  getFieldMapping,
-
-  checkDuplicates,
-
-};
-
