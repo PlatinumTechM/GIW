@@ -18,7 +18,15 @@ router.get("/", authenticate, stockController.getAllStocks);
 
 router.get("/my", authenticate, stockController.getMyStocks);
 
-// Get single stock by id
+// Get unique filter options (shapes, colors, clarities) - MUST be before /:id
+
+router.get("/filters", authenticate, stockController.getFilterOptions);
+
+// Get field mapping info
+
+router.get("/fields/mapping", authenticate, stockController.getFieldMapping);
+
+// Get single stock by id - MUST be after all specific routes
 
 router.get("/:id", authenticate, stockController.getStockById);
 
@@ -33,9 +41,5 @@ router.put("/:id", authenticate, stockController.updateStock);
 // Delete stock
 
 router.delete("/:id", authenticate, stockController.deleteStock);
-
-// Get field mapping info
-
-router.get("/fields/mapping", authenticate, stockController.getFieldMapping);
 
 export { router as stockRoutes };

@@ -34,6 +34,7 @@ import api from "../../services/api";
 
 const INITIAL_FORM_DATA = {
   stock_id: "",
+  type: "",
   certificate_number: "",
   weight: "",
   shape: "",
@@ -189,7 +190,9 @@ const TREATMENT_OPTIONS = [
   "Fracture Filled",
 ];
 
-const DIAMOND_TYPE_OPTIONS = ["Natural", "Lab Grown"];
+
+
+const TYPE_OPTIONS = ["NATURAL", "LABGROWN"];
 
 const FANCY_COLOR_OPTIONS = [
   "Yellow",
@@ -229,9 +232,9 @@ const FANCY_OVERTONE_OPTIONS = [
   "Pinkish",
 ];
 
-const STATUS_OPTIONS = ["Available", "Sold", "On Hold", "In Memo"];
+const STATUS_OPTIONS = ["AVAILABLE", "SOLD", "ON HOLD", "IN MEMO"];
 
-const GROWTH_TYPE_OPTIONS = ["CVD", "HPHT", "Natural"];
+const GROWTH_TYPE_OPTIONS = ["CVD", "HPHT", "NATURAL"];
 
 const EYE_CLEAN_OPTIONS = ["Yes", "No", "VVS"];
 
@@ -944,12 +947,20 @@ const AddStockManual = () => {
                       placeholder="Enter unique stock ID"
                     />
                     <InputField
+                      label="Type"
+                      name="type"
+                      value={formData.type}
+                      onChange={handleInputChange}
+                      options={TYPE_OPTIONS}
+                      required
+                    />
+                    {/* <InputField
                       label="Diamond Type"
                       name="diamond_type"
                       value={formData.diamond_type}
                       onChange={handleInputChange}
                       options={DIAMOND_TYPE_OPTIONS}
-                    />
+                    /> */}
                     <InputField
                       label="Status"
                       name="status"
