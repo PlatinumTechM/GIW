@@ -39,6 +39,7 @@ export const getAllStocks = async (req, res) => {
     const {
       page = 1,
       limit = 50,
+      sortBy = "featured",
       shape,
       color,
       clarity,
@@ -48,33 +49,96 @@ export const getAllStocks = async (req, res) => {
       maxPrice,
       availability,
       search,
+      type,
+      // Detailed filters
+      cut,
+      polish,
+      symmetry,
+      fluorescence,
+      lab,
+      fancyColor,
+      fancyIntensity,
+      fancyOvertone,
+      minLength,
+      maxLength,
+      minWidth,
+      maxWidth,
+      minHeight,
+      maxHeight,
+      minRatio,
+      maxRatio,
+      minDepth,
+      maxDepth,
+      minTable,
+      maxTable,
+      minCrownHeight,
+      maxCrownHeight,
+      minCrownAngle,
+      maxCrownAngle,
+      minPavilionDepth,
+      maxPavilionDepth,
+      minPavilionAngle,
+      maxPavilionAngle,
+      minGirdle,
+      maxGirdle,
+      milky,
+      eyeClean,
+      shade,
+      hasMedia,
     } = req.query;
 
     const filters = {
       shape,
-
       color,
-
       clarity,
-
       minCarat: minCarat ? parseFloat(minCarat) : null,
-
       maxCarat: maxCarat ? parseFloat(maxCarat) : null,
-
       minPrice: minPrice ? parseFloat(minPrice) : null,
-
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-
       availability,
-
       search,
+      type,
+      // Detailed filters
+      cut,
+      polish,
+      symmetry,
+      fluorescence,
+      lab,
+      fancyColor,
+      fancyIntensity,
+      fancyOvertone,
+      minLength: minLength ? parseFloat(minLength) : null,
+      maxLength: maxLength ? parseFloat(maxLength) : null,
+      minWidth: minWidth ? parseFloat(minWidth) : null,
+      maxWidth: maxWidth ? parseFloat(maxWidth) : null,
+      minHeight: minHeight ? parseFloat(minHeight) : null,
+      maxHeight: maxHeight ? parseFloat(maxHeight) : null,
+      minRatio: minRatio ? parseFloat(minRatio) : null,
+      maxRatio: maxRatio ? parseFloat(maxRatio) : null,
+      minDepth: minDepth ? parseFloat(minDepth) : null,
+      maxDepth: maxDepth ? parseFloat(maxDepth) : null,
+      minTable: minTable ? parseFloat(minTable) : null,
+      maxTable: maxTable ? parseFloat(maxTable) : null,
+      minCrownHeight: minCrownHeight ? parseFloat(minCrownHeight) : null,
+      maxCrownHeight: maxCrownHeight ? parseFloat(maxCrownHeight) : null,
+      minCrownAngle: minCrownAngle ? parseFloat(minCrownAngle) : null,
+      maxCrownAngle: maxCrownAngle ? parseFloat(maxCrownAngle) : null,
+      minPavilionDepth: minPavilionDepth ? parseFloat(minPavilionDepth) : null,
+      maxPavilionDepth: maxPavilionDepth ? parseFloat(maxPavilionDepth) : null,
+      minPavilionAngle: minPavilionAngle ? parseFloat(minPavilionAngle) : null,
+      maxPavilionAngle: maxPavilionAngle ? parseFloat(maxPavilionAngle) : null,
+      minGirdle: minGirdle ? parseFloat(minGirdle) : null,
+      maxGirdle: maxGirdle ? parseFloat(maxGirdle) : null,
+      milky,
+      eyeClean,
+      shade,
+      hasMedia: hasMedia === "true",
     };
 
     const result = await stockService.getAllStocks(
       parseInt(page),
-
       parseInt(limit),
-
+      sortBy,
       filters,
     );
 

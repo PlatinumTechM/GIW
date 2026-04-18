@@ -6,6 +6,18 @@ import { authenticate } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+// NaturalDiamond stocks route
+router.get("/natural", authenticate, (req, res) => {
+  req.query.type = "NATURAL";
+  return stockController.getAllStocks(req, res);
+});
+
+// LabGrownDiamond stocks route
+router.get("/lab-grown", authenticate, (req, res) => {
+  req.query.type = "LAB_GROWN";
+  return stockController.getAllStocks(req, res);
+});
+
 // Bulk upload stock from CSV/Excel
 
 router.post("/bulk", authenticate, stockController.bulkUpload);

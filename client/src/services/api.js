@@ -116,4 +116,56 @@ export const authAPI = {
   },
 };
 
+export const stockAPI = {
+  getAllStocks: async (params = {}) => {
+    const response = await api.get("/stock", { params });
+    return response.data;
+  },
+
+  getNaturalDiamonds: async (params = {}) => {
+    const response = await api.get("/stock/natural", { params });
+    return response.data;
+  },
+
+  getLabGrownDiamonds: async (params = {}) => {
+    const response = await api.get("/stock/lab-grown", { params });
+    return response.data;
+  },
+
+  getStockById: async (id) => {
+    const response = await api.get(`/stock/${id}`);
+    return response.data;
+  },
+
+  bulkUpload: async (stockData) => {
+    const response = await api.post("/stock/bulk", { stock: stockData });
+    return response.data;
+  },
+
+  createStock: async (stockData) => {
+    const response = await api.post("/stock", stockData);
+    return response.data;
+  },
+
+  updateStock: async (id, stockData) => {
+    const response = await api.put(`/stock/${id}`, stockData);
+    return response.data;
+  },
+
+  deleteStock: async (id) => {
+    const response = await api.delete(`/stock/${id}`);
+    return response.data;
+  },
+
+  getMyStocks: async (params = {}) => {
+    const response = await api.get("/stock/my", { params });
+    return response.data;
+  },
+
+  getFieldMapping: async () => {
+    const response = await api.get("/stock/fields/mapping");
+    return response.data;
+  },
+};
+
 export default api;
