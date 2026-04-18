@@ -14,7 +14,6 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width: screenWidth } = Dimensions.get("window");

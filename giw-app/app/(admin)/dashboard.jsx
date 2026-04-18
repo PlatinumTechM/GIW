@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -112,7 +111,6 @@ const ActivityItem = ({ icon, title, subtitle, time, color }) => {
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
-  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   useEffect(() => {
@@ -145,10 +143,7 @@ const Dashboard = () => {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top + 16 }]}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <View>
