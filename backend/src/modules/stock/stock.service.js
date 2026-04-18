@@ -322,7 +322,7 @@ const FIELD_MAPPINGS = {
 
   status: ["status", "availability", "available", "avail"],
 
-  diamond_type: ["diamond type", "stone type", "stone", "growth type"],
+  diamond_type: ["diamond type", "stone type", "stone"],
 
   // Media
 
@@ -524,7 +524,6 @@ const parseMeasurements = (measurementsStr) => {
 
 const convertToDbFormat = (mappedData, userId = null) => {
   return {
-    // Basic fields
 
     type: parseString(mappedData.type),
 
@@ -844,7 +843,7 @@ const convertToDbFormat = (mappedData, userId = null) => {
   };
 };
 
-export const bulkUpload = async (stockDataArray, userId = null) => {
+export const bulkUpload = async (stockDataArray, userId = null, importType = null) => {
   const results = {
     insertedCount: 0,
     replacedCount: 0,
@@ -861,6 +860,10 @@ export const bulkUpload = async (stockDataArray, userId = null) => {
     // Only rows with stock_id will be saved to DB
     if (hasStockId(mappedData)) {
       const dbData = convertToDbFormat(mappedData, userId);
+      // Apply import type if provided
+      if (importType) {
+        dbData.type = importType;
+      }
       results.validRows.push(dbData);
     } else {
       results.skippedRows.push({
@@ -914,8 +917,8 @@ export const getAllStocks = async (page, limit, filters) => {
   return await stockRepo.getAll(page, limit, filters);
 };
 
-export const getStocksByUserId = async (userId, page, limit) => {
-  return await stockRepo.getByUserId(userId, page, limit);
+export const getStocksByUserId = async (userId, page, limit, filters = {}) => {
+  return await stockRepo.getByUserId(userId, page, limit, filters);
 };
 
 export const getStockById = async (id) => {
@@ -984,4 +987,8 @@ export const getFieldMapping = () => {
 
     dbFields: ALL_COLUMNS,
   };
+};
+
+export const getFilterOptions = async () => {
+  return await stockRepo.getFilterOptions();
 };
