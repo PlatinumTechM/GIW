@@ -6,6 +6,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Request interceptor to add API key header
+api.interceptors.request.use(
+  (config) => {
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (apiKey) {
+      config.headers["x-api-key"] = apiKey;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
@@ -34,10 +46,11 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: async (identifier, password) => {
+  login: async (identifier, password, rememberMe = false) => {
     const response = await api.post("/auth/login", {
       email: identifier,
       password,
+      rememberMe,
     });
     return response.data;
   },
