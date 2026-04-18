@@ -12,6 +12,16 @@ import {
   ChevronRight,
   RefreshCw,
   SlidersHorizontal,
+  X,
+  Diamond,
+  Palette,
+  Sparkles,
+  Scissors,
+  Building2,
+  Microscope,
+  Scale,
+  DollarSign,
+  Tag,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
@@ -279,7 +289,7 @@ const FIELD_MAPPINGS = {
 
   // Status
   status: ["status", "availability", "available", "avail"],
-  diamond_type: ["diamond type", "stone type", "stone", "growth type"],
+  diamond_type: ["diamond type", "stone type", "stone"],
 };
 
 const AddStock = () => {
@@ -297,7 +307,47 @@ const AddStock = () => {
   const [userStockSearch, setUserStockSearch] = useState("");
   const [userStockTotal, setUserStockTotal] = useState(0);
 
-  // Filter states
+  // Filter states - pending (not yet applied)
+  const [pendingFilters, setPendingFilters] = useState({
+    stockId: "",
+    certificate: "",
+    status: [],
+    shape: [],
+    minWeight: "",
+    maxWeight: "",
+    color: [],
+    cut: [],
+    clarity: [],
+    lab: [],
+    minPricePerCarat: "",
+    maxPricePerCarat: "",
+    growthType: [],
+  });
+
+  // Applied filters (sent to backend)
+  const [appliedFilters, setAppliedFilters] = useState({
+    stockId: "",
+    certificate: "",
+    status: [],
+    shape: [],
+    minWeight: "",
+    maxWeight: "",
+    color: [],
+    cut: [],
+    clarity: [],
+    lab: [],
+    minPricePerCarat: "",
+    maxPricePerCarat: "",
+    growthType: [],
+  });
+
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState({
+    sortBy: "created_at",
+    sortOrder: "DESC",
+  });
+
+  // Legacy filter states for backward compatibility
   const [filterShape, setFilterShape] = useState("");
   const [filterColor, setFilterColor] = useState("");
   const [filterClarity, setFilterClarity] = useState("");
@@ -308,19 +358,47 @@ const AddStock = () => {
   const [data, setData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [importType, setImportType] = useState("");
   const fileInputRef = useRef(null);
 
-  // Fetch user stock on mount and when page changes
+  // Fetch user stock on mount and when page, filters, or sorting changes
   useEffect(() => {
     fetchUserStock();
-  }, [userStockPage]);
+  }, [userStockPage, appliedFilters, sortConfig, userStockSearch]);
 
   const fetchUserStock = async () => {
     setUserStockLoading(true);
     try {
-      const response = await api.get(
-        `/stock/my?page=${userStockPage}&limit=50`,
-      );
+      // Build query params with filters and sorting
+      const params = new URLSearchParams();
+      params.append("page", userStockPage);
+      params.append("limit", 50);
+
+      // Add search
+      if (userStockSearch) {
+        params.append("search", userStockSearch);
+      }
+
+      // Add applied filters
+      if (appliedFilters.stockId) params.append("stockId", appliedFilters.stockId);
+      if (appliedFilters.certificate) params.append("certificate", appliedFilters.certificate);
+      if (appliedFilters.status.length > 0) params.append("status", appliedFilters.status.join(","));
+      if (appliedFilters.shape.length > 0) params.append("shape", appliedFilters.shape.join(","));
+      if (appliedFilters.minWeight) params.append("minWeight", appliedFilters.minWeight);
+      if (appliedFilters.maxWeight) params.append("maxWeight", appliedFilters.maxWeight);
+      if (appliedFilters.color.length > 0) params.append("color", appliedFilters.color.join(","));
+      if (appliedFilters.cut.length > 0) params.append("cut", appliedFilters.cut.join(","));
+      if (appliedFilters.clarity.length > 0) params.append("clarity", appliedFilters.clarity.join(","));
+      if (appliedFilters.lab.length > 0) params.append("lab", appliedFilters.lab.join(","));
+      if (appliedFilters.minPricePerCarat) params.append("minPricePerCarat", appliedFilters.minPricePerCarat);
+      if (appliedFilters.maxPricePerCarat) params.append("maxPricePerCarat", appliedFilters.maxPricePerCarat);
+      if (appliedFilters.growthType.length > 0) params.append("growthType", appliedFilters.growthType.join(","));
+
+      // Add sorting
+      params.append("sortBy", sortConfig.sortBy);
+      params.append("sortOrder", sortConfig.sortOrder);
+
+      const response = await api.get(`/stock/my?${params.toString()}`);
       if (response.data.success) {
         setUserStock(response.data.data.stocks);
         setUserStockTotalPages(response.data.data.pagination.totalPages);
@@ -332,6 +410,146 @@ const AddStock = () => {
     } finally {
       setUserStockLoading(false);
     }
+  };
+
+  // Filter and Sorting Handlers
+  const handlePendingFilterChange = (field, value) => {
+    setPendingFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleStatusToggle = (status) => {
+    setPendingFilters((prev) => {
+      const currentStatuses = prev.status || [];
+      const newStatuses = currentStatuses.includes(status)
+        ? currentStatuses.filter((s) => s !== status)
+        : [...currentStatuses, status];
+      return { ...prev, status: newStatuses };
+    });
+  };
+
+  // Generic toggle for multi-select filters
+  const toggleArrayFilter = (field, value) => {
+    setPendingFilters((prev) => {
+      const currentValues = prev[field] || [];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter((v) => v !== value)
+        : [...currentValues, value];
+      return { ...prev, [field]: newValues };
+    });
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = () => {
+    return (
+      appliedFilters.stockId ||
+      appliedFilters.certificate ||
+      appliedFilters.status.length > 0 ||
+      appliedFilters.shape.length > 0 ||
+      appliedFilters.color.length > 0 ||
+      appliedFilters.cut.length > 0 ||
+      appliedFilters.clarity.length > 0 ||
+      appliedFilters.lab.length > 0 ||
+      appliedFilters.growthType.length > 0 ||
+      appliedFilters.minWeight ||
+      appliedFilters.maxWeight ||
+      appliedFilters.minPricePerCarat ||
+      appliedFilters.maxPricePerCarat
+    );
+  };
+
+  // Get count of active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (appliedFilters.stockId) count++;
+    if (appliedFilters.certificate) count++;
+    count += appliedFilters.status.length;
+    count += appliedFilters.shape.length;
+    count += appliedFilters.color.length;
+    count += appliedFilters.cut.length;
+    count += appliedFilters.clarity.length;
+    count += appliedFilters.lab.length;
+    count += appliedFilters.growthType.length;
+    if (appliedFilters.minWeight || appliedFilters.maxWeight) count++;
+    if (appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat) count++;
+    return count;
+  };
+
+  const applyFilters = () => {
+    setAppliedFilters({ ...pendingFilters });
+    setUserStockPage(1); // Reset to first page when filters change
+    setShowFilters(false); // Close modal
+    setViewMode("show"); // Switch to Show Stock view
+  };
+
+  // Remove individual filter
+  const removeFilter = (field, value = null) => {
+    if (value !== null && Array.isArray(appliedFilters[field])) {
+      // Remove specific value from array filter
+      const newValues = appliedFilters[field].filter((v) => v !== value);
+      const newFilters = { ...appliedFilters, [field]: newValues };
+      setAppliedFilters(newFilters);
+      setPendingFilters(newFilters);
+    } else {
+      // Clear entire filter field
+      const newFilters = { ...appliedFilters, [field]: Array.isArray(appliedFilters[field]) ? [] : "" };
+      setAppliedFilters(newFilters);
+      setPendingFilters(newFilters);
+    }
+  };
+
+  const clearAllFilters = () => {
+    const emptyFilters = {
+      stockId: "",
+      certificate: "",
+      status: [],
+      shape: [],
+      minWeight: "",
+      maxWeight: "",
+      color: [],
+      cut: [],
+      clarity: [],
+      lab: [],
+      minPricePerCarat: "",
+      maxPricePerCarat: "",
+      growthType: [],
+    };
+    setPendingFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
+    setUserStockSearch("");
+    setUserStockPage(1);
+
+    // Clear legacy filters too
+    setFilterShape("");
+    setFilterColor("");
+    setFilterClarity("");
+    setFilterStatus("");
+  };
+
+  const handleSort = (column) => {
+    setSortConfig((prev) => {
+      if (prev.sortBy === column) {
+        // Same column: ASC → DESC → Default (reset)
+        if (prev.sortOrder === "ASC") {
+          return { sortBy: column, sortOrder: "DESC" };
+        } else {
+          // Reset to default (created_at DESC)
+          return { sortBy: "created_at", sortOrder: "DESC" };
+        }
+      }
+      // New column, start with ASC
+      return { sortBy: column, sortOrder: "ASC" };
+    });
+  };
+
+  const getSortIcon = (column) => {
+    if (sortConfig.sortBy !== column) {
+      return <span className="text-slate-400 opacity-0 group-hover:opacity-50">↕</span>;
+    }
+    return sortConfig.sortOrder === "ASC" ? (
+      <span className="text-white">↑</span>
+    ) : (
+      <span className="text-white">↓</span>
+    );
   };
 
   // Normalize field name: first convert to lowercase, trim, remove special chars, then match
@@ -564,6 +782,7 @@ const AddStock = () => {
     setFile(null);
     setData([]);
     setColumns([]);
+    setImportType("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -594,7 +813,7 @@ const AddStock = () => {
     });
 
     try {
-      const response = await api.post("/stock/bulk", { stock: data });
+      const response = await api.post("/stock/bulk", { stock: data, type: importType });
       const result = response.data;
 
       if (result.data) {
@@ -729,19 +948,36 @@ const AddStock = () => {
     );
   });
 
-  // Get unique values for filters
-  const uniqueShapes = [
-    ...new Set(userStock.map((s) => s.shape).filter(Boolean)),
-  ];
-  const uniqueColors = [
-    ...new Set(userStock.map((s) => s.color).filter(Boolean)),
-  ];
-  const uniqueClarities = [
-    ...new Set(userStock.map((s) => s.clarity).filter(Boolean)),
-  ];
-  const uniqueStatuses = [
-    ...new Set(userStock.map((s) => s.status).filter(Boolean)),
-  ];
+  // Fetch filter options from DB (all available values)
+  const [filterOptions, setFilterOptions] = useState({
+    shapes: [],
+    colors: [],
+    clarities: [],
+  });
+  const [filterOptionsLoading, setFilterOptionsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setFilterOptionsLoading(true);
+        const response = await api.get("/stock/filters");
+        if (response.data.success) {
+          setFilterOptions(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching filter options:", error);
+      } finally {
+        setFilterOptionsLoading(false);
+      }
+    };
+    fetchFilterOptions();
+  }, []);
+
+  // Use DB filter options
+  const uniqueShapes = filterOptions.shapes;
+  const uniqueColors = filterOptions.colors;
+  const uniqueClarities = filterOptions.clarities;
+  const uniqueStatuses = ["AVAILABLE", "HOLD", "SOLD", "MEMO"];
 
   const clearFilters = () => {
     setFilterShape("");
@@ -930,98 +1166,348 @@ const AddStock = () => {
         </div>
       </div>
 
-      {/* Filters Panel */}
+      {/* Filters Modal Popup */}
       <AnimatePresence>
         {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="bg-[#F8FAFC] border-b border-[#E2E8F0] overflow-hidden"
-          >
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <div className="flex flex-wrap items-end gap-4">
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-[#64748B] mb-1">
-                    Shape
-                  </label>
-                  <select
-                    value={filterShape}
-                    onChange={(e) => setFilterShape(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFilters(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-hidden pointer-events-auto border border-gray-200">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-slate-900 text-white">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-5 h-5" />
+                    <h2 className="text-base font-semibold">Filter Stock</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                   >
-                    <option value="">All Shapes</option>
-                    {uniqueShapes.map((shape) => (
-                      <option key={shape} value={shape}>
-                        {shape}
-                      </option>
-                    ))}
-                  </select>
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-[#64748B] mb-1">
-                    Color
-                  </label>
-                  <select
-                    value={filterColor}
-                    onChange={(e) => setFilterColor(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-                  >
-                    <option value="">All Colors</option>
-                    {uniqueColors.map((color) => (
-                      <option key={color} value={color}>
-                        {color}
-                      </option>
-                    ))}
-                  </select>
+                {/* Filter Content - Scrollable */}
+                <div className="p-3 overflow-y-auto max-h-[calc(85vh-120px)] bg-gray-50">
+                  <div className="space-y-2">
+                    {/* Search Row - Stack on mobile, side by side on sm+ */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={pendingFilters.stockId}
+                        onChange={(e) => handlePendingFilterChange("stockId", e.target.value)}
+                        placeholder="Search By Stock ID.."
+                        className="input-field w-full py-2.5 text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={pendingFilters.certificate}
+                        onChange={(e) => handlePendingFilterChange("certificate", e.target.value)}
+                        placeholder="Search By Certificate Number.."
+                        className="input-field w-full py-2.5 text-sm"
+                      />
+                    </div>
+
+                    {/* Shape */}
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                        <Diamond className="w-4 h-4 text-indigo-500" />
+                        Shape
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {filterOptionsLoading ? (
+                          <div className="flex flex-wrap gap-1.5 w-full">
+                            {[...Array(8)].map((_, i) => (
+                              <div key={i} className="h-7 w-16 bg-gray-200 rounded-md animate-pulse" />
+                            ))}
+                          </div>
+                        ) : uniqueShapes.length > 0 ? (
+                          uniqueShapes.map((shape) => (
+                            <button
+                              key={shape}
+                              onClick={() => toggleArrayFilter("shape", shape)}
+                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                                pendingFilters.shape.includes(shape)
+                                  ? "bg-indigo-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                            >
+                              {shape}
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-400">No shapes</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Color */}
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                        <Palette className="w-4 h-4 text-purple-500" />
+                        Color
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {filterOptionsLoading ? (
+                          <div className="flex flex-wrap gap-1.5 w-full">
+                            {[...Array(12)].map((_, i) => (
+                              <div key={i} className="h-7 w-12 bg-gray-200 rounded-md animate-pulse" />
+                            ))}
+                          </div>
+                        ) : uniqueColors.length > 0 ? (
+                          uniqueColors.map((color) => (
+                            <button
+                              key={color}
+                              onClick={() => toggleArrayFilter("color", color)}
+                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                                pendingFilters.color.includes(color)
+                                  ? "bg-purple-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                            >
+                              {color}
+                            </button>
+                          ))
+                        ) : (
+                          <span className="text-xs text-gray-400">No colors</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 2 Column Grid for Clarity, Cut, Lab */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {/* Clarity */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <Sparkles className="w-4 h-4 text-emerald-500" />
+                          Clarity
+                        </label>
+                        <div className="flex flex-wrap gap-1">
+                          {filterOptionsLoading ? (
+                            <div className="flex flex-wrap gap-1 w-full">
+                              {[...Array(6)].map((_, i) => (
+                                <div key={i} className="h-6 w-10 bg-gray-200 rounded-md animate-pulse" />
+                              ))}
+                            </div>
+                          ) : uniqueClarities.length > 0 ? (
+                            uniqueClarities.map((clarity) => (
+                              <button
+                                key={clarity}
+                                onClick={() => toggleArrayFilter("clarity", clarity)}
+                                className={`px-2 py-1 rounded text-xs transition-all ${
+                                  pendingFilters.clarity.includes(clarity)
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                }`}
+                              >
+                                {clarity}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">No data</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cut */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <Scissors className="w-4 h-4 text-pink-500" />
+                          Cut
+                        </label>
+                        <div className="flex flex-wrap gap-1">
+                          {["Ideal", "Exc", "VG", "Good", "Fair", "Poor"].map((cut, idx) => {
+                            const fullNames = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
+                            return (
+                              <button
+                                key={fullNames[idx]}
+                                onClick={() => toggleArrayFilter("cut", fullNames[idx])}
+                                className={`px-2 py-1 rounded text-xs transition-all ${
+                                  pendingFilters.cut.includes(fullNames[idx])
+                                    ? "bg-pink-600 text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                }`}
+                              >
+                                {cut}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Lab */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <Building2 className="w-4 h-4 text-cyan-500" />
+                          Lab
+                        </label>
+                        <div className="flex flex-wrap gap-1">
+                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL"].map((lab) => (
+                            <button
+                              key={lab}
+                              onClick={() => toggleArrayFilter("lab", lab)}
+                              className={`px-2 py-1 rounded text-xs transition-all ${
+                                pendingFilters.lab.includes(lab)
+                                  ? "bg-cyan-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                            >
+                              {lab}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Growth, Weight, Price Row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {/* Growth Type */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <Microscope className="w-4 h-4 text-teal-500" />
+                          Growth
+                        </label>
+                        <div className="flex gap-1">
+                          {["CVD", "HPHT"].map((type) => (
+                            <button
+                              key={type}
+                              onClick={() => toggleArrayFilter("growthType", type)}
+                              className={`flex-1 px-2 py-1.5 rounded text-sm transition-all ${
+                                pendingFilters.growthType.includes(type)
+                                  ? "bg-teal-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Weight */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <Scale className="w-4 h-4 text-orange-500" />
+                          Weight
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={pendingFilters.minWeight}
+                            onChange={(e) => handlePendingFilterChange("minWeight", e.target.value)}
+                            placeholder="Min"
+                            className="input-field text-center w-full py-2 text-sm"
+                          />
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={pendingFilters.maxWeight}
+                            onChange={(e) => handlePendingFilterChange("maxWeight", e.target.value)}
+                            placeholder="Max"
+                            className="input-field text-center w-full py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="bg-white p-3 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
+                        <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                          <DollarSign className="w-4 h-4 text-rose-500" />
+                          Price
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            step="1"
+                            value={pendingFilters.minPricePerCarat}
+                            onChange={(e) => handlePendingFilterChange("minPricePerCarat", e.target.value)}
+                            placeholder="Min"
+                            className="input-field text-center w-full py-2 text-sm"
+                          />
+                          <input
+                            type="number"
+                            step="1"
+                            value={pendingFilters.maxPricePerCarat}
+                            onChange={(e) => handlePendingFilterChange("maxPricePerCarat", e.target.value)}
+                            placeholder="Max"
+                            className="input-field text-center w-full py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
+                        <Tag className="w-4 h-4 text-green-500" />
+                        Status
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {["AVAILABLE", "HOLD", "SOLD", "MEMO"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => handleStatusToggle(status)}
+                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${
+                              pendingFilters.status.includes(status)
+                                ? status === "AVAILABLE"
+                                  ? "bg-green-600 text-white"
+                                  : status === "SOLD"
+                                    ? "bg-red-600 text-white"
+                                    : status === "HOLD"
+                                      ? "bg-amber-500 text-white"
+                                      : "bg-blue-600 text-white"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-[#64748B] mb-1">
-                    Clarity
-                  </label>
-                  <select
-                    value={filterClarity}
-                    onChange={(e) => setFilterClarity(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                {/* Footer */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
                   >
-                    <option value="">All Clarities</option>
-                    {uniqueClarities.map((clarity) => (
-                      <option key={clarity} value={clarity}>
-                        {clarity}
-                      </option>
-                    ))}
-                  </select>
+                    Clear All
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={applyFilters}
+                      className="px-4 py-1.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
                 </div>
-
-                <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs font-medium text-[#64748B] mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-                  >
-                    <option value="">All Status</option>
-                    {uniqueStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  Clear All
-                </button>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -1045,13 +1531,18 @@ const AddStock = () => {
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  showFilters
-                    ? "bg-[#1E3A8A] text-white"
+                  hasActiveFilters()
+                    ? "bg-blue-600 text-white"
                     : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                 }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filters
+                {hasActiveFilters() && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-xs font-medium">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
               </button>
               <button
                 onClick={fetchUserStock}
@@ -1065,10 +1556,154 @@ const AddStock = () => {
               </button>
             </div>
 
+            {/* Active Filters Display - Compact */}
+            {hasActiveFilters() && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-gray-500 font-medium">Filters:</span>
+                {/* Stock ID */}
+                {appliedFilters.stockId && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                    Stock:{appliedFilters.stockId}
+                    <button onClick={() => removeFilter("stockId")} className="hover:bg-blue-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {/* Certificate */}
+                {appliedFilters.certificate && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                    Cert:{appliedFilters.certificate}
+                    <button onClick={() => removeFilter("certificate")} className="hover:bg-blue-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {/* Shapes */}
+                {appliedFilters.shape.map((shape) => (
+                  <span key={shape} className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
+                    {shape}
+                    <button onClick={() => removeFilter("shape", shape)} className="hover:bg-indigo-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Colors */}
+                {appliedFilters.color.map((color) => (
+                  <span key={color} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                    {color}
+                    <button onClick={() => removeFilter("color", color)} className="hover:bg-purple-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Clarities */}
+                {appliedFilters.clarity.map((clarity) => (
+                  <span key={clarity} className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs">
+                    {clarity}
+                    <button onClick={() => removeFilter("clarity", clarity)} className="hover:bg-emerald-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Cuts */}
+                {appliedFilters.cut.map((cut) => (
+                  <span key={cut} className="inline-flex items-center gap-1 px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">
+                    {cut}
+                    <button onClick={() => removeFilter("cut", cut)} className="hover:bg-pink-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Labs */}
+                {appliedFilters.lab.map((lab) => (
+                  <span key={lab} className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs">
+                    {lab}
+                    <button onClick={() => removeFilter("lab", lab)} className="hover:bg-cyan-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Growth Types */}
+                {appliedFilters.growthType.map((type) => (
+                  <span key={type} className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">
+                    {type}
+                    <button onClick={() => removeFilter("growthType", type)} className="hover:bg-teal-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Statuses */}
+                {appliedFilters.status.map((status) => (
+                  <span key={status} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                    status === "AVAILABLE" ? "bg-green-100 text-green-700" :
+                    status === "SOLD" ? "bg-red-100 text-red-700" :
+                    status === "HOLD" ? "bg-amber-100 text-amber-700" :
+                    "bg-blue-100 text-blue-700"
+                  }`}>
+                    {status}
+                    <button onClick={() => removeFilter("status", status)} className={`rounded p-0.5 ml-1 ${
+                      status === "AVAILABLE" ? "hover:bg-green-200" :
+                      status === "SOLD" ? "hover:bg-red-200" :
+                      status === "HOLD" ? "hover:bg-amber-200" :
+                      "hover:bg-blue-200"
+                    }`}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                {/* Weight Range */}
+                {(appliedFilters.minWeight || appliedFilters.maxWeight) && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">
+                    {appliedFilters.minWeight || "0"}-{appliedFilters.maxWeight || "∞"}ct
+                    <button onClick={() => { removeFilter("minWeight"); removeFilter("maxWeight"); }} className="hover:bg-orange-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {/* Price Range */}
+                {(appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat) && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-xs">
+                    ${appliedFilters.minPricePerCarat || "0"}-${appliedFilters.maxPricePerCarat || "∞"}
+                    <button onClick={() => { removeFilter("minPricePerCarat"); removeFilter("maxPricePerCarat"); }} className="hover:bg-rose-200 rounded p-0.5 ml-1">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  onClick={clearAllFilters}
+                  className="text-xs text-red-500 hover:text-red-600 hover:underline ml-2"
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+
             {/* User Stock List - Full Width Table */}
             {userStockLoading ? (
-              <div className="flex items-center justify-center py-12 bg-white rounded-xl border border-[#E2E8F0]">
-                <div className="w-8 h-8 border-4 border-[#E2E8F0] border-t-[#1E3A8A] rounded-full animate-spin" />
+              <div className="bg-white rounded-xl border border-[#E2E8F0] overflow-hidden">
+                {/* Skeleton Header */}
+                <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] p-4">
+                  <div className="flex gap-4">
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                </div>
+                {/* Skeleton Rows */}
+                <div className="p-4 space-y-4">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="flex gap-4 items-center">
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-8 w-20 bg-gray-200 rounded animate-pulse ml-auto" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : filteredUserStock.length === 0 ? (
               <div className="bg-white rounded-xl border border-[#E2E8F0] p-12 text-center">
@@ -1129,18 +1764,40 @@ const AddStock = () => {
                 <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-x-auto max-h-[70vh]">
                   <table className="w-full text-sm border-collapse">
                     <thead className="sticky top-0 z-30">
-                      <tr className="bg-gradient-to-r from-slate-700 to-slate-600 text-white">
-                        <th className="px-2 py-3 text-center font-semibold border-r border-slate-500/30 sticky left-0 bg-gradient-to-r from-slate-700 to-slate-700 z-40 w-10">
+                      <tr className="bg-gray-900 text-gray-900">
+                        <th className="px-2 py-3 text-center font-semibold border-r border-gray-300 sticky left-0 bg-gray-200 z-40 w-10">
                           #
                         </th>
-                        {ALL_DB_FIELDS.map((field) => (
-                          <th
-                            key={field}
-                            className="px-3 py-3 text-left font-semibold border-r border-slate-500/30 whitespace-nowrap bg-gradient-to-r from-slate-700 to-slate-600"
-                          >
-                            {field.replace(/_/g, " ").toUpperCase()}
-                          </th>
-                        ))}
+                        {ALL_DB_FIELDS.map((field) => {
+                          // Determine if this column is sortable
+                          const sortableFields = [
+                            "stock_id", "certificate_number", "weight", "shape",
+                            "color", "clarity", "cut", "lab", "price_per_carat",
+                            "final_price", "growth_type", "status"
+                          ];
+                          const isSortable = sortableFields.includes(field);
+
+                          return (
+                            <th
+                              key={field}
+                              onClick={() => isSortable && handleSort(field)}
+                              className={`px-3 py-3 text-left font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 ${
+                                isSortable
+                                  ? "cursor-pointer hover:bg-gray-300 transition-all group"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex items-center gap-1">
+                                <span>{field.replace(/_/g, " ").toUpperCase()}</span>
+                                {isSortable && (
+                                  <span className="ml-1">
+                                    {getSortIcon(field)}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody className="overflow-y-auto">
@@ -1321,7 +1978,22 @@ const AddStock = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    {/* Type Dropdown */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-[#64748B]">
+                        Type <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={importType}
+                        onChange={(e) => setImportType(e.target.value)}
+                        className="px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="">Select Type</option>
+                        <option value="NATURAL">NATURAL</option>
+                        <option value="LABGROWN">LABGROWN</option>
+                      </select>
+                    </div>
                     <button
                       onClick={clearFile}
                       className="px-4 py-2 text-[#64748B] hover:text-red-600 transition-colors"
@@ -1330,7 +2002,7 @@ const AddStock = () => {
                     </button>
                     <button
                       onClick={handleSubmit}
-                      disabled={isImporting}
+                      disabled={isImporting || !importType}
                       className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2"
                     >
                       {isImporting ? (

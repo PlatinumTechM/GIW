@@ -1,4 +1,5 @@
 import { pool } from "../../config/db.js";
+import { buildStockFilters, getSortConfig, buildWhereClause } from "./stock.filter.js";
 
 // All columns from diamond_stock table
 
@@ -126,108 +127,22 @@ export const bulkInsert = async (stockDataArray, client = null) => {
 export const getAll = async (page, limit, filters) => {
   const offset = (page - 1) * limit;
 
-  const whereConditions = [];
+  // Build filters using filter module
+  const { whereConditions, values, paramIndex } = buildStockFilters(filters, 1);
+  const whereClause = buildWhereClause(whereConditions);
+  const { sortBy, sortOrder } = getSortConfig(filters);
 
-  const values = [];
-
-  let paramIndex = 1;
-
-  if (filters.shape) {
-    whereConditions.push(`shape ILIKE $${paramIndex}`);
-
-    values.push(`%${filters.shape}%`);
-
-    paramIndex++;
-  }
-
-  if (filters.color) {
-    whereConditions.push(`color ILIKE $${paramIndex}`);
-
-    values.push(`%${filters.color}%`);
-
-    paramIndex++;
-  }
-
-  if (filters.clarity) {
-    whereConditions.push(`clarity ILIKE $${paramIndex}`);
-
-    values.push(`%${filters.clarity}%`);
-
-    paramIndex++;
-  }
-
-  if (filters.status) {
-    whereConditions.push(`status = $${paramIndex}`);
-
-    values.push(filters.status);
-
-    paramIndex++;
-  }
-
-  if (filters.minWeight) {
-    whereConditions.push(`weight >= $${paramIndex}`);
-
-    values.push(filters.minWeight);
-
-    paramIndex++;
-  }
-
-  if (filters.maxWeight) {
-    whereConditions.push(`weight <= $${paramIndex}`);
-
-    values.push(filters.maxWeight);
-
-    paramIndex++;
-  }
-
-  if (filters.minPrice) {
-    whereConditions.push(`final_price >= $${paramIndex}`);
-
-    values.push(filters.minPrice);
-
-    paramIndex++;
-  }
-
-  if (filters.maxPrice) {
-    whereConditions.push(`final_price <= $${paramIndex}`);
-
-    values.push(filters.maxPrice);
-
-    paramIndex++;
-  }
-
-  if (filters.search) {
-    whereConditions.push(`(
-
-      shape ILIKE $${paramIndex} OR
-
-      color ILIKE $${paramIndex} OR
-
-      clarity ILIKE $${paramIndex} OR
-
-      lab ILIKE $${paramIndex}
-
-    )`);
-
-    values.push(`%${filters.search}%`);
-
-    paramIndex++;
-  }
-
-  const whereClause =
-    whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
-
+  // Count query
   const countQuery = `SELECT COUNT(*) FROM diamond_stock ${whereClause}`;
-
   const countResult = await pool.query(countQuery, values);
-
   const totalCount = parseInt(countResult.rows[0].count);
 
+  // Data query
   const dataQuery = `
     SELECT
-     id, type, user_id, stock_id, certificate_number, weight, shape, color,
+      id, type, user_id, stock_id, certificate_number, weight, shape, color,
       fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
-      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements, 
+      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
       length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
       state, country, treatment, depth_percentage, table_percentage, rap_price,
       rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
@@ -236,25 +151,19 @@ export const getAll = async (page, limit, filters) => {
       pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
     FROM diamond_stock
     ${whereClause}
-    ORDER BY created_at DESC
+    ORDER BY ${sortBy} ${sortOrder}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-
   `;
 
-  values.push(limit, offset);
-
-  const dataResult = await pool.query(dataQuery, values);
+  const dataValues = [...values, limit, offset];
+  const dataResult = await pool.query(dataQuery, dataValues);
 
   return {
     stocks: dataResult.rows,
-
     pagination: {
       page,
-
       limit,
-
       totalCount,
-
       totalPages: Math.ceil(totalCount / limit),
     },
   };
@@ -343,22 +252,32 @@ export const deleteByStockIds = async (stockIds, client = null) => {
   return result.rowCount;
 };
 
-// Get stocks by user_id
-
-export const getByUserId = async (userId, page = 1, limit = 50) => {
+// Get stocks by user_id with filters and sorting
+export const getByUserId = async (userId, page = 1, limit = 50, filters = {}) => {
   const offset = (page - 1) * limit;
 
-  const countQuery = `SELECT COUNT(*) FROM diamond_stock WHERE user_id = $1`;
+  // Build filters using filter module (startIndex=2 because $1 is user_id)
+  const baseConditions = [`user_id = $1`];
+  const baseValues = [userId];
+  const { whereConditions, values, paramIndex } = buildStockFilters(filters, 2, baseConditions);
 
-  const countResult = await pool.query(countQuery, [userId]);
+  // Combine base values with filter values
+  const allValues = [...baseValues, ...values];
 
+  const whereClause = buildWhereClause(whereConditions);
+  const { sortBy, sortOrder } = getSortConfig(filters);
+
+  // Count query
+  const countQuery = `SELECT COUNT(*) FROM diamond_stock ${whereClause}`;
+  const countResult = await pool.query(countQuery, allValues);
   const totalCount = parseInt(countResult.rows[0].count);
 
+  // Data query
   const dataQuery = `
     SELECT
       id, type, user_id, stock_id, certificate_number, weight, shape, color,
       fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
-      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements, 
+      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
       length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
       state, country, treatment, depth_percentage, table_percentage, rap_price,
       rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
@@ -366,12 +285,13 @@ export const getByUserId = async (userId, page = 1, limit = 50) => {
       gridle_thin, gridle_thick, gridle_condition, gridle_per, crown_height, crown_angle,
       pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
     FROM diamond_stock
-    WHERE user_id = $1
-    ORDER BY created_at DESC
-    LIMIT $2 OFFSET $3
+    ${whereClause}
+    ORDER BY ${sortBy} ${sortOrder}
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
-  const dataResult = await pool.query(dataQuery, [userId, limit, offset]);
+  const dataValues = [...allValues, limit, offset];
+  const dataResult = await pool.query(dataQuery, dataValues);
 
   return {
     stocks: dataResult.rows,
@@ -381,6 +301,31 @@ export const getByUserId = async (userId, page = 1, limit = 50) => {
       total: totalCount,
       totalPages: Math.ceil(totalCount / limit),
     },
+  };
+};
+
+export const getFilterOptions = async () => {
+  const shapeQuery = `SELECT DISTINCT UPPER(shape) as value FROM diamond_stock WHERE shape IS NOT NULL AND shape != '' ORDER BY value`;
+  const colorQuery = `SELECT DISTINCT UPPER(color) as value FROM diamond_stock WHERE color IS NOT NULL AND color != '' ORDER BY value`;
+  const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock WHERE fancy_color IS NOT NULL AND fancy_color != '' ORDER BY value`;
+  const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock WHERE clarity IS NOT NULL AND clarity != '' ORDER BY value`;
+
+  const [shapeResult, colorResult, fancyColorResult, clarityResult] = await Promise.all([
+    pool.query(shapeQuery),
+    pool.query(colorQuery),
+    pool.query(fancyColorQuery),
+    pool.query(clarityQuery),
+  ]);
+
+  // Combine colors and fancy colors, remove duplicates
+  const dbColors = colorResult.rows.map((r) => r.value);
+  const dbFancyColors = fancyColorResult.rows.map((r) => r.value);
+  const allColors = [...new Set([...dbColors, ...dbFancyColors])];
+
+  return {
+    shapes: shapeResult.rows.map((r) => r.value),
+    colors: allColors,
+    clarities: clarityResult.rows.map((r) => r.value),
   };
 };
 
