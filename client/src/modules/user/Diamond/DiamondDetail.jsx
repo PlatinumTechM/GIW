@@ -5,123 +5,67 @@ import {
   ArrowLeft,
   Heart,
   Share2,
-  Download,
-  Check,
   Diamond,
-  Gem,
-  Sparkles,
-  Ruler,
   Scale,
   Shield,
-  Eye,
-  ShoppingCart,
-  RotateCw,
-  Maximize2,
-  ZoomIn,
-  Award,
+  CheckCircle2,
   FileCheck,
   Copy,
-  CheckCircle2,
-  X,
-  ChevronLeft,
-  ChevronRight,
   MapPin,
+  Ruler,
+  Gem,
+  Sparkles,
+  Eye,
 } from "lucide-react";
+import { stockAPI } from "../../../services/api.js";
 
 const DiamondDetail = () => {
-  const { type, id } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [diamond, setDiamond] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isImageZoomed, setIsImageZoomed] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showShareModal, setShowShareModal] = useState(false);
 
-  const images = [
-    `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=800&h=800&fit=crop`,
-  ];
-
-  // Mock data generator
-  const getMockDiamond = (type, id) => {
-    const shapes = ["Round", "Oval", "Pear", "Cushion", "Emerald"];
-    const whiteColors = ["D", "E", "F", "G", "H", "I", "J"];
-    const fancyColors = [
-      "Yellow", "Blue", "Pink", "Red", "Green", "Purple",
-      "Orange", "Violet", "Gray", "Black", "Brown",
-    ];
-    const fancyIntensities = [
-      "Faint", "Very Light", "Light", "Fancy Light",
-      "Fancy", "Fancy Dark", "Fancy Intense", "Fancy Vivid", "Fancy Deep",
-    ];
-    const fancyOvertones = [
-      "None", "Yellow", "Blue", "Pink", "Green",
-      "Orange", "Brown", "Gray", "Purple", "Red",
-    ];
-    const clarities = ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1"];
-    const cuts = ["Ideal", "Excellent", "Very Good", "Good"];
-    const certifications = ["GIA", "IGI", "HRD"];
-
-    const index = parseInt(id?.split("-").pop()) || 0;
-    const carat = parseFloat((0.3 + Math.random() * 2).toFixed(2));
-    const isFancy = index % 4 === 0;
-
+  // Map backend data to frontend format (same as ShowStock)
+  const mapDiamondData = (stock) => {
     return {
-      id: id || `${type}-1`,
-      shape: shapes[index % shapes.length],
-      carat,
-      caratMin: parseFloat((carat * 0.9).toFixed(2)),
-      caratMax: parseFloat((carat * 1.1).toFixed(2)),
-      colorType: isFancy ? "Fancy" : "White",
-      color: isFancy
-        ? fancyColors[index % fancyColors.length]
-        : whiteColors[index % whiteColors.length],
-      fancyIntensity: isFancy
-        ? fancyIntensities[index % fancyIntensities.length]
-        : null,
-      fancyOvertone: isFancy
-        ? fancyOvertones[index % fancyOvertones.length]
-        : null,
-      clarity: clarities[index % clarities.length],
-      cut: cuts[index % cuts.length],
-      polish: cuts[(index + 1) % cuts.length],
-      symmetry: cuts[(index + 2) % cuts.length],
-      fluorescence: ["None", "Faint", "Medium"][index % 3],
-      price: Math.floor(2000 + Math.random() * 30000),
-      priceMin: Math.floor(2000 + Math.random() * 20000),
-      priceMax: Math.floor(15000 + Math.random() * 40000),
-      certification: certifications[index % certifications.length],
-      certificationNumber: `CERT-${Math.floor(Math.random() * 1000000)}`,
-      hasMedia: index % 2 === 0,
-      image: images[index % images.length],
-      badge: index % 3 === 0 ? "GIA Certified" : index % 4 === 0 ? "Available" : null,
-      available: index % 3 !== 0,
-      table: Math.floor(54 + Math.random() * 10),
-      depth: Math.floor(59 + Math.random() * 8),
-      length: (5 + Math.random() * 3).toFixed(2),
-      width: (4 + Math.random() * 2).toFixed(2),
-      height: (3 + Math.random() * 2).toFixed(2),
-      culetSize: ["None", "Small", "Medium", "Large"][index % 4],
-      girdlePercentage: Math.floor(3 + Math.random() * 5),
-      crownHeight: (11 + Math.random() * 4).toFixed(1),
-      crownAngle: (31 + Math.random() * 5).toFixed(1),
-      pavilionDepth: (41 + Math.random() * 4).toFixed(1),
-      pavilionAngle: (40 + Math.random() * 3).toFixed(1),
-      whiteInclusion: ["None", "Minor", "Major"][index % 3],
-      blackTable: ["None", "Minor", "Major"][index % 3],
-      blackCrown: ["None", "Minor", "Major"][index % 3],
-      openInclusion: ["None", "Minor", "Major"][index % 3],
-      fancyColor: isFancy ? fancyColors[index % fancyColors.length] : "None",
-      colorIntensity: isFancy ? fancyIntensities[index % fancyIntensities.length] : "None",
-      colorOvertone: isFancy ? fancyOvertones[index % fancyOvertones.length] : "None",
-      location: ["Surat"][index % 1],
-      culet: ["None", "Small", "Medium", "Large"][index % 4],
-      luster: ["Excellent", "Very Good", "Good", "Fair"][index % 4],
+      id: stock.id,
+      stockId: stock.stock_id,
+      shape: stock.shape,
+      carat: parseFloat(stock.weight),
+      colorType: stock.fancy_color ? "Fancy" : "White",
+      color: stock.color || stock.fancy_color,
+      fancyIntensity: stock.fancy_color_intensity,
+      fancyOvertone: stock.fancy_color_overtone,
+      clarity: stock.clarity,
+      cut: stock.cut,
+      polish: stock.polish,
+      symmetry: stock.symmetry,
+      fluorescence: stock.fluorescence,
+      price: Math.floor(stock.final_price),
+      certification: stock.lab,
+      certificationNumber: stock.certificate_number,
+      available: stock.status === "AVAILABLE",
+      table: stock.table_percentage,
+      depth: stock.depth_percentage,
+      length: stock.length,
+      width: stock.width,
+      height: stock.height,
+      ratio: stock.lw_ratio ? parseFloat(stock.lw_ratio) : null,
+      crownHeight: stock.crown_height,
+      crownAngle: stock.crown_angle,
+      pavilionDepth: stock.pavilion_depth,
+      pavilionAngle: stock.pavilion_angle,
+      girdle: stock.gridle_per,
+      milky: stock.milky,
+      eyeClean: stock.eye_clean,
+      shade: stock.shade,
+      type: stock.type,
+      location: stock.city || "Surat",
+      certificateImage: stock.certificate_image,
+      video360: stock.diamond_video,
     };
   };
 
@@ -129,43 +73,26 @@ const DiamondDetail = () => {
     setLoading(true);
     const fetchDiamond = async () => {
       try {
-        const response = await fetch(`/api/stock/${type}/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setDiamond(data);
+        const response = await stockAPI.getStockById(id);
+        if (response.success && response.data) {
+          setDiamond(mapDiamondData(response.data));
         } else {
-          setDiamond(getMockDiamond(type, id));
+          setDiamond(null);
         }
       } catch (error) {
         console.error("Error fetching diamond:", error);
-        setDiamond(getMockDiamond(type, id));
+        setDiamond(null);
       } finally {
         setLoading(false);
       }
     };
     fetchDiamond();
-  }, [type, id]);
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePosition({
-      x: ((e.clientX - rect.left) / rect.width) * 100,
-      y: ((e.clientY - rect.top) / rect.height) * 100,
-    });
-  };
+  }, [id]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const nextImage = () => {
-    setActiveImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   if (loading) {
@@ -355,7 +282,7 @@ const DiamondDetail = () => {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2 text-sm"
           >
-            {["Diamonds", type?.replace(/-/g, " "), diamond.id].map((item, i, arr) => (
+            {["Diamonds", diamond.type?.replace(/-/g, " "), diamond.id].map((item, i, arr) => (
               <span key={i} className="flex items-center gap-2">
                 <motion.span
                   initial={{ opacity: 0, y: 5 }}
@@ -460,7 +387,7 @@ const DiamondDetail = () => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowShareModal(true)}
+                  onClick={() => handleCopy()}
                   className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
                   style={{ 
                     background: theme.surface,
@@ -470,7 +397,7 @@ const DiamondDetail = () => {
                   onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
                 >
-                  <Share2 className="h-5 w-5" />
+                  <Copy className="h-5 w-5" />
                 </motion.button>
               </div>
             </div>
@@ -478,7 +405,7 @@ const DiamondDetail = () => {
 
           {/* Content */}
           <div className="grid gap-0 lg:grid-cols-2">
-            {/* Left - Image Gallery */}
+            {/* Left - Diamond Info Card */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -486,81 +413,45 @@ const DiamondDetail = () => {
               className="space-y-4 p-6 lg:border-r"
               style={{ borderColor: theme.border }}
             >
-              {/* Main Image */}
+              {/* Main Info Card */}
               <motion.div
                 variants={itemVariants}
-                className="relative aspect-square overflow-hidden rounded-2xl group cursor-zoom-in"
+                className="relative aspect-square overflow-hidden rounded-2xl flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #E2E8F0 100%)` }}
-                onMouseEnter={() => setIsImageZoomed(true)}
-                onMouseLeave={() => setIsImageZoomed(false)}
-                onMouseMove={handleMouseMove}
               >
                 <motion.div
-                  className="relative h-full w-full"
-                  animate={isImageZoomed ? { scale: 1.5 } : { scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                  style={{
-                    transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
-                  }}
+                  animate={floatingAnimation}
+                  className="flex flex-col items-center gap-4"
                 >
-                  <motion.img
-                    key={activeImageIndex}
-                    src={images[activeImageIndex]}
-                    alt={`${diamond.shape} Diamond`}
-                    className="h-full w-full object-cover"
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                  />
+                  <div
+                    className="flex h-24 w-24 items-center justify-center rounded-2xl shadow-lg"
+                    style={{ background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)` }}
+                  >
+                    <Diamond className="h-12 w-12 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold" style={{ color: theme.secondary }}>
+                      {diamond.shape} {diamond.carat}ct
+                    </p>
+                    <p className="text-sm" style={{ color: theme.textMuted }}>
+                      {diamond.color} · {diamond.clarity}
+                    </p>
+                  </div>
                 </motion.div>
-
-                {/* Zoom Indicator */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isImageZoomed ? 0 : 1 }}
-                  className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium backdrop-blur-sm"
-                  style={{ background: "rgba(255,255,255,0.9)", color: theme.text }}
-                >
-                  <ZoomIn className="h-4 w-4" />
-                  Hover to zoom
-                </motion.div>
-
-                {/* Navigation Arrows */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={prevImage}
-                  className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                  style={{ background: "rgba(255,255,255,0.9)", color: theme.text, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all"
-                  style={{ background: "rgba(255,255,255,0.9)", color: theme.text, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </motion.button>
 
                 {/* Badges */}
                 <div className="absolute left-4 top-4 flex flex-col gap-2">
-                  <AnimatePresence>
-                    {diamond.badge && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -20, scale: 0.8 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg"
-                        style={{ background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)` }}
-                      >
-                        <Award className="h-4 w-4" />
-                        {diamond.badge}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {diamond.certification && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                      className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg"
+                      style={{ background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)` }}
+                    >
+                      <Shield className="h-4 w-4" />
+                      {diamond.certification} Certified
+                    </motion.div>
+                  )}
                 </div>
 
                 {diamond.available && (
@@ -586,74 +477,7 @@ const DiamondDetail = () => {
                 )}
               </motion.div>
 
-              {/* Thumbnails */}
-              <motion.div
-                variants={itemVariants}
-                className="flex justify-center gap-3"
-              >
-                {images.map((img, idx) => (
-                  <motion.button
-                    key={idx}
-                    whileHover={{ scale: 1.1, y: -3 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className="relative h-16 w-16 overflow-hidden rounded-xl transition-all"
-                    style={{
-                      opacity: activeImageIndex === idx ? 1 : 0.6,
-                      boxShadow: activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
-                    }}
-                  >
-                    <img
-                      src={img}
-                      alt={`Thumbnail ${idx + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                    {activeImageIndex === idx && (
-                      <motion.div
-                        layoutId="activeIndicator"
-                        className="absolute inset-0"
-                        style={{ background: `${theme.primary}15` }}
-                      />
-                    )}
-                  </motion.button>
-                ))}
-              </motion.div>
-
-              {/* 360 View Button */}
-              <motion.button
-                variants={itemVariants}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-sm font-medium transition-all"
-                style={{ 
-                  borderColor: theme.border,
-                  background: theme.background,
-                  color: theme.textMuted
-                }}
-                onMouseEnter={(e) => { 
-                  e.currentTarget.style.borderColor = theme.primary; 
-                  e.currentTarget.style.background = `${theme.primary}08`; 
-                  e.currentTarget.style.color = theme.primary; 
-                }}
-                onMouseLeave={(e) => { 
-                  e.currentTarget.style.borderColor = theme.border; 
-                  e.currentTarget.style.background = theme.background; 
-                  e.currentTarget.style.color = theme.textMuted; 
-                }}
-                onClick={() => window.open('about:blank', '_blank')}
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                >
-                  <RotateCw className="h-5 w-5" />
-                </motion.div>
-                <span>View 360° Diamond Experience</span>
-              </motion.button>
-
-
-
-              {/* Certification */}
+              {/* 360 Video & Certification */}
               <motion.div
                 variants={itemVariants}
                 whileHover={{ scale: 1.01 }}
@@ -676,30 +500,65 @@ const DiamondDetail = () => {
                     <p className="font-bold" style={{ color: theme.secondary }}>{diamond.certification} Certified</p>
                     <p className="text-sm" style={{ color: theme.textMuted }}>Cert. No: {diamond.certificationNumber}</p>
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold shadow-md transition-all"
-                    style={{
-                      background: theme.surface,
-                      color: theme.success
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = theme.success;
-                      e.currentTarget.style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = theme.surface;
-                      e.currentTarget.style.color = theme.success;
-                    }}
-                    onClick={() => window.open('about:blank', '_blank')}
-                  >
-                    View Report
-                  </motion.button>
+                  <div className="flex flex-col gap-2">
+                    {diamond.video360 && (
+                      <motion.button
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold shadow-lg transition-all"
+                        style={{
+                          background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)`,
+                          color: "#fff",
+                          boxShadow: `0 8px 20px -5px ${theme.primary}50`
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = `linear-gradient(135deg, ${theme.primaryLight} 0%, #60A5FA 100%)`;
+                          e.currentTarget.style.boxShadow = `0 12px 28px -8px ${theme.primary}60`;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)`;
+                          e.currentTarget.style.boxShadow = `0 8px 20px -5px ${theme.primary}50`;
+                        }}
+                        onClick={() => diamond.video360 && window.open(diamond.video360, '_blank')}
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </motion.div>
+                        View 360
+                      </motion.button>
+                    )}
+                    {diamond.certificateImage && (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all"
+                        style={{
+                          background: theme.surface,
+                          color: theme.success,
+                          border: `1px solid ${theme.success}40`
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = theme.success;
+                          e.currentTarget.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = theme.surface;
+                          e.currentTarget.style.color = theme.success;
+                        }}
+                        onClick={() => diamond.certificateImage && window.open(diamond.certificateImage, '_blank')}
+                      >
+                        <FileCheck className="h-3.5 w-3.5" />
+                        View Report
+                      </motion.button>
+                    )}
+                  </div>
                 </div>
-                
               </motion.div>
-                            {/* Additional Info */}
+
+              {/* Additional Info */}
               <motion.div
                 variants={itemVariants}
                 whileHover={{ boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.1)" }}
@@ -727,7 +586,7 @@ const DiamondDetail = () => {
                     { label: "Luster", value: diamond.luster || "None" },
                     { label: "Fluorescence", value: diamond.fluorescence || "None" },
                     { label: "Media Available", value: diamond.hasMedia ? "Yes (Video & Images)" : "Photos Only" },
-                    { label: "Origin", value: type?.includes("lab") ? "Laboratory Grown" : "Natural Earth Mined" },
+                    { label: "Origin", value: diamond.type?.toLowerCase().includes("lab") ? "Laboratory Grown" : "Natural Earth Mined" },
                   ].map((item, idx) => (
                     <motion.div
                       key={idx}

@@ -887,35 +887,27 @@ export const DiamondFilterContent = ({
     <div className="space-y-4">
       {/* Shape Filter */}
       <FilterSection title="Shape" section="shape" expandedSections={expandedSections} toggleSection={toggleSection}>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {shapes.slice(0, visibleShapesCount).map((shape) => (
             <button
               key={shape.name}
               onClick={() => toggleShape(shape.name)}
-              className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all duration-200 ${
                 selectedShapes.includes(shape.name)
-                  ? "bg-[#DBEAFE] ring-2 ring-[#1E3A8A] scale-105"
-                  : "hover:bg-[#F1F5F9]"
+                  ? "bg-[#DBEAFE] ring-1 ring-[#1E3A8A]"
+                  : "bg-white border border-gray-100 hover:bg-[#F1F5F9]"
               }`}
             >
-              <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg">
-                <img
-                  src={shape.icon}
-                  alt={shape.name}
-                  loading="lazy"
-                  className="w-10 h-10 object-cover transition-all duration-300"
-                  style={{
-                    filter: selectedShapes.includes(shape.name)
-                      ? 'brightness(0.3) contrast(1.8)'
-                      : 'brightness(0.2) contrast(1.5) opacity(1)'
-                  }}
-                />
-              </div>
+              <img
+                src={shape.icon}
+                alt={shape.name}
+                className="w-8 h-8 object-contain mb-0.5"
+              />
               <span
-                className={`text-[9px] leading-tight text-center ${
+                className={`text-[8px] text-center leading-none ${
                   selectedShapes.includes(shape.name)
-                    ? "text-[#1E3A8A] font-medium"
-                    : "text-[#475569]"
+                    ? "text-[#1E3A8A] font-semibold"
+                    : "text-gray-600"
                 }`}
               >
                 {shape.name}

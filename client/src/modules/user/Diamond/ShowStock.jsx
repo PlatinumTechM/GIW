@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
+import { stockAPI } from "../../../services/api.js";
 
 const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, searchQuery = "" }) => {
   const navigate = useNavigate();
@@ -10,96 +11,160 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
   const [selectedItems, setSelectedItems] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 9;
 
   const openDiamondDetail = (diamond) => {
     navigate(`/user/diamond/${type}/${diamond.id}`);
   };
 
+  // Map backend data to frontend format
+  const mapStockData = (stock) => {
+    return {
+      id: stock.id,
+      stockId: stock.stock_id,
+      shape: stock.shape,
+      carat: parseFloat(stock.weight),
+      caratMin: parseFloat(stock.weight) * 0.95,
+      caratMax: parseFloat(stock.weight) * 1.05,
+      priceMin: Math.floor(stock.final_price * 0.9),
+      priceMax: Math.floor(stock.final_price * 1.1),
+      get price() { return Math.floor(stock.final_price); },
+      colorType: stock.fancy_color ? "Fancy" : "White",
+      color: stock.color || stock.fancy_color,
+      fancyIntensity: stock.fancy_color_intensity,
+      fancyOvertone: stock.fancy_color_overtone,
+      clarity: stock.clarity,
+      cut: stock.cut,
+      polish: stock.polish,
+      symmetry: stock.symmetry,
+      fluorescence: stock.fluorescence,
+      certification: stock.lab,
+      certificationNumber: stock.certificate_number,
+      hasMedia: !!(stock.diamond_image1 || stock.diamond_video),
+      image: stock.diamond_image1,
+      badge: stock.lab ? `${stock.lab} Certified` : null,
+      available: stock.status === "AVAILABLE",
+      table: stock.table_percentage,
+      depth: stock.depth_percentage,
+      length: stock.length,
+      width: stock.width,
+      height: stock.height,
+      ratio: stock.lw_ratio ? parseFloat(stock.lw_ratio) : null,
+      crownHeight: stock.crown_height,
+      crownAngle: stock.crown_angle,
+      pavilionDepth: stock.pavilion_depth,
+      pavilionAngle: stock.pavilion_angle,
+      girdle: stock.gridle_per,
+      milky: stock.milky,
+      eyeClean: stock.eye_clean,
+      shade: stock.shade,
+      type: stock.type,
+    };
+  };
+
   useEffect(() => {
-    // Use mock data directly for now since API endpoint doesn't exist
-    setLoading(true);
-    setTimeout(() => {
-      setItems(getMockData(type));
-      setLoading(false);
-    }, 500);
-  }, [type]);
+    const fetchStocks = async () => {
+      setLoading(true);
+      try {
+        const params = {
+          page: currentPage,
+          limit: itemsPerPage,
+          sortBy: sortBy,
+        };
+
+        // Add filters to params
+        if (filters?.shapes?.length > 0) params.shape = filters.shapes.join(",");
+        if (filters?.colors?.length > 0) params.color = filters.colors.join(",");
+        if (filters?.clarities?.length > 0) params.clarity = filters.clarities.join(",");
+        if (filters?.caratMin) params.minCarat = filters.caratMin;
+        if (filters?.caratMax) params.maxCarat = filters.caratMax;
+        if (filters?.priceMin) params.minPrice = filters.priceMin;
+        if (filters?.priceMax) params.maxPrice = filters.priceMax;
+        if (searchQuery?.trim()) params.search = searchQuery.trim();
+
+        // Detailed filters
+        if (filters?.cuts?.length > 0) params.cut = filters.cuts.join(",");
+        if (filters?.polish?.length > 0) params.polish = filters.polish.join(",");
+        if (filters?.symmetry?.length > 0) params.symmetry = filters.symmetry.join(",");
+        if (filters?.fluorescence?.length > 0) params.fluorescence = filters.fluorescence.join(",");
+        if (filters?.certifications?.length > 0) params.lab = filters.certifications.join(",");
+        if (filters?.fancyIntensity) params.fancyIntensity = filters.fancyIntensity;
+        if (filters?.fancyOvertone) params.fancyOvertone = filters.fancyOvertone;
+        if (filters?.available) params.availability = "AVAILABLE";
+        if (filters?.showOnlyMedia) params.hasMedia = "true";
+
+        // Measurement filters
+        if (filters?.lengthMin) params.minLength = filters.lengthMin;
+        if (filters?.lengthMax) params.maxLength = filters.lengthMax;
+        if (filters?.widthMin) params.minWidth = filters.widthMin;
+        if (filters?.widthMax) params.maxWidth = filters.widthMax;
+        if (filters?.heightMin) params.minHeight = filters.heightMin;
+        if (filters?.heightMax) params.maxHeight = filters.heightMax;
+        if (filters?.ratioMin) params.minRatio = filters.ratioMin;
+        if (filters?.ratioMax) params.maxRatio = filters.ratioMax;
+
+        // Percentage filters
+        if (filters?.depthMin) params.minDepth = filters.depthMin;
+        if (filters?.depthMax) params.maxDepth = filters.depthMax;
+        if (filters?.tableMin) params.minTable = filters.tableMin;
+        if (filters?.tableMax) params.maxTable = filters.tableMax;
+
+        // Crown filters
+        if (filters?.crownHeightMin) params.minCrownHeight = filters.crownHeightMin;
+        if (filters?.crownHeightMax) params.maxCrownHeight = filters.crownHeightMax;
+        if (filters?.crownAngleMin) params.minCrownAngle = filters.crownAngleMin;
+        if (filters?.crownAngleMax) params.maxCrownAngle = filters.crownAngleMax;
+
+        // Pavilion filters
+        if (filters?.pavilionDepthMin) params.minPavilionDepth = filters.pavilionDepthMin;
+        if (filters?.pavilionDepthMax) params.maxPavilionDepth = filters.pavilionDepthMax;
+        if (filters?.pavilionAngleMin) params.minPavilionAngle = filters.pavilionAngleMin;
+        if (filters?.pavilionAngleMax) params.maxPavilionAngle = filters.pavilionAngleMax;
+
+        // Girdle filters
+        if (filters?.girdleMin) params.minGirdle = filters.girdleMin;
+        if (filters?.girdleMax) params.maxGirdle = filters.girdleMax;
+
+        // Dropdown filters
+        if (filters?.milky) params.milky = filters.milky;
+        if (filters?.eyeClean) params.eyeClean = filters.eyeClean;
+        if (filters?.shade) params.shade = filters.shade;
+
+        // Use dedicated routes based on type - backend handles type filtering
+        let response;
+        if (type === "natural-diamonds" || type === "NaturalDiamond") {
+          response = await stockAPI.getNaturalDiamonds(params);
+        } else if (type === "lab-grown-diamonds" || type === "LabGrownDiamond") {
+          response = await stockAPI.getLabGrownDiamonds(params);
+        } else {
+          response = await stockAPI.getAllStocks(params);
+        }
+
+        if (response.success && response.data) {
+          const mappedItems = response.data.stocks.map(mapStockData);
+          setItems(mappedItems);
+          setTotalCount(response.data.pagination.totalCount);
+          setTotalPages(response.data.pagination.totalPages);
+        } else {
+          setItems([]);
+        }
+      } catch (error) {
+        console.error("Error fetching stocks:", error);
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStocks();
+  }, [type, currentPage, filters, searchQuery]);
 
   // Reset to page 1 when filters or search change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, sortBy, searchQuery]);
-
-  const getMockData = (category) => {
-    const shapes = ["Round", "Oval", "Pear", "Cushion", "Emerald"];
-    const whiteColors = ["D", "E", "F", "G", "H", "I", "J"];
-    const fancyColors = ["Yellow", "Blue", "Pink", "Red", "Green", "Purple", "Orange", "Violet", "Gray", "Black", "Brown"];
-    const fancyIntensities = ["Faint", "Very Light", "Light", "Fancy Light", "Fancy", "Fancy Dark", "Fancy Intense", "Fancy Vivid", "Fancy Deep"];
-    const fancyOvertones = ["None", "Yellow", "Blue", "Pink", "Green", "Orange", "Brown", "Gray", "Purple", "Red"];
-    const clarities = ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1"];
-    const cuts = ["Ideal", "Excellent", "Very Good", "Good"];
-    const certifications = ["GIA", "IGI", "HRD"];
-    const hasMedia = [true, false];
-
-    return Array.from({ length: 24 }, (_, i) => {
-      const caratMin = parseFloat((0.3 + Math.random() * 2).toFixed(2));
-      const caratMax = parseFloat((caratMin + 0.5 + Math.random() * 2).toFixed(2));
-      const priceMin = Math.floor(2000 + Math.random() * 30000);
-      const table = Math.floor(54 + Math.random() * 10);
-      const depth = Math.floor(59 + Math.random() * 8);
-      // Advanced filter properties
-      const length = parseFloat((5 + Math.random() * 10).toFixed(2));
-      const width = parseFloat((4 + Math.random() * 8).toFixed(2));
-      const height = parseFloat((3 + Math.random() * 5).toFixed(2));
-      const crownHeight = parseFloat((10 + Math.random() * 5).toFixed(1));
-      const crownAngle = parseFloat((30 + Math.random() * 5).toFixed(1));
-      const pavilionDepth = parseFloat((40 + Math.random() * 5).toFixed(1));
-      const pavilionAngle = parseFloat((40 + Math.random() * 5).toFixed(1));
-      const girdle = parseFloat((1 + Math.random() * 4).toFixed(1));
-      return {
-        id: `${category}-${i + 1}`,
-        shape: shapes[Math.floor(Math.random() * shapes.length)],
-        carat: parseFloat(((caratMin + caratMax) / 2).toFixed(2)),
-        caratMin,
-        caratMax,
-        priceMin,
-        priceMax: Math.floor(priceMin + 5000 + Math.random() * 50000),
-        get price() { return Math.floor((this.priceMin + this.priceMax) / 2); },
-        colorType: Math.random() > 0.7 ? "Fancy" : "White",
-        color: Math.random() > 0.7
-          ? fancyColors[Math.floor(Math.random() * fancyColors.length)]
-          : whiteColors[Math.floor(Math.random() * whiteColors.length)],
-        fancyIntensity: Math.random() > 0.7 ? fancyIntensities[Math.floor(Math.random() * fancyIntensities.length)] : null,
-        fancyOvertone: Math.random() > 0.7 ? fancyOvertones[Math.floor(Math.random() * fancyOvertones.length)] : null,
-        clarity: clarities[Math.floor(Math.random() * clarities.length)],
-        cut: cuts[Math.floor(Math.random() * cuts.length)],
-        polish: cuts[Math.floor(Math.random() * cuts.length)],
-        symmetry: cuts[Math.floor(Math.random() * cuts.length)],
-        fluorescence: ["None", "Faint", "Medium"][Math.floor(Math.random() * 3)],
-        certification: certifications[Math.floor(Math.random() * certifications.length)],
-        certificationNumber: `CERT-${Math.floor(Math.random() * 1000000)}`,
-        hasMedia: hasMedia[Math.floor(Math.random() * hasMedia.length)],
-        image: `https://images.unsplash.com/photo-${['1605100804763-247f67b3557e', '1515377905703-c4788e51af15', '1573408301185-9146fe634ad0', '1603561591411-07134e71a2a9'][i % 4]}?w=600&h=600&fit=crop`,
-        badge: i % 3 === 0 ? "GIA Certified" : i % 4 === 0 ? "Available" : null,
-        available: Math.random() > 0.2,
-        table,
-        depth,
-        // Advanced filter properties
-        length,
-        width,
-        height,
-        ratio: parseFloat((length / width).toFixed(2)),
-        crownHeight,
-        crownAngle,
-        pavilionDepth,
-        pavilionAngle,
-        girdle,
-        milky: ["None", "Light", "Medium", "Heavy"][Math.floor(Math.random() * 4)],
-        eyeClean: ["Yes", "No"][Math.floor(Math.random() * 2)],
-        shade: ["None", "Light", "Medium"][Math.floor(Math.random() * 3)],
-      };
-    });
-  };
 
   const toggleSelect = (id) => {
     if (selectedItems.includes(id)) {
@@ -109,97 +174,11 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     }
   };
 
-  const sortedItems = [...items].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price;
-      case "price-high":
-        return b.price - a.price;
-      case "carat-low":
-        return a.carat - b.carat;
-      case "carat-high":
-        return b.carat - a.carat;
-      case "color":
-        return a.color.localeCompare(b.color);
-      default:
-        return 0;
-    }
-  });
+  // Server-side sorting - handled by backend, frontend just displays
+  const sortedItems = items;
 
-  const filteredItems = sortedItems.filter((item) => {
-    // Search query filter
-    if (searchQuery?.trim()) {
-      const query = searchQuery.toLowerCase();
-      const searchText = `${item.shape} ${item.carat} ${item.color} ${item.clarity} ${item.cut} ${item.certification}`.toLowerCase();
-      if (!searchText.includes(query)) return false;
-    }
-    // All other filters
-    if (filters?.shapes?.length > 0 && !filters.shapes.some(s => s.toLowerCase() === item.shape.toLowerCase())) return false;
-
-    // Color Type filter
-    if (filters?.colorType && item.colorType !== filters.colorType) return false;
-
-    // Color Grade filter - handle both White and Fancy colors
-    if (filters?.colors?.length > 0 && !filters.colors.includes(item.color)) return false;
-
-    // Fancy Intensity filter
-    if (filters?.fancyIntensity && item.fancyIntensity !== filters.fancyIntensity) return false;
-
-    // Fancy Overtone filter
-    if (filters?.fancyOvertone && item.fancyOvertone !== filters.fancyOvertone) return false;
-
-    if (filters?.clarities?.length > 0 && !filters.clarities.includes(item.clarity)) return false;
-    if (filters?.cuts?.length > 0 && !filters.cuts.includes(item.cut)) return false;
-    if (filters?.polish?.length > 0 && !filters.polish.includes(item.polish)) return false;
-    if (filters?.symmetry?.length > 0 && !filters.symmetry.includes(item.symmetry)) return false;
-    if (filters?.certifications?.length > 0 && !filters.certifications.includes(item.certification)) return false;
-    if (filters?.certificateType === 'certified' && (!item.certification || item.certification === 'None')) return false;
-    if (filters?.certificateType === 'non-certified' && item.certification && item.certification !== 'None') return false;
-    if (filters?.available && !item.available) return false;
-    if (filters?.showOnlyMedia && !item.hasMedia) return false;
-    if (filters?.caratMin && item.carat < parseFloat(filters.caratMin)) return false;
-    if (filters?.caratMax && item.carat > parseFloat(filters.caratMax)) return false;
-    if (filters?.priceMin !== "" && filters?.priceMin != null && item.price < parseFloat(filters.priceMin)) return false;
-    if (filters?.priceMax !== "" && filters?.priceMax != null && item.price > parseFloat(filters.priceMax)) return false;
-
-    // Advanced Filters - Measurements
-    if (filters?.lengthMin && item.length < parseFloat(filters.lengthMin)) return false;
-    if (filters?.lengthMax && item.length > parseFloat(filters.lengthMax)) return false;
-    if (filters?.widthMin && item.width < parseFloat(filters.widthMin)) return false;
-    if (filters?.widthMax && item.width > parseFloat(filters.widthMax)) return false;
-    if (filters?.heightMin && item.height < parseFloat(filters.heightMin)) return false;
-    if (filters?.heightMax && item.height > parseFloat(filters.heightMax)) return false;
-    if (filters?.ratioMin && item.ratio < parseFloat(filters.ratioMin)) return false;
-    if (filters?.ratioMax && item.ratio > parseFloat(filters.ratioMax)) return false;
-    if (filters?.depthMin && item.depth < parseFloat(filters.depthMin)) return false;
-    if (filters?.depthMax && item.depth > parseFloat(filters.depthMax)) return false;
-    if (filters?.tableMin && item.table < parseFloat(filters.tableMin)) return false;
-    if (filters?.tableMax && item.table > parseFloat(filters.tableMax)) return false;
-    if (filters?.crownHeightMin && item.crownHeight < parseFloat(filters.crownHeightMin)) return false;
-    if (filters?.crownHeightMax && item.crownHeight > parseFloat(filters.crownHeightMax)) return false;
-    if (filters?.crownAngleMin && item.crownAngle < parseFloat(filters.crownAngleMin)) return false;
-    if (filters?.crownAngleMax && item.crownAngle > parseFloat(filters.crownAngleMax)) return false;
-    if (filters?.pavilionDepthMin && item.pavilionDepth < parseFloat(filters.pavilionDepthMin)) return false;
-    if (filters?.pavilionDepthMax && item.pavilionDepth > parseFloat(filters.pavilionDepthMax)) return false;
-    if (filters?.pavilionAngleMin && item.pavilionAngle < parseFloat(filters.pavilionAngleMin)) return false;
-    if (filters?.pavilionAngleMax && item.pavilionAngle > parseFloat(filters.pavilionAngleMax)) return false;
-    if (filters?.girdleMin && item.girdle < parseFloat(filters.girdleMin)) return false;
-    if (filters?.girdleMax && item.girdle > parseFloat(filters.girdleMax)) return false;
-
-    // Advanced Filters - Dropdowns
-    if (filters?.milky && item.milky !== filters.milky) return false;
-    if (filters?.eyeClean && item.eyeClean !== filters.eyeClean) return false;
-    if (filters?.shade && item.shade !== filters.shade) return false;
-
-    return true;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Server-side filtering - all filters sent to backend
+  const paginatedItems = sortedItems;
 
   const handlePageChange = (page) => {
     if (page < 1 || page > totalPages) return;
@@ -243,7 +222,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     );
   }
 
-  if (filteredItems.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="text-center py-16">
         <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-[#F1F5F9] flex items-center justify-center">
@@ -267,8 +246,8 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
       <div className="flex items-center justify-between">
         <span className="text-sm text-[#64748B]">
           Showing {(currentPage - 1) * itemsPerPage + 1} -{" "}
-          {Math.min(currentPage * itemsPerPage, filteredItems.length)} of{" "}
-          <span className="text-[#0F172A] font-medium">{filteredItems.length}</span> diamonds
+          {Math.min(currentPage * itemsPerPage, totalCount)} of{" "}
+          <span className="text-[#0F172A] font-medium">{totalCount}</span> diamonds
         </span>
       </div>
 
@@ -455,6 +434,9 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   className="w-full h-full object-cover"
                   animate={{ scale: hoveredItem === item.id ? 1.1 : 1 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
                 />
 
                 {/* Badge */}
