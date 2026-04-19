@@ -10,6 +10,7 @@ const Login = () => {
     identifier: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [focusedField, setFocusedField] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -45,7 +46,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const result = await login(formData.identifier, formData.password);
+      const result = await login(formData.identifier, formData.password, rememberMe);
 
       if (result.success) {
         // Get role from localStorage (stored by AuthContext)
@@ -422,6 +423,8 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-[#3B82F6] focus:ring-[#3B82F6] border-[#E2E8F0] rounded"
                 />
                 <label

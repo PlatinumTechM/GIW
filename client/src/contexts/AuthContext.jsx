@@ -4,15 +4,7 @@ import notify from "../utils/notifications.jsx";
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
+function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -43,9 +35,9 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (identifier, password) => {
+  const login = async (identifier, password, rememberMe = false) => {
     try {
-      const response = await authAPI.login(identifier, password);
+      const response = await authAPI.login(identifier, password, rememberMe);
       const { user: userData } = response;
 
       // Token is stored in httpOnly cookie by backend
@@ -110,4 +102,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
+
+function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
+
+export { AuthProvider, useAuth };

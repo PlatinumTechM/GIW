@@ -2,7 +2,7 @@ import * as stockService from "./stock.service.js";
 
 export const bulkUpload = async (req, res) => {
   try {
-    const { stock } = req.body;
+    const { stock, type } = req.body;
 
     const userId = req.user?.id || null;
 
@@ -14,7 +14,7 @@ export const bulkUpload = async (req, res) => {
       });
     }
 
-    const result = await stockService.bulkUpload(stock, userId);
+    const result = await stockService.bulkUpload(stock, userId, type);
 
     res.status(201).json({
       success: true,
@@ -40,14 +40,20 @@ export const getAllStocks = async (req, res) => {
       page = 1,
       limit = 50,
       sortBy = "featured",
+      stockId,
+      certificate,
+      status,
       shape,
+      weight,
+      minWeight,
+      maxWeight,
       color,
+      cut,
       clarity,
-      minCarat,
-      maxCarat,
-      minPrice,
-      maxPrice,
-      availability,
+      lab,
+      minPricePerCarat,
+      maxPricePerCarat,
+      growthType,
       search,
       type,
       // Detailed filters
@@ -85,9 +91,14 @@ export const getAllStocks = async (req, res) => {
       eyeClean,
       shade,
       hasMedia,
+      sortBy,
+      sortOrder,
     } = req.query;
 
     const filters = {
+      stockId,
+      certificate,
+      status,
       shape,
       color,
       clarity,
@@ -133,6 +144,19 @@ export const getAllStocks = async (req, res) => {
       eyeClean,
       shade,
       hasMedia: hasMedia === "true",
+      weight,
+      minWeight: minWeight ? parseFloat(minWeight) : null,
+      maxWeight: maxWeight ? parseFloat(maxWeight) : null,
+      color,
+      cut,
+      clarity,
+      lab,
+      minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
+      maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
+      growthType,
+      search,
+      sortBy: sortBy || "created_at",
+      sortOrder: sortOrder || "DESC",
     };
 
     const result = await stockService.getAllStocks(
@@ -144,7 +168,6 @@ export const getAllStocks = async (req, res) => {
 
     res.status(200).json({
       success: true,
-
       data: result,
     });
   } catch (error) {
@@ -152,7 +175,6 @@ export const getAllStocks = async (req, res) => {
 
     res.status(500).json({
       success: false,
-
       message: error.message,
     });
   }
@@ -281,24 +303,59 @@ export const getMyStocks = async (req, res) => {
     if (!userId) {
       return res.status(401).json({
         success: false,
-
         message: "User not authenticated",
       });
     }
 
-    const { page = 1, limit = 50 } = req.query;
+    const {
+      page = 1,
+      limit = 50,
+      stockId,
+      certificate,
+      status,
+      shape,
+      minWeight,
+      maxWeight,
+      color,
+      cut,
+      clarity,
+      lab,
+      minPricePerCarat,
+      maxPricePerCarat,
+      growthType,
+      search,
+      sortBy,
+      sortOrder,
+    } = req.query;
+
+    const filters = {
+      stockId,
+      certificate,
+      status,
+      shape,
+      minWeight: minWeight ? parseFloat(minWeight) : null,
+      maxWeight: maxWeight ? parseFloat(maxWeight) : null,
+      color,
+      cut,
+      clarity,
+      lab,
+      minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
+      maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
+      growthType,
+      search,
+      sortBy: sortBy || "created_at",
+      sortOrder: sortOrder || "DESC",
+    };
 
     const result = await stockService.getStocksByUserId(
       userId,
-
       parseInt(page),
-
       parseInt(limit),
+      filters,
     );
 
     res.status(200).json({
       success: true,
-
       data: result,
     });
   } catch (error) {
@@ -306,8 +363,25 @@ export const getMyStocks = async (req, res) => {
 
     res.status(500).json({
       success: false,
-
       message: error.message || "Failed to fetch your stock",
+    });
+  }
+};
+
+export const getFilterOptions = async (req, res) => {
+  try {
+    const result = await stockService.getFilterOptions();
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error at getFilterOptions = ", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch filter options",
     });
   }
 };
