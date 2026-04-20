@@ -32,7 +32,11 @@ const sorts = [
 // Animation variants - defined outside component to prevent re-creation
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 const staggerContainer = {
@@ -149,7 +153,7 @@ const LabGrownDiamond = () => {
             </div>
             <motion.div variants={fadeInUp} className="flex items-center gap-3">
               <Link
-                to="/natural-diamonds"
+                to="/user/natural-diamonds"
                 className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
               >
                 <Gem className="h-4 w-4" />
@@ -494,7 +498,9 @@ const LabGrownDiamond = () => {
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-4">{filterContentJsx}</div>
+              <div className="flex-1 overflow-y-auto p-4">
+                {filterContentJsx}
+              </div>
 
               {/* Fixed Footer */}
               <div className="border-t border-[#E2E8F0] p-4">

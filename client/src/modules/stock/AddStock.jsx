@@ -380,19 +380,32 @@ const AddStock = () => {
       }
 
       // Add applied filters
-      if (appliedFilters.stockId) params.append("stockId", appliedFilters.stockId);
-      if (appliedFilters.certificate) params.append("certificate", appliedFilters.certificate);
-      if (appliedFilters.status.length > 0) params.append("status", appliedFilters.status.join(","));
-      if (appliedFilters.shape.length > 0) params.append("shape", appliedFilters.shape.join(","));
-      if (appliedFilters.minWeight) params.append("minWeight", appliedFilters.minWeight);
-      if (appliedFilters.maxWeight) params.append("maxWeight", appliedFilters.maxWeight);
-      if (appliedFilters.color.length > 0) params.append("color", appliedFilters.color.join(","));
-      if (appliedFilters.cut.length > 0) params.append("cut", appliedFilters.cut.join(","));
-      if (appliedFilters.clarity.length > 0) params.append("clarity", appliedFilters.clarity.join(","));
-      if (appliedFilters.lab.length > 0) params.append("lab", appliedFilters.lab.join(","));
-      if (appliedFilters.minPricePerCarat) params.append("minPricePerCarat", appliedFilters.minPricePerCarat);
-      if (appliedFilters.maxPricePerCarat) params.append("maxPricePerCarat", appliedFilters.maxPricePerCarat);
-      if (appliedFilters.growthType.length > 0) params.append("growthType", appliedFilters.growthType.join(","));
+      if (appliedFilters.stockId)
+        params.append("stockId", appliedFilters.stockId);
+      if (appliedFilters.certificate)
+        params.append("certificate", appliedFilters.certificate);
+      if (appliedFilters.status.length > 0)
+        params.append("status", appliedFilters.status.join(","));
+      if (appliedFilters.shape.length > 0)
+        params.append("shape", appliedFilters.shape.join(","));
+      if (appliedFilters.minWeight)
+        params.append("minWeight", appliedFilters.minWeight);
+      if (appliedFilters.maxWeight)
+        params.append("maxWeight", appliedFilters.maxWeight);
+      if (appliedFilters.color.length > 0)
+        params.append("color", appliedFilters.color.join(","));
+      if (appliedFilters.cut.length > 0)
+        params.append("cut", appliedFilters.cut.join(","));
+      if (appliedFilters.clarity.length > 0)
+        params.append("clarity", appliedFilters.clarity.join(","));
+      if (appliedFilters.lab.length > 0)
+        params.append("lab", appliedFilters.lab.join(","));
+      if (appliedFilters.minPricePerCarat)
+        params.append("minPricePerCarat", appliedFilters.minPricePerCarat);
+      if (appliedFilters.maxPricePerCarat)
+        params.append("maxPricePerCarat", appliedFilters.maxPricePerCarat);
+      if (appliedFilters.growthType.length > 0)
+        params.append("growthType", appliedFilters.growthType.join(","));
 
       // Add sorting
       params.append("sortBy", sortConfig.sortBy);
@@ -470,7 +483,8 @@ const AddStock = () => {
     count += appliedFilters.lab.length;
     count += appliedFilters.growthType.length;
     if (appliedFilters.minWeight || appliedFilters.maxWeight) count++;
-    if (appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat) count++;
+    if (appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat)
+      count++;
     return count;
   };
 
@@ -491,7 +505,10 @@ const AddStock = () => {
       setPendingFilters(newFilters);
     } else {
       // Clear entire filter field
-      const newFilters = { ...appliedFilters, [field]: Array.isArray(appliedFilters[field]) ? [] : "" };
+      const newFilters = {
+        ...appliedFilters,
+        [field]: Array.isArray(appliedFilters[field]) ? [] : "",
+      };
       setAppliedFilters(newFilters);
       setPendingFilters(newFilters);
     }
@@ -543,7 +560,11 @@ const AddStock = () => {
 
   const getSortIcon = (column) => {
     if (sortConfig.sortBy !== column) {
-      return <span className="text-slate-400 opacity-0 group-hover:opacity-50">↕</span>;
+      return (
+        <span className="text-slate-400 opacity-0 group-hover:opacity-50">
+          ↕
+        </span>
+      );
     }
     return sortConfig.sortOrder === "ASC" ? (
       <span className="text-white">↑</span>
@@ -813,7 +834,10 @@ const AddStock = () => {
     });
 
     try {
-      const response = await api.post("/stock/bulk", { stock: data, type: importType });
+      const response = await api.post("/stock/bulk", {
+        stock: data,
+        type: importType,
+      });
       const result = response.data;
 
       if (result.data) {
@@ -1209,14 +1233,21 @@ const AddStock = () => {
                       <input
                         type="text"
                         value={pendingFilters.stockId}
-                        onChange={(e) => handlePendingFilterChange("stockId", e.target.value)}
+                        onChange={(e) =>
+                          handlePendingFilterChange("stockId", e.target.value)
+                        }
                         placeholder="Search By Stock ID.."
                         className="input-field w-full py-2.5 text-sm"
                       />
                       <input
                         type="text"
                         value={pendingFilters.certificate}
-                        onChange={(e) => handlePendingFilterChange("certificate", e.target.value)}
+                        onChange={(e) =>
+                          handlePendingFilterChange(
+                            "certificate",
+                            e.target.value,
+                          )
+                        }
                         placeholder="Search By Certificate Number.."
                         className="input-field w-full py-2.5 text-sm"
                       />
@@ -1232,7 +1263,10 @@ const AddStock = () => {
                         {filterOptionsLoading ? (
                           <div className="flex flex-wrap gap-1.5 w-full">
                             {[...Array(8)].map((_, i) => (
-                              <div key={i} className="h-7 w-16 bg-gray-200 rounded-md animate-pulse" />
+                              <div
+                                key={i}
+                                className="h-7 w-16 bg-gray-200 rounded-md animate-pulse"
+                              />
                             ))}
                           </div>
                         ) : uniqueShapes.length > 0 ? (
@@ -1250,7 +1284,9 @@ const AddStock = () => {
                             </button>
                           ))
                         ) : (
-                          <span className="text-xs text-gray-400">No shapes</span>
+                          <span className="text-xs text-gray-400">
+                            No shapes
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1265,7 +1301,10 @@ const AddStock = () => {
                         {filterOptionsLoading ? (
                           <div className="flex flex-wrap gap-1.5 w-full">
                             {[...Array(12)].map((_, i) => (
-                              <div key={i} className="h-7 w-12 bg-gray-200 rounded-md animate-pulse" />
+                              <div
+                                key={i}
+                                className="h-7 w-12 bg-gray-200 rounded-md animate-pulse"
+                              />
                             ))}
                           </div>
                         ) : uniqueColors.length > 0 ? (
@@ -1283,7 +1322,9 @@ const AddStock = () => {
                             </button>
                           ))
                         ) : (
-                          <span className="text-xs text-gray-400">No colors</span>
+                          <span className="text-xs text-gray-400">
+                            No colors
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1300,14 +1341,19 @@ const AddStock = () => {
                           {filterOptionsLoading ? (
                             <div className="flex flex-wrap gap-1 w-full">
                               {[...Array(6)].map((_, i) => (
-                                <div key={i} className="h-6 w-10 bg-gray-200 rounded-md animate-pulse" />
+                                <div
+                                  key={i}
+                                  className="h-6 w-10 bg-gray-200 rounded-md animate-pulse"
+                                />
                               ))}
                             </div>
                           ) : uniqueClarities.length > 0 ? (
                             uniqueClarities.map((clarity) => (
                               <button
                                 key={clarity}
-                                onClick={() => toggleArrayFilter("clarity", clarity)}
+                                onClick={() =>
+                                  toggleArrayFilter("clarity", clarity)
+                                }
                                 className={`px-2 py-1 rounded text-xs transition-all ${
                                   pendingFilters.clarity.includes(clarity)
                                     ? "bg-emerald-600 text-white"
@@ -1318,7 +1364,9 @@ const AddStock = () => {
                               </button>
                             ))
                           ) : (
-                            <span className="text-xs text-gray-400">No data</span>
+                            <span className="text-xs text-gray-400">
+                              No data
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1330,22 +1378,33 @@ const AddStock = () => {
                           Cut
                         </label>
                         <div className="flex flex-wrap gap-1">
-                          {["Ideal", "Exc", "VG", "Good", "Fair", "Poor"].map((cut, idx) => {
-                            const fullNames = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
-                            return (
-                              <button
-                                key={fullNames[idx]}
-                                onClick={() => toggleArrayFilter("cut", fullNames[idx])}
-                                className={`px-2 py-1 rounded text-xs transition-all ${
-                                  pendingFilters.cut.includes(fullNames[idx])
-                                    ? "bg-pink-600 text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
-                              >
-                                {cut}
-                              </button>
-                            );
-                          })}
+                          {["Ideal", "Exc", "VG", "Good", "Fair", "Poor"].map(
+                            (cut, idx) => {
+                              const fullNames = [
+                                "Ideal",
+                                "Excellent",
+                                "Very Good",
+                                "Good",
+                                "Fair",
+                                "Poor",
+                              ];
+                              return (
+                                <button
+                                  key={fullNames[idx]}
+                                  onClick={() =>
+                                    toggleArrayFilter("cut", fullNames[idx])
+                                  }
+                                  className={`px-2 py-1 rounded text-xs transition-all ${
+                                    pendingFilters.cut.includes(fullNames[idx])
+                                      ? "bg-pink-600 text-white"
+                                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {cut}
+                                </button>
+                              );
+                            },
+                          )}
                         </div>
                       </div>
 
@@ -1356,19 +1415,21 @@ const AddStock = () => {
                           Lab
                         </label>
                         <div className="flex flex-wrap gap-1">
-                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL"].map((lab) => (
-                            <button
-                              key={lab}
-                              onClick={() => toggleArrayFilter("lab", lab)}
-                              className={`px-2 py-1 rounded text-xs transition-all ${
-                                pendingFilters.lab.includes(lab)
-                                  ? "bg-cyan-600 text-white"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
-                            >
-                              {lab}
-                            </button>
-                          ))}
+                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL"].map(
+                            (lab) => (
+                              <button
+                                key={lab}
+                                onClick={() => toggleArrayFilter("lab", lab)}
+                                className={`px-2 py-1 rounded text-xs transition-all ${
+                                  pendingFilters.lab.includes(lab)
+                                    ? "bg-cyan-600 text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                }`}
+                              >
+                                {lab}
+                              </button>
+                            ),
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1385,7 +1446,9 @@ const AddStock = () => {
                           {["CVD", "HPHT"].map((type) => (
                             <button
                               key={type}
-                              onClick={() => toggleArrayFilter("growthType", type)}
+                              onClick={() =>
+                                toggleArrayFilter("growthType", type)
+                              }
                               className={`flex-1 px-2 py-1.5 rounded text-sm transition-all ${
                                 pendingFilters.growthType.includes(type)
                                   ? "bg-teal-600 text-white"
@@ -1409,7 +1472,12 @@ const AddStock = () => {
                             type="number"
                             step="0.01"
                             value={pendingFilters.minWeight}
-                            onChange={(e) => handlePendingFilterChange("minWeight", e.target.value)}
+                            onChange={(e) =>
+                              handlePendingFilterChange(
+                                "minWeight",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Min"
                             className="input-field text-center w-full py-2 text-sm"
                           />
@@ -1417,7 +1485,12 @@ const AddStock = () => {
                             type="number"
                             step="0.01"
                             value={pendingFilters.maxWeight}
-                            onChange={(e) => handlePendingFilterChange("maxWeight", e.target.value)}
+                            onChange={(e) =>
+                              handlePendingFilterChange(
+                                "maxWeight",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Max"
                             className="input-field text-center w-full py-2 text-sm"
                           />
@@ -1435,7 +1508,12 @@ const AddStock = () => {
                             type="number"
                             step="1"
                             value={pendingFilters.minPricePerCarat}
-                            onChange={(e) => handlePendingFilterChange("minPricePerCarat", e.target.value)}
+                            onChange={(e) =>
+                              handlePendingFilterChange(
+                                "minPricePerCarat",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Min"
                             className="input-field text-center w-full py-2 text-sm"
                           />
@@ -1443,7 +1521,12 @@ const AddStock = () => {
                             type="number"
                             step="1"
                             value={pendingFilters.maxPricePerCarat}
-                            onChange={(e) => handlePendingFilterChange("maxPricePerCarat", e.target.value)}
+                            onChange={(e) =>
+                              handlePendingFilterChange(
+                                "maxPricePerCarat",
+                                e.target.value,
+                              )
+                            }
                             placeholder="Max"
                             className="input-field text-center w-full py-2 text-sm"
                           />
@@ -1559,12 +1642,17 @@ const AddStock = () => {
             {/* Active Filters Display - Compact */}
             {hasActiveFilters() && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-gray-500 font-medium">Filters:</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  Filters:
+                </span>
                 {/* Stock ID */}
                 {appliedFilters.stockId && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                     Stock:{appliedFilters.stockId}
-                    <button onClick={() => removeFilter("stockId")} className="hover:bg-blue-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("stockId")}
+                      className="hover:bg-blue-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -1573,80 +1661,131 @@ const AddStock = () => {
                 {appliedFilters.certificate && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                     Cert:{appliedFilters.certificate}
-                    <button onClick={() => removeFilter("certificate")} className="hover:bg-blue-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("certificate")}
+                      className="hover:bg-blue-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 )}
                 {/* Shapes */}
                 {appliedFilters.shape.map((shape) => (
-                  <span key={shape} className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
+                  <span
+                    key={shape}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs"
+                  >
                     {shape}
-                    <button onClick={() => removeFilter("shape", shape)} className="hover:bg-indigo-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("shape", shape)}
+                      className="hover:bg-indigo-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Colors */}
                 {appliedFilters.color.map((color) => (
-                  <span key={color} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                  <span
+                    key={color}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
+                  >
                     {color}
-                    <button onClick={() => removeFilter("color", color)} className="hover:bg-purple-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("color", color)}
+                      className="hover:bg-purple-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Clarities */}
                 {appliedFilters.clarity.map((clarity) => (
-                  <span key={clarity} className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs">
+                  <span
+                    key={clarity}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs"
+                  >
                     {clarity}
-                    <button onClick={() => removeFilter("clarity", clarity)} className="hover:bg-emerald-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("clarity", clarity)}
+                      className="hover:bg-emerald-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Cuts */}
                 {appliedFilters.cut.map((cut) => (
-                  <span key={cut} className="inline-flex items-center gap-1 px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">
+                  <span
+                    key={cut}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs"
+                  >
                     {cut}
-                    <button onClick={() => removeFilter("cut", cut)} className="hover:bg-pink-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("cut", cut)}
+                      className="hover:bg-pink-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Labs */}
                 {appliedFilters.lab.map((lab) => (
-                  <span key={lab} className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs">
+                  <span
+                    key={lab}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded text-xs"
+                  >
                     {lab}
-                    <button onClick={() => removeFilter("lab", lab)} className="hover:bg-cyan-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("lab", lab)}
+                      className="hover:bg-cyan-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Growth Types */}
                 {appliedFilters.growthType.map((type) => (
-                  <span key={type} className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">
+                  <span
+                    key={type}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs"
+                  >
                     {type}
-                    <button onClick={() => removeFilter("growthType", type)} className="hover:bg-teal-200 rounded p-0.5 ml-1">
+                    <button
+                      onClick={() => removeFilter("growthType", type)}
+                      className="hover:bg-teal-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
                 {/* Statuses */}
                 {appliedFilters.status.map((status) => (
-                  <span key={status} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-                    status === "AVAILABLE" ? "bg-green-100 text-green-700" :
-                    status === "SOLD" ? "bg-red-100 text-red-700" :
-                    status === "HOLD" ? "bg-amber-100 text-amber-700" :
-                    "bg-blue-100 text-blue-700"
-                  }`}>
+                  <span
+                    key={status}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
+                      status === "AVAILABLE"
+                        ? "bg-green-100 text-green-700"
+                        : status === "SOLD"
+                          ? "bg-red-100 text-red-700"
+                          : status === "HOLD"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
                     {status}
-                    <button onClick={() => removeFilter("status", status)} className={`rounded p-0.5 ml-1 ${
-                      status === "AVAILABLE" ? "hover:bg-green-200" :
-                      status === "SOLD" ? "hover:bg-red-200" :
-                      status === "HOLD" ? "hover:bg-amber-200" :
-                      "hover:bg-blue-200"
-                    }`}>
+                    <button
+                      onClick={() => removeFilter("status", status)}
+                      className={`rounded p-0.5 ml-1 ${
+                        status === "AVAILABLE"
+                          ? "hover:bg-green-200"
+                          : status === "SOLD"
+                            ? "hover:bg-red-200"
+                            : status === "HOLD"
+                              ? "hover:bg-amber-200"
+                              : "hover:bg-blue-200"
+                      }`}
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -1654,17 +1793,32 @@ const AddStock = () => {
                 {/* Weight Range */}
                 {(appliedFilters.minWeight || appliedFilters.maxWeight) && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">
-                    {appliedFilters.minWeight || "0"}-{appliedFilters.maxWeight || "∞"}ct
-                    <button onClick={() => { removeFilter("minWeight"); removeFilter("maxWeight"); }} className="hover:bg-orange-200 rounded p-0.5 ml-1">
+                    {appliedFilters.minWeight || "0"}-
+                    {appliedFilters.maxWeight || "∞"}ct
+                    <button
+                      onClick={() => {
+                        removeFilter("minWeight");
+                        removeFilter("maxWeight");
+                      }}
+                      className="hover:bg-orange-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 )}
                 {/* Price Range */}
-                {(appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat) && (
+                {(appliedFilters.minPricePerCarat ||
+                  appliedFilters.maxPricePerCarat) && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-xs">
-                    ${appliedFilters.minPricePerCarat || "0"}-${appliedFilters.maxPricePerCarat || "∞"}
-                    <button onClick={() => { removeFilter("minPricePerCarat"); removeFilter("maxPricePerCarat"); }} className="hover:bg-rose-200 rounded p-0.5 ml-1">
+                    ${appliedFilters.minPricePerCarat || "0"}-$
+                    {appliedFilters.maxPricePerCarat || "∞"}
+                    <button
+                      onClick={() => {
+                        removeFilter("minPricePerCarat");
+                        removeFilter("maxPricePerCarat");
+                      }}
+                      className="hover:bg-rose-200 rounded p-0.5 ml-1"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </span>
@@ -1689,13 +1843,18 @@ const AddStock = () => {
                     <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
                     <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
                     <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
                   </div>
                 </div>
                 {/* Skeleton Rows */}
                 <div className="p-4 space-y-4">
-                  {[...Array(8)].map((_, i) => (
+                  {[...Array(10)].map((_, i) => (
                     <div key={i} className="flex gap-4 items-center">
                       <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
                       <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
                       <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
                       <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
@@ -1771,9 +1930,18 @@ const AddStock = () => {
                         {ALL_DB_FIELDS.map((field) => {
                           // Determine if this column is sortable
                           const sortableFields = [
-                            "stock_id", "certificate_number", "weight", "shape",
-                            "color", "clarity", "cut", "lab", "price_per_carat",
-                            "final_price", "growth_type", "status"
+                            "stock_id",
+                            "certificate_number",
+                            "weight",
+                            "shape",
+                            "color",
+                            "clarity",
+                            "cut",
+                            "lab",
+                            "price_per_carat",
+                            "final_price",
+                            "growth_type",
+                            "status",
                           ];
                           const isSortable = sortableFields.includes(field);
 
@@ -1788,7 +1956,9 @@ const AddStock = () => {
                               }`}
                             >
                               <div className="flex items-center gap-1">
-                                <span>{field.replace(/_/g, " ").toUpperCase()}</span>
+                                <span>
+                                  {field.replace(/_/g, " ").toUpperCase()}
+                                </span>
                                 {isSortable && (
                                   <span className="ml-1">
                                     {getSortIcon(field)}
