@@ -1,6 +1,5 @@
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.75:5000/api/v1"; // Your computer IP - UPDATE if different!
-console.log("API URL = ", API_URL);
 
 // Validate API_URL is set
 if (!API_URL || API_URL === "undefined") {
@@ -18,7 +17,6 @@ const apiRequest = async (endpoint, options = {}) => {
   const baseUrl = API_URL?.replace(/\/$/, "") || "";
   const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   const url = `${baseUrl}${path}`;
-  console.log("Final api = ", url);
   const config = {
     headers: getHeaders(),
     ...options,
@@ -44,7 +42,6 @@ const apiRequest = async (endpoint, options = {}) => {
 // Auth specific API methods
 export const authAPI = {
   login: async (email, password) => {
-    console.log("Email = ", email, "PAss = ", password);
     return apiRequest("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
