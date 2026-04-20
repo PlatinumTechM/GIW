@@ -12,10 +12,6 @@ export const pool = new Pool({
   max: 10, // connection pool
 });
 
-pool.on("connect", () => {
-  console.log("PostgreSQL connected");
-});
-
 pool.on("error", (err) => {
   console.error("PostgreSQL connection error:", err.message);
   console.error("Connection details:", {
