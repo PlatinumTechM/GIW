@@ -11,12 +11,16 @@ import {
   Modal,
   Dimensions,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authAPI } from "../../src/api/api.js";
 import { secureStorage } from "../../src/utils/secureStorage.js";
 import Toast from "react-native-toast-message";
+
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.75:5000/api/v1"; // Your computer IP - UPDATE if different!
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -61,6 +65,7 @@ const UserCard = ({
   onViewPassword,
   revealedPassword,
   onHidePassword,
+  onViewDocument,
 }) => {
   const statusColor = user.status === "active" ? COLORS.success : COLORS.error;
 
@@ -94,49 +99,98 @@ const UserCard = ({
         </View>
       </View>
 
-      {/* Password Section */}
-      <View style={styles.passwordSection}>
-        <View style={styles.sectionLabel}>
-          <MaterialIcons name="lock" size={14} color={COLORS.amber} />
-          <Text style={styles.sectionLabelText}>Password</Text>
-        </View>
-        {revealedPassword === user.id ? (
-          <View style={styles.passwordRevealed}>
-            <View style={styles.passwordBox}>
-              <Text style={styles.passwordText}>{user.password || "N/A"}</Text>
-            </View>
-            <Pressable onPress={onHidePassword} style={styles.hideButton}>
-              <MaterialIcons
-                name="visibility-off"
-                size={18}
-                color={COLORS.textSecondary}
-              />
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable style={styles.viewPasswordButton} onPress={onViewPassword}>
-            <MaterialIcons name="visibility" size={16} color="#fff" />
-            <Text style={styles.viewPasswordText}>View Password</Text>
-          </Pressable>
-        )}
-      </View>
-
-      {/* Status & Actions */}
-      <View style={styles.userFooter}>
+      {/* Action Buttons Grid */}
+      <View style={styles.actionGrid}>
+        {/* Status Toggle */}
         <Pressable
-          style={[styles.statusButton, { backgroundColor: statusColor }]}
+          style={[
+            styles.actionButton,
+            {
+              backgroundColor:
+                user.status === "active" ? COLORS.success : COLORS.error,
+            },
+          ]}
           onPress={onToggleStatus}
         >
-          <View style={[styles.statusDot, { backgroundColor: "#fff" }]} />
-          <Text style={styles.statusButtonText}>
+          <MaterialIcons
+            name={user.status === "active" ? "check-circle" : "cancel"}
+            size={18}
+            color="#fff"
+          />
+          <Text style={styles.actionButtonText}>
             {user.status === "active" ? "Active" : "Inactive"}
           </Text>
         </Pressable>
 
-        <Pressable style={styles.detailsButton} onPress={onViewDetails}>
-          <MaterialIcons name="info" size={16} color="#fff" />
-          <Text style={styles.detailsButtonText}>Details</Text>
+        {/* Details Button */}
+        <Pressable
+          style={[
+            styles.actionButton,
+            { backgroundColor: COLORS.primaryLight },
+          ]}
+          onPress={onViewDetails}
+        >
+          <MaterialIcons name="person" size={18} color="#fff" />
+          <Text style={styles.actionButtonText}>Details</Text>
         </Pressable>
+
+        {/* Password Button - Shows password when revealed */}
+        <Pressable
+          style={[
+            styles.actionButton,
+            {
+              backgroundColor:
+                revealedPassword === user.id ? "#FEF3C7" : COLORS.amber,
+            },
+          ]}
+          onPress={
+            revealedPassword === user.id ? onHidePassword : onViewPassword
+          }
+        >
+          <MaterialIcons
+            name={
+              revealedPassword === user.id ? "visibility-off" : "visibility"
+            }
+            size={18}
+            color={revealedPassword === user.id ? COLORS.amber : "#fff"}
+          />
+          <Text
+            style={[
+              styles.actionButtonText,
+              revealedPassword === user.id && {
+                color: COLORS.amber,
+                fontSize: 12,
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {revealedPassword === user.id ? user.password || "N/A" : "Password"}
+          </Text>
+        </Pressable>
+
+        {/* Document Button */}
+        {user.document ? (
+          <Pressable
+            style={[styles.actionButton, { backgroundColor: COLORS.info }]}
+            onPress={onViewDocument}
+          >
+            <MaterialIcons name="description" size={18} color="#fff" />
+            <Text style={styles.actionButtonText}>Document</Text>
+          </Pressable>
+        ) : (
+          <View style={[styles.actionButton, styles.actionButtonDisabled]}>
+            <MaterialIcons
+              name="description"
+              size={18}
+              color={COLORS.textSecondary}
+            />
+            <Text
+              style={[styles.actionButtonText, { color: COLORS.textSecondary }]}
+            >
+              No Doc
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -206,8 +260,92 @@ const PasswordModal = ({
   );
 };
 
+// ─── Document View Modal ──────────────────────────────────────────
+const DocumentViewModal = ({ visible, documentUrl, onClose }) => {
+  if (!documentUrl) return null;
+
+  const handleOpenDocument = async () => {
+    try {
+      const fullUrl = documentUrl.startsWith("http")
+        ? documentUrl
+        : `${API_URL.replace("/api/v1", "")}${documentUrl}`;
+
+      const supported = await Linking.canOpenURL(fullUrl);
+      if (supported) {
+        await Linking.openURL(fullUrl);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Cannot Open Document",
+          text2: "No application available to open this file",
+        });
+      }
+    } catch (error) {
+      console.error("Error opening document:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to open document",
+      });
+    }
+  };
+
+  const getFileName = (url) => {
+    if (!url) return "document";
+    return url.split("/").pop() || "document";
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <MaterialIcons name="description" size={28} color={COLORS.info} />
+            <Text style={styles.modalTitle}>User Document</Text>
+          </View>
+          <Text style={styles.modalDescription}>
+            View or download the uploaded document
+          </Text>
+
+          <View style={styles.documentPreview}>
+            <MaterialIcons
+              name="insert-drive-file"
+              size={64}
+              color={COLORS.primaryLight}
+            />
+            <Text style={styles.documentName} numberOfLines={1}>
+              {getFileName(documentUrl)}
+            </Text>
+            <Text style={styles.documentHint}>
+              Tap below to open the document
+            </Text>
+          </View>
+
+          <View style={styles.modalButtons}>
+            <Pressable style={styles.cancelButton} onPress={onClose}>
+              <Text style={styles.cancelButtonText}>Close</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.viewButton, styles.verifyButton]}
+              onPress={handleOpenDocument}
+            >
+              <MaterialIcons name="open-in-new" size={18} color="#fff" />
+              <Text style={styles.verifyButtonText}>Open Document</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // ─── User Details Modal ───────────────────────────────────────────
-const UserDetailsModal = ({ visible, user, onClose }) => {
+const UserDetailsModal = ({ visible, user, onClose, onViewDocument }) => {
   if (!user) return null;
 
   return (
@@ -265,12 +403,14 @@ const UserDetailsModal = ({ visible, user, onClose }) => {
               }
             />
             {user.document && (
-              <DetailRow
-                icon="description"
-                label="Document"
-                value={user.document}
-                isDocument
-              />
+              <Pressable onPress={onViewDocument}>
+                <DetailRow
+                  icon="description"
+                  label="Document"
+                  value={user.document}
+                  isDocument
+                />
+              </Pressable>
             )}
           </ScrollView>
 
@@ -317,6 +457,8 @@ const Users = () => {
   const [adminPassword, setAdminPassword] = useState("");
   const [revealedPassword, setRevealedPassword] = useState(null);
   const [verifying, setVerifying] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   const insets = useSafeAreaInsets();
   const tokenRef = React.useRef(null);
@@ -508,6 +650,12 @@ const Users = () => {
     setShowDetailsModal(true);
   };
 
+  // View document handler
+  const handleViewDocument = (documentUrl) => {
+    setSelectedDocument(documentUrl);
+    setShowDocumentModal(true);
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -518,7 +666,7 @@ const Users = () => {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
+    <View style={[styles.container]}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -621,6 +769,7 @@ const Users = () => {
               onViewDetails={() => handleViewDetails(user)}
               onViewPassword={() => handleViewPassword(user)}
               onHidePassword={() => setRevealedPassword(null)}
+              onViewDocument={() => handleViewDocument(user.document)}
             />
           ))
         )}
@@ -697,6 +846,18 @@ const Users = () => {
         visible={showDetailsModal}
         user={selectedUser}
         onClose={() => setShowDetailsModal(false)}
+        onViewDocument={() =>
+          selectedUser?.document && handleViewDocument(selectedUser.document)
+        }
+      />
+
+      <DocumentViewModal
+        visible={showDocumentModal}
+        documentUrl={selectedDocument}
+        onClose={() => {
+          setShowDocumentModal(false);
+          setSelectedDocument(null);
+        }}
       />
     </View>
   );
@@ -846,96 +1007,32 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     flex: 1,
   },
-  passwordSection: {
-    backgroundColor: COLORS.background,
+  actionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 4,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-  sectionLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 8,
-  },
-  sectionLabelText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.amber,
-  },
-  viewPasswordButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: COLORS.amber,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  viewPasswordText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  passwordRevealed: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  passwordBox: {
     flex: 1,
-    backgroundColor: "#FEF3C7",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    minWidth: "45%",
+    maxWidth: "48%",
   },
-  passwordText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.amber,
-    fontFamily: "monospace",
+  actionButtonDisabled: {
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  hideButton: {
-    padding: 8,
-  },
-  userFooter: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  statusButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "center",
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusButtonText: {
+  actionButtonText: {
     color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  detailsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.info,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "center",
-  },
-  detailsButtonText: {
-    color: "#fff",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
   },
   pagination: {
@@ -1070,6 +1167,36 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  viewButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: COLORS.info,
+  },
+  documentPreview: {
+    alignItems: "center",
+    paddingVertical: 30,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  documentName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginTop: 12,
+    paddingHorizontal: 20,
+    textAlign: "center",
+  },
+  documentHint: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 4,
   },
   // Details Modal Styles
   detailsHeader: {
