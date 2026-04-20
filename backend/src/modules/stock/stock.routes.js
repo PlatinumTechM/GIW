@@ -14,7 +14,7 @@ router.get("/natural", authenticate, (req, res) => {
 
 // LabGrownDiamond stocks route
 router.get("/lab-grown", authenticate, (req, res) => {
-  req.query.type = "LAB_GROWN";
+  req.query.type = "LABGROWN";
   return stockController.getAllStocks(req, res);
 });
 

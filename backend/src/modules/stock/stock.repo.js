@@ -1,5 +1,9 @@
 import { pool } from "../../config/db.js";
-import { buildStockFilters, getSortConfig, buildWhereClause } from "./stock.filter.js";
+import {
+  buildStockFilters,
+  getSortConfig,
+  buildWhereClause,
+} from "./stock.filter.js";
 
 // All columns from diamond_stock table
 
@@ -147,18 +151,18 @@ export const getAll = async (page, limit, sortBy, filters) => {
 
   // Sort mapping
   const sortMapping = {
-    "featured": "created_at DESC",
+    featured: "created_at DESC",
     "price-low": "final_price ASC",
     "price-high": "final_price DESC",
     "carat-low": "weight ASC",
     "carat-high": "weight DESC",
-    "color": "color ASC",
+    color: "color ASC",
   };
   const orderBy = sortMapping[sortBy] || "created_at DESC";
 
   // Array filters (comma-separated values)
   if (filters.shape) {
-    const shapes = filters.shape.split(",").map(s => s.trim().toUpperCase());
+    const shapes = filters.shape.split(",").map((s) => s.trim().toUpperCase());
     const placeholders = shapes.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(shape) IN (${placeholders})`);
     values.push(...shapes);
@@ -166,7 +170,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.color) {
-    const colors = filters.color.split(",").map(c => c.trim().toUpperCase());
+    const colors = filters.color.split(",").map((c) => c.trim().toUpperCase());
     const placeholders = colors.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(color) IN (${placeholders})`);
     values.push(...colors);
@@ -174,15 +178,19 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.clarity) {
-    const clarities = filters.clarity.split(",").map(c => c.trim().toUpperCase());
-    const placeholders = clarities.map((_, i) => `$${paramIndex + i}`).join(", ");
+    const clarities = filters.clarity
+      .split(",")
+      .map((c) => c.trim().toUpperCase());
+    const placeholders = clarities
+      .map((_, i) => `$${paramIndex + i}`)
+      .join(", ");
     whereConditions.push(`UPPER(clarity) IN (${placeholders})`);
     values.push(...clarities);
     paramIndex += clarities.length;
   }
 
   if (filters.cut) {
-    const cuts = filters.cut.split(",").map(c => c.trim().toUpperCase());
+    const cuts = filters.cut.split(",").map((c) => c.trim().toUpperCase());
     const placeholders = cuts.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(cut) IN (${placeholders})`);
     values.push(...cuts);
@@ -190,23 +198,33 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.polish) {
-    const polishes = filters.polish.split(",").map(p => p.trim().toUpperCase());
-    const placeholders = polishes.map((_, i) => `$${paramIndex + i}`).join(", ");
+    const polishes = filters.polish
+      .split(",")
+      .map((p) => p.trim().toUpperCase());
+    const placeholders = polishes
+      .map((_, i) => `$${paramIndex + i}`)
+      .join(", ");
     whereConditions.push(`UPPER(polish) IN (${placeholders})`);
     values.push(...polishes);
     paramIndex += polishes.length;
   }
 
   if (filters.symmetry) {
-    const symmetries = filters.symmetry.split(",").map(s => s.trim().toUpperCase());
-    const placeholders = symmetries.map((_, i) => `$${paramIndex + i}`).join(", ");
+    const symmetries = filters.symmetry
+      .split(",")
+      .map((s) => s.trim().toUpperCase());
+    const placeholders = symmetries
+      .map((_, i) => `$${paramIndex + i}`)
+      .join(", ");
     whereConditions.push(`UPPER(symmetry) IN (${placeholders})`);
     values.push(...symmetries);
     paramIndex += symmetries.length;
   }
 
   if (filters.fluorescence) {
-    const flours = filters.fluorescence.split(",").map(f => f.trim().toUpperCase());
+    const flours = filters.fluorescence
+      .split(",")
+      .map((f) => f.trim().toUpperCase());
     const placeholders = flours.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(fluorescence) IN (${placeholders})`);
     values.push(...flours);
@@ -214,7 +232,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.lab) {
-    const labs = filters.lab.split(",").map(l => l.trim().toUpperCase());
+    const labs = filters.lab.split(",").map((l) => l.trim().toUpperCase());
     const placeholders = labs.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(lab) IN (${placeholders})`);
     values.push(...labs);
@@ -229,7 +247,9 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.fancyIntensity) {
-    whereConditions.push(`UPPER(fancy_color_intensity) = UPPER($${paramIndex})`);
+    whereConditions.push(
+      `UPPER(fancy_color_intensity) = UPPER($${paramIndex})`,
+    );
     values.push(filters.fancyIntensity);
     paramIndex++;
   }
@@ -437,7 +457,9 @@ export const getAll = async (page, limit, sortBy, filters) => {
 
   // Media filter
   if (filters.hasMedia) {
-    whereConditions.push(`(diamond_image1 IS NOT NULL OR diamond_video IS NOT NULL)`);
+    whereConditions.push(
+      `(diamond_image1 IS NOT NULL OR diamond_video IS NOT NULL)`,
+    );
   }
 
   // Search
@@ -463,10 +485,10 @@ export const getAll = async (page, limit, sortBy, filters) => {
   const whereClause =
     whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
   // Build filters using filter module
-  const { whereConditions, values, paramIndex } = buildStockFilters(filters, 1);
-  const whereClause = buildWhereClause(whereConditions);
-  const { sortBy, sortOrder } = getSortConfig(filters);
-  
+  // const {} = buildStockFilters(filters, 1);
+  // const whereClause = buildWhereClause(whereConditions);
+  // const { sortBy, sortOrder } = getSortConfig(filters);
+
   // Count query
   const countQuery = `SELECT COUNT(*) FROM diamond_stock ${whereClause}`;
   const countResult = await pool.query(countQuery, values);
@@ -486,7 +508,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
       pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
     FROM diamond_stock
     ${whereClause}
-    ORDER BY ${sortBy} ${sortOrder}
+    ORDER BY ${orderBy}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
@@ -588,13 +610,22 @@ export const deleteByStockIds = async (stockIds, client = null) => {
 };
 
 // Get stocks by user_id with filters and sorting
-export const getByUserId = async (userId, page = 1, limit = 50, filters = {}) => {
+export const getByUserId = async (
+  userId,
+  page = 1,
+  limit = 50,
+  filters = {},
+) => {
   const offset = (page - 1) * limit;
 
   // Build filters using filter module (startIndex=2 because $1 is user_id)
   const baseConditions = [`user_id = $1`];
   const baseValues = [userId];
-  const { whereConditions, values, paramIndex } = buildStockFilters(filters, 2, baseConditions);
+  const { whereConditions, values, paramIndex } = buildStockFilters(
+    filters,
+    2,
+    baseConditions,
+  );
 
   // Combine base values with filter values
   const allValues = [...baseValues, ...values];
@@ -645,12 +676,13 @@ export const getFilterOptions = async () => {
   const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock WHERE fancy_color IS NOT NULL AND fancy_color != '' ORDER BY value`;
   const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock WHERE clarity IS NOT NULL AND clarity != '' ORDER BY value`;
 
-  const [shapeResult, colorResult, fancyColorResult, clarityResult] = await Promise.all([
-    pool.query(shapeQuery),
-    pool.query(colorQuery),
-    pool.query(fancyColorQuery),
-    pool.query(clarityQuery),
-  ]);
+  const [shapeResult, colorResult, fancyColorResult, clarityResult] =
+    await Promise.all([
+      pool.query(shapeQuery),
+      pool.query(colorQuery),
+      pool.query(fancyColorQuery),
+      pool.query(clarityQuery),
+    ]);
 
   // Combine colors and fancy colors, remove duplicates
   const dbColors = colorResult.rows.map((r) => r.value);

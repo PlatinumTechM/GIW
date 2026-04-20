@@ -40,6 +40,7 @@ export const getAllStocks = async (req, res) => {
       page = 1,
       limit = 50,
       sortBy = "featured",
+      sortOrder,
       stockId,
       certificate,
       status,
@@ -56,15 +57,16 @@ export const getAllStocks = async (req, res) => {
       growthType,
       search,
       type,
-      // Detailed filters
-      cut,
       polish,
       symmetry,
       fluorescence,
-      lab,
       fancyColor,
       fancyIntensity,
       fancyOvertone,
+      minCarat,
+      maxCarat,
+      minPrice,
+      maxPrice,
       minLength,
       maxLength,
       minWidth,
@@ -91,8 +93,6 @@ export const getAllStocks = async (req, res) => {
       eyeClean,
       shade,
       hasMedia,
-      sortBy,
-      sortOrder,
     } = req.query;
 
     const filters = {
@@ -106,7 +106,6 @@ export const getAllStocks = async (req, res) => {
       maxCarat: maxCarat ? parseFloat(maxCarat) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-      availability,
       search,
       type,
       // Detailed filters
