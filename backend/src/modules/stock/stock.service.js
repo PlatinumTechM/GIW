@@ -326,15 +326,48 @@ const FIELD_MAPPINGS = {
 
   // Media
 
-  diamond_image1: ["image 1", "image1", "photo 1", "pic 1"],
+  // diamond_image1: ["image 1", "image1", "photo 1", "pic 1"],
+// diamond_image1: ["image 1", "image1", "photo 1", "pic 1", "diamond_image", "diamond image"],
+diamond_image1: [
+  "image 1", "image1", "photo 1", "pic 1",
+  "image", "photo", "pic", "picture",
+  "diamond_image", "diamond image", "diamondimage",
+  "image_url", "image link", "image_url",
+  "link", "url", "src", "source"
+],  
+// diamond_image2: ["image 2", "image2", "photo 2", "pic 2"],
+diamond_image2: [
+  "image 2", "image2", "photo 2", "pic 2",
+  "image", "photo", "pic", "picture",
+  "diamond_image", "diamond image", "diamondimage",
+  "image_url", "image link", "image_url",
+  "link", "url", "src", "source"
+],
 
-  diamond_image2: ["image 2", "image2", "photo 2", "pic 2"],
-
-  diamond_image3: ["image 3", "image3", "photo 3", "pic 3"],
-
-  diamond_image4: ["image 4", "image4", "photo 4", "pic 4"],
-
-  diamond_image5: ["image 5", "image5", "photo 5", "pic 5"],
+    // diamond_image3: ["image 3", "image3", "photo 3", "pic 3"],
+diamond_image3: [
+  "image 3", "image3", "photo 3", "pic 3",
+  "image", "photo", "pic", "picture",
+  "diamond_image", "diamond image", "diamondimage",
+  "image_url", "image link", "image_url",
+  "link", "url", "src", "source"
+],
+  // diamond_image4: ["image 4", "image4", "photo 4", "pic 4"],
+diamond_image4: [
+  "image 4", "image4", "photo 4", "pic 4",
+  "image", "photo", "pic", "picture",
+  "diamond_image", "diamond image", "diamondimage",
+  "image_url", "image link", "image_url",
+  "link", "url", "src", "source"
+],
+  // diamond_image5: ["image 5", "image5", "photo 5", "pic 5"],
+diamond_image5: [
+  "image 5", "image5", "photo 5", "pic 5",
+  "image", "photo", "pic", "picture",
+  "diamond_image", "diamond image", "diamondimage",
+  "image_url", "image link", "image_url",
+  "link", "url", "src", "source"
+],
 
   diamond_video: ["video", "diamond video", "video link"],
 
@@ -913,8 +946,8 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
   return results;
 };
 
-export const getAllStocks = async (page, limit, filters) => {
-  return await stockRepo.getAll(page, limit, filters);
+export const getAllStocks = async (page, limit, sortBy, filters) => {
+  return await stockRepo.getAll(page, limit, sortBy, filters);
 };
 
 export const getStocksByUserId = async (userId, page, limit, filters = {}) => {

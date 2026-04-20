@@ -6,6 +6,18 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Request interceptor to add API key header
+api.interceptors.request.use(
+  (config) => {
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (apiKey) {
+      config.headers["x-api-key"] = apiKey;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
@@ -34,10 +46,11 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: async (identifier, password) => {
+  login: async (identifier, password, rememberMe = false) => {
     const response = await api.post("/auth/login", {
       email: identifier,
       password,
+      rememberMe,
     });
     return response.data;
   },
@@ -112,6 +125,58 @@ export const authAPI = {
 
   deleteSubscription: async (id) => {
     const response = await api.delete(`/admin/subscriptions/${id}`);
+    return response.data;
+  },
+};
+
+export const stockAPI = {
+  getAllStocks: async (params = {}) => {
+    const response = await api.get("/stock", { params });
+    return response.data;
+  },
+
+  getNaturalDiamonds: async (params = {}) => {
+    const response = await api.get("/stock/natural", { params });
+    return response.data;
+  },
+
+  getLabGrownDiamonds: async (params = {}) => {
+    const response = await api.get("/stock/lab-grown", { params });
+    return response.data;
+  },
+
+  getStockById: async (id) => {
+    const response = await api.get(`/stock/${id}`);
+    return response.data;
+  },
+
+  bulkUpload: async (stockData) => {
+    const response = await api.post("/stock/bulk", { stock: stockData });
+    return response.data;
+  },
+
+  createStock: async (stockData) => {
+    const response = await api.post("/stock", stockData);
+    return response.data;
+  },
+
+  updateStock: async (id, stockData) => {
+    const response = await api.put(`/stock/${id}`, stockData);
+    return response.data;
+  },
+
+  deleteStock: async (id) => {
+    const response = await api.delete(`/stock/${id}`);
+    return response.data;
+  },
+
+  getMyStocks: async (params = {}) => {
+    const response = await api.get("/stock/my", { params });
+    return response.data;
+  },
+
+  getFieldMapping: async () => {
+    const response = await api.get("/stock/fields/mapping");
     return response.data;
   },
 };

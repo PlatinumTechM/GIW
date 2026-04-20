@@ -2,15 +2,19 @@ import { authService } from "./auth.service.js";
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const result = await authService.login(email, password);
+
+    // Set session duration: 30 days if rememberMe, otherwise 7 days
+    const sessionDays = rememberMe ? 30 : 7;
+    const maxAge = sessionDays * 24 * 60 * 60 * 1000;
 
     res.cookie("token", result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      maxAge: maxAge,
+      expires: new Date(Date.now() + maxAge),
       path: "/",
     });
 

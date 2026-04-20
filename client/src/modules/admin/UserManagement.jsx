@@ -292,8 +292,8 @@ const UserManagement = () => {
         transition={{ delay: 0.4 }}
         className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden flex flex-col max-h-[600px]"
       >
-        <div className="overflow-auto flex-1">
-          <table className="w-full">
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full min-w-[750px]">
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 sticky top-0 z-10">
               <tr>
                 <th
@@ -318,28 +318,6 @@ const UserManagement = () => {
                     <SortIcon columnKey="name" />
                   </div>
                 </th>
-                <th
-                  onClick={() => handleSort("email")}
-                  className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-200/50 transition-colors sticky top-0"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 text-purple-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span>Email</span>
-                    <SortIcon columnKey="email" />
-                  </div>
-                </th>
                 <th className="px-4 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
                   <div className="flex items-center gap-2">
                     <svg
@@ -356,6 +334,24 @@ const UserManagement = () => {
                       />
                     </svg>
                     <span>Phone</span>
+                  </div>
+                </th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <span>Document</span>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-slate-700 uppercase tracking-wider sticky top-0">
@@ -447,34 +443,18 @@ const UserManagement = () => {
                         <div className="flex items-center gap-3">
                           <motion.div
                             whileHover={{ scale: 1.1, rotate: 5 }}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-md"
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-md flex-shrink-0"
                           >
                             {user.avatar}
                           </motion.div>
-                          <div>
-                            <p className="font-semibold text-slate-900">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-900 truncate">
                               {user.name}
                             </p>
+                            <p className="text-xs text-slate-500 truncate">
+                              {user.email}
+                            </p>
                           </div>
-                        </div>
-                      </td>
-                      {/* Email */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            className="w-4 h-4 text-slate-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                            />
-                          </svg>
-                          <p className="text-sm text-slate-600">{user.email}</p>
                         </div>
                       </td>
                       {/* Phone */}
@@ -497,6 +477,40 @@ const UserManagement = () => {
                             {user.phone || "N/A"}
                           </p>
                         </div>
+                      </td>
+                      {/* Document */}
+                      <td className="px-4 py-4 text-center">
+                        {user.document ? (
+                          <a
+                            href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')}${user.document}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all shadow-sm"
+                            title="View Document"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span className="text-sm text-slate-400">N/A</span>
+                        )}
                       </td>
                       {/* Password */}
                       <td className="px-4 py-4 text-center">
@@ -1068,7 +1082,7 @@ const UserManagement = () => {
                         </p>
                       </div>
                       <a
-                        href={`${import.meta.env.VITE_API_BASE_URL}/uploads/${selectedUser.document}`}
+                        href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')}${selectedUser.document}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-medium rounded-lg hover:from-red-600 hover:to-red-700 transition-all shadow-md shadow-red-200"
