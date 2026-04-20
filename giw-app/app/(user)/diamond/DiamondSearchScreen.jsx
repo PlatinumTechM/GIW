@@ -17,6 +17,7 @@ import { Image } from "expo-image";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import ShowStock from "./ShowStock";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -1049,7 +1050,7 @@ const DiamondSearchScreen = () => {
   // RENDER
   // ==========================================
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -1211,33 +1212,13 @@ const DiamondSearchScreen = () => {
 
       {/* Main Content - Diamond List */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* TODO: Replace with actual DiamondList component */}
-        <View style={styles.placeholderContainer}>
-          <MaterialIcons name="diamond" size={48} color="#CBD5E1" />
-          <Text style={styles.placeholderText}>Diamond list coming soon</Text>
-          <Text style={styles.placeholderSubtext}>
-            Type: {type} | Sort: {sortBy} | View: {viewMode}
-          </Text>
-          {activeFiltersCount > 0 && (
-            <Text style={styles.placeholderSubtext}>
-              {activeFiltersCount} filters applied
-            </Text>
-          )}
-        </View>
-
-        {/* Apply Button */}
-        <Pressable style={styles.applyButton} onPress={applyFilters}>
-          <LinearGradient
-            colors={["#1E3A8A", "#1E40AF"]}
-            style={styles.applyButtonGradient}
-          >
-            <MaterialIcons name="filter-list" size={20} color="#FFFFFF" />
-            <Text style={styles.applyButtonText}>Apply Filters</Text>
-          </LinearGradient>
-        </Pressable>
-
-        {/* Bottom Padding */}
-        <View style={{ height: 100 }} />
+        <ShowStock
+          type={type}
+          viewMode={viewMode}
+          sortBy={sortBy}
+          filters={appliedFilters}
+          searchQuery={searchQuery}
+        />
       </ScrollView>
 
       {/* Mobile Filters Modal */}
@@ -1246,7 +1227,7 @@ const DiamondSearchScreen = () => {
         animationType="slide"
         presentationStyle="fullScreen"
       >
-        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+        <View style={styles.modalContainer}>
           {/* Modal Header */}
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderLeft}>

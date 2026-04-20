@@ -212,7 +212,7 @@ const Home = () => {
 
   return (
     <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       bounces={false}
     >
