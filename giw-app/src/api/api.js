@@ -103,6 +103,44 @@ export const authAPI = {
   },
 };
 
+// Stock/Diamond API methods
+export const stockAPI = {
+  getAllStocks: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = `/stock${queryString ? `?${queryString}` : ""}`;
+    return apiRequest(endpoint, { method: "GET" });
+  },
+
+  getNaturalDiamonds: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = `/stock/natural${queryString ? `?${queryString}` : ""}`;
+    return apiRequest(endpoint, { method: "GET" });
+  },
+
+  getLabGrownDiamonds: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = `/stock/lab-grown${queryString ? `?${queryString}` : ""}`;
+    return apiRequest(endpoint, { method: "GET" });
+  },
+
+  getStockById: async (id) => {
+    return apiRequest(`/stock/${id}`, { method: "GET" });
+  },
+
+  createStock: async (stockData) => {
+    return apiRequest("/stock", {
+      method: "POST",
+      body: JSON.stringify(stockData),
+    });
+  },
+
+  getMyStocks: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = `/stock/my${queryString ? `?${queryString}` : ""}`;
+    return apiRequest(endpoint, { method: "GET" });
+  },
+};
+
 // Generic API methods for other modules
 export const api = {
   get: (endpoint) => apiRequest(endpoint, { method: "GET" }),

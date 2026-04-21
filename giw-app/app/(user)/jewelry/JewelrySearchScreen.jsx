@@ -665,7 +665,7 @@ const JewelrySearchScreen = () => {
   // RENDER
   // ==========================================
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -851,7 +851,7 @@ const JewelrySearchScreen = () => {
         animationType="slide"
         presentationStyle="fullScreen"
       >
-        <View style={[styles.modalContainer, { paddingTop: insets.top }]}>
+        <View style={styles.modalContainer}>
           {/* Modal Header */}
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderLeft}>
