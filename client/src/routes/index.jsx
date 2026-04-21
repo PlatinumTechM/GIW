@@ -21,6 +21,7 @@ import JewelryDetail from "@/modules/user/jewelry/JewelryDetail";
 import ManageSubscription from "@/modules/admin/ManageSubscription";
 import AddStock from "@/modules/stock/AddStock";
 import AddStockManual from "@/modules/stock/AddStockManual";
+import SharePage from "@/modules/share/SharePage";
 
 export const router = createBrowserRouter([
   {
@@ -130,6 +131,10 @@ export const router = createBrowserRouter([
             <AddStockManual />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "/share/:token",
+        element: <SharePage />,
       },
       {
         path: "/admin",
