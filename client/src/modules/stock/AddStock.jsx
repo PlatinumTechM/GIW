@@ -22,6 +22,12 @@ import {
   Scale,
   DollarSign,
   Tag,
+  Share2,
+  Link,
+  Copy,
+  Check,
+  MessageCircle,
+  Percent,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
@@ -298,6 +304,12 @@ const AddStock = () => {
 
   // UI States
   const [showFilters, setShowFilters] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareData, setShareData] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [markupPercentage, setMarkupPercentage] = useState("");
+  const [showMarkupModal, setShowMarkupModal] = useState(false);
 
   // User stock state
   const [userStock, setUserStock] = useState([]);
@@ -540,6 +552,67 @@ const AddStock = () => {
     setFilterColor("");
     setFilterClarity("");
     setFilterStatus("");
+  };
+//share
+  // Handle share functionality - open markup modal first
+  const handleShare = () => {
+    setMarkupPercentage("");
+    setShowMarkupModal(true);
+  };
+
+  // Generate share link with markup
+  const generateShareLinkWithMarkup = async () => {
+    setShareLoading(true);
+    try {
+      // Build filters object to send to backend
+      const filtersToShare = {
+        filters: {
+          ...appliedFilters,
+          search: userStockSearch,
+          page: userStockPage,
+          limit: 50,
+          sortBy: sortConfig.sortBy,
+          sortOrder: sortConfig.sortOrder,
+        },
+        markupPercentage: parseFloat(markupPercentage) || 0,
+      };
+
+      const response = await api.post("/share/create", filtersToShare);
+
+      if (response.data.success) {
+        setShareData(response.data.data);
+        setShowMarkupModal(false);
+        setShowShareModal(true);
+        setCopied(false);
+        notify.success("Share Link Created", markupPercentage
+          ? `Link created with ${markupPercentage}% markup on prices!`
+          : "Your stock link is ready to share!");
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      notify.error("Error", error.response?.data?.message || "Failed to create share link");
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    if (!shareData?.shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareData.shareUrl);
+      setCopied(true);
+      notify.success("Copied!", "Link copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      notify.error("Error", "Failed to copy link");
+    }
+  };
+
+  const shareViaWhatsApp = () => {
+    if (!shareData?.shareUrl) return;
+    const text = `Check out my diamond stock: ${shareData.shareUrl}\n\nLink expires in 24 hours.`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const handleSort = (column) => {
@@ -1084,13 +1157,14 @@ const AddStock = () => {
   const SimpleTableRow = ({ item, index, page }) => {
     // Calculate continuous row number: (page - 1) * 50 + index + 1
     const rowNumber = (page - 1) * 50 + index + 1;
+    const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]";
 
     return (
       <tr
-        className={`${index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]"} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}
+        className={`${rowBgClass} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}
       >
         {/* Row Number - Continuous across pages */}
-        <td className="px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 bg-inherit z-10 w-10 font-medium">
+        <td className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-10 w-10 font-medium ${rowBgClass}`}>
           {rowNumber}
         </td>
 
@@ -1102,7 +1176,7 @@ const AddStock = () => {
           return (
             <td
               key={field}
-              className={`px-3 py-3 border-r border-[#E2E8F0] whitespace-nowrap ${
+              className={`px-2 sm:px-3 py-2 sm:py-3 border-r border-[#E2E8F0] whitespace-nowrap text-xs sm:text-sm ${
                 isEmpty ? "text-[#94A3B8]" : "text-[#374151]"
               }`}
             >
@@ -1149,41 +1223,44 @@ const AddStock = () => {
       {/* Main Action Bar - Left: Filter, Right: Add/Show Stock + Import Features */}
       <div className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Right: View Mode Toggle - 3 Options */}
-            <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl">
+            <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl w-full sm:w-auto">
               <button
                 onClick={() => setViewMode("show")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "show"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 <Table className="w-4 h-4" />
-                Show Stock
+                <span className="hidden sm:inline">Show Stock</span>
+                <span className="sm:hidden">Stock</span>
               </button>
               <button
                 onClick={() => setViewMode("import")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "import"
                     ? "bg-emerald-600 text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 <Upload className="w-4 h-4" />
-                Imports
+                <span className="hidden sm:inline">Imports</span>
+                <span className="sm:hidden">Import</span>
               </button>
               <button
                 onClick={() => setViewMode("manual")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "manual"
                     ? "bg-[#fab34f] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 <Plus className="w-4 h-4" />
-                Manual Entry
+                <span className="hidden sm:inline">Manual Entry</span>
+                <span className="sm:hidden">Manual</span>
               </button>
             </div>
           </div>
@@ -1599,8 +1676,8 @@ const AddStock = () => {
         {/* VIEW 1: Show Stock - Only Table */}
         {viewMode === "show" && (
           <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center gap-4">
+            {/* Search Bar - Responsive */}
+            <div className="bg-white rounded-xl border border-[#E2E8F0] p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                 <input
@@ -1608,35 +1685,47 @@ const AddStock = () => {
                   placeholder="Search stock..."
                   value={userStockSearch}
                   onChange={(e) => setUserStockSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-sm"
                 />
               </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  hasActiveFilters()
-                    ? "bg-blue-600 text-white"
-                    : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
-                }`}
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters
-                {hasActiveFilters() && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-xs font-medium">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={fetchUserStock}
-                disabled={userStockLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] rounded-lg transition-colors disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${userStockLoading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${
+                    hasActiveFilters()
+                      ? "bg-blue-600 text-white"
+                      : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
+                  }`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {hasActiveFilters() && (
+                    <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-xs font-medium">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </button>
+
+                {/* share */}
+                <button
+                  onClick={handleShare}
+                  disabled={userStockLoading || filteredUserStock.length === 0}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Share</span>
+                </button>
+                <button
+                  onClick={fetchUserStock}
+                  disabled={userStockLoading}
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] rounded-lg transition-colors disabled:opacity-50 text-sm"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${userStockLoading ? "animate-spin" : ""}`}
+                  />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+              </div>
             </div>
 
             {/* Active Filters Display - Compact */}
@@ -1920,11 +2009,11 @@ const AddStock = () => {
                 </div>
 
                 {/* Full Width Table */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-x-auto max-h-[70vh]">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-auto max-h-[70vh]">
                   <table className="w-full text-sm border-collapse">
-                    <thead className="sticky top-0 z-30">
-                      <tr className="bg-gray-900 text-gray-900">
-                        <th className="px-2 py-3 text-center font-semibold border-r border-gray-300 sticky left-0 bg-gray-200 z-40 w-10">
+                    <thead className="sticky top-0 z-30 bg-gray-200">
+                      <tr className="bg-gray-200 text-gray-900">
+                        <th className="px-2 py-3 text-center font-semibold border-r border-gray-300 sticky left-0 z-40 w-10 bg-gray-300">
                           #
                         </th>
                         {ALL_DB_FIELDS.map((field) => {
@@ -1949,7 +2038,7 @@ const AddStock = () => {
                             <th
                               key={field}
                               onClick={() => isSortable && handleSort(field)}
-                              className={`px-3 py-3 text-left font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 ${
+                              className={`px-2 sm:px-3 py-2 sm:py-3 text-left font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm ${
                                 isSortable
                                   ? "cursor-pointer hover:bg-gray-300 transition-all group"
                                   : ""
@@ -1985,9 +2074,9 @@ const AddStock = () => {
 
                 {/* Pagination */}
                 {userStockTotalPages > 1 && (
-                  <div className="px-4 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
+                  <div className="px-4 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p className="text-sm text-[#64748B]">
-                      Showing page{" "}
+                      Page{" "}
                       <span className="font-semibold text-[#0F172A]">
                         {userStockPage}
                       </span>{" "}
@@ -2002,10 +2091,10 @@ const AddStock = () => {
                           setUserStockPage((p) => Math.max(1, p - 1))
                         }
                         disabled={userStockPage === 1}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronLeft className="w-4 h-4" />
-                        Previous
+                        <span className="hidden sm:inline">Prev</span>
                       </button>
                       <button
                         onClick={() =>
@@ -2014,9 +2103,9 @@ const AddStock = () => {
                           )
                         }
                         disabled={userStockPage === userStockTotalPages}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
-                        Next
+                        <span className="hidden sm:inline">Next</span>
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -2191,14 +2280,14 @@ const AddStock = () => {
                 </div>
 
                 {/* Data Preview Table */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-x-auto max-h-[60vh]">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] shadow-sm overflow-auto max-h-[60vh]">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 z-20 bg-slate-700 text-white">
                       <tr>
                         {columns.map((col) => (
                           <th
                             key={col}
-                            className="px-3 py-2 text-left font-semibold whitespace-nowrap"
+                            className="px-2 sm:px-3 py-2 text-left font-semibold whitespace-nowrap text-xs sm:text-sm"
                           >
                             {col}
                           </th>
@@ -2214,7 +2303,7 @@ const AddStock = () => {
                           {columns.map((col) => (
                             <td
                               key={col}
-                              className="px-3 py-2 whitespace-nowrap"
+                              className="px-2 sm:px-3 py-2 whitespace-nowrap text-xs sm:text-sm"
                             >
                               {row[col] || "-"}
                             </td>
@@ -2258,6 +2347,227 @@ const AddStock = () => {
           </div>
         </div>
       )}
+
+      {/* share */}
+      {/* Markup Input Modal - First Step */}
+      <AnimatePresence>
+        {showMarkupModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMarkupModal(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Percent className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          Price Markup
+                        </h3>
+                        <p className="text-sm text-indigo-100">
+                          Add percentage to price per carat
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowMarkupModal(false)}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Markup Percentage (%)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={markupPercentage}
+                        onChange={(e) => setMarkupPercentage(e.target.value)}
+                        placeholder="Enter percentage (e.g., 10)"
+                        className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        min="0"
+                        max="1000"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+                        %
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Leave empty for no markup. Price per carat will be increased by this percentage.
+                    </p>
+                  </div>
+
+                  {/* Preview */}
+                  {markupPercentage && parseFloat(markupPercentage) > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <p className="text-sm text-amber-800">
+                        <span className="font-semibold">Preview:</span> Price per carat will be increased by{" "}
+                        <span className="font-semibold">{markupPercentage}%</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={() => setShowMarkupModal(false)}
+                      className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={generateShareLinkWithMarkup}
+                      disabled={shareLoading}
+                      className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {shareLoading ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Share2 className="w-4 h-4" />
+                          Generate Link
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Share Modal - Second Step */}
+      <AnimatePresence>
+        {showShareModal && shareData && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowShareModal(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                        <Share2 className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          Share Stock
+                        </h3>
+                        <p className="text-indigo-100 text-sm">
+                          Link expires in 24 hours
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowShareModal(false)}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  {/* Link Display */}
+                  <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3 border border-gray-200">
+                    <Link className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <p className="text-sm text-gray-600 truncate flex-1">
+                      {shareData.shareUrl}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Copy Link */}
+                    <button
+                      onClick={copyToClipboard}
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
+                        copied
+                          ? "bg-green-100 text-green-700 border-2 border-green-200"
+                          : "bg-indigo-50 text-indigo-700 border-2 border-indigo-100 hover:bg-indigo-100"
+                      }`}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+
+                    {/* WhatsApp */}
+                    <button
+                      onClick={shareViaWhatsApp}
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-green-50 text-green-700 border-2 border-green-100 hover:bg-green-100 rounded-xl font-medium transition-all"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </button>
+                  </div>
+
+                  {/* Info */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-sm text-amber-800 flex items-center gap-2">
+                      <span className="font-medium">Note:</span>
+                      Anyone with this link can view your filtered stock data for 24 hours.
+                      Pricing information is hidden in shared view.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                  <button
+                    onClick={() => setShowShareModal(false)}
+                    className="w-full py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
