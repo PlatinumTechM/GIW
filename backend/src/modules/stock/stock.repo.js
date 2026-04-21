@@ -130,7 +130,7 @@ export const getAll = async (page, limit, filters) => {
   // Build filters using filter module
   const { whereConditions, values, paramIndex } = buildStockFilters(filters, 1);
   const whereClause = buildWhereClause(whereConditions);
-  const { sortBy, sortOrder } = getSortConfig(filters);
+  const { orderClause } = getSortConfig(filters);
 
   // Count query
   const countQuery = `SELECT COUNT(*) FROM diamond_stock ${whereClause}`;
@@ -151,7 +151,7 @@ export const getAll = async (page, limit, filters) => {
       pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
     FROM diamond_stock
     ${whereClause}
-    ORDER BY ${sortBy} ${sortOrder}
+    ORDER BY ${orderClause}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
@@ -265,14 +265,16 @@ export const getByUserId = async (userId, page = 1, limit = 50, filters = {}) =>
   const allValues = [...baseValues, ...values];
 
   const whereClause = buildWhereClause(whereConditions);
-  const { sortBy, sortOrder } = getSortConfig(filters);
+  const { orderClause } = getSortConfig(filters);
 
   // Count query
   const countQuery = `SELECT COUNT(*) FROM diamond_stock ${whereClause}`;
   const countResult = await pool.query(countQuery, allValues);
   const totalCount = parseInt(countResult.rows[0].count);
 
-  // Data query
+  // Data query - use paramIndex for correct LIMIT/OFFSET parameter placement
+  const limitIndex = paramIndex;
+  const offsetIndex = paramIndex + 1;
   const dataQuery = `
     SELECT
       id, type, user_id, stock_id, certificate_number, weight, shape, color,
@@ -286,8 +288,8 @@ export const getByUserId = async (userId, page = 1, limit = 50, filters = {}) =>
       pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
     FROM diamond_stock
     ${whereClause}
-    ORDER BY ${sortBy} ${sortOrder}
-    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    ORDER BY ${orderClause}
+    LIMIT $${limitIndex} OFFSET $${offsetIndex}
   `;
 
   const dataValues = [...allValues, limit, offset];
@@ -328,5 +330,8 @@ export const getFilterOptions = async () => {
     clarities: clarityResult.rows.map((r) => r.value),
   };
 };
+
+// Export pool query for raw queries
+export const query = (text, params) => pool.query(text, params);
 
 export { ALL_COLUMNS };
