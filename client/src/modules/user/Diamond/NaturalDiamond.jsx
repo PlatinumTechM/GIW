@@ -33,7 +33,11 @@ const sorts = [
 // Animation variants - defined outside component to prevent re-creation
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 const staggerContainer = {
@@ -50,7 +54,7 @@ const NaturalDiamond = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Use shared diamond filters hook
   const filters = useDiamondFilters();
   const {
@@ -89,7 +93,7 @@ const NaturalDiamond = () => {
     toggleCut,
     togglePolish,
     toggleSymmetry,
-    toggleCertification
+    toggleCertification,
   } = filters;
 
   // Sync pending filters to applied on initial mount
@@ -97,19 +101,17 @@ const NaturalDiamond = () => {
     syncPendingToApplied();
   }, []);
 
-  const filterContentJsx = (
-    <DiamondFilterContent filters={filters} />
-  );
+  const filterContentJsx = <DiamondFilterContent filters={filters} />;
 
   // Lock body scroll when mobile filter is open
   useEffect(() => {
     if (showMobileFilters) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [showMobileFilters]);
 
@@ -130,12 +132,20 @@ const NaturalDiamond = () => {
             className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <motion.div variants={fadeInUp} className="mb-2 flex items-center gap-2 text-sm text-[#64748B]">
-                <Link to="/user/home" className="hover:text-[#1E3A8A]">Home</Link>
+              <motion.div
+                variants={fadeInUp}
+                className="mb-2 flex items-center gap-2 text-sm text-[#64748B]"
+              >
+                <Link to="/user/home" className="hover:text-[#1E3A8A]">
+                  Home
+                </Link>
                 <span>/</span>
                 <span className="text-[#1E3A8A]">Natural Diamonds</span>
               </motion.div>
-              <motion.h1 variants={fadeInUp} className="text-2xl font-bold text-[#0F172A]">
+              <motion.h1
+                variants={fadeInUp}
+                className="text-2xl font-bold text-[#0F172A]"
+              >
                 Natural Diamond Collection
               </motion.h1>
               <motion.p variants={fadeInUp} className="text-sm text-[#64748B]">
@@ -144,7 +154,7 @@ const NaturalDiamond = () => {
             </div>
             <motion.div variants={fadeInUp} className="flex items-center gap-3">
               <Link
-                to="/lab-grown-diamonds"
+                to="/user/lab-grown-diamonds"
                 className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
               >
                 <FlaskConical className="h-4 w-4" />
@@ -179,7 +189,10 @@ const NaturalDiamond = () => {
                   <span className="text-sm text-[#64748B]">•</span>
                   <span className="text-sm text-[#64748B]">Active:</span>
                   {selectedShapes.map((shape) => (
-                    <span key={shape} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={shape}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       {shape}
                       <button onClick={() => toggleShape(shape)}>
                         <X className="h-3 w-3" />
@@ -187,7 +200,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedWhiteColors.map((color) => (
-                    <span key={color} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={color}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       Color {color}
                       <button onClick={() => toggleWhiteColor(color)}>
                         <X className="h-3 w-3" />
@@ -195,7 +211,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedFancyColors.map((color) => (
-                    <span key={color} className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#BE185D]">
+                    <span
+                      key={color}
+                      className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#BE185D]"
+                    >
                       Fancy {color}
                       <button onClick={() => toggleFancyColor(color)}>
                         <X className="h-3 w-3" />
@@ -219,7 +238,10 @@ const NaturalDiamond = () => {
                     </span>
                   )}
                   {selectedClarities.map((clarity) => (
-                    <span key={clarity} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={clarity}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       {clarity}
                       <button onClick={() => toggleClarity(clarity)}>
                         <X className="h-3 w-3" />
@@ -227,7 +249,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedCuts.map((cut) => (
-                    <span key={cut} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={cut}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       {cut}
                       <button onClick={() => toggleCut(cut)}>
                         <X className="h-3 w-3" />
@@ -235,7 +260,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedPolish.map((polish) => (
-                    <span key={polish} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={polish}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       Polish: {polish}
                       <button onClick={() => togglePolish(polish)}>
                         <X className="h-3 w-3" />
@@ -243,7 +271,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedSymmetry.map((symmetry) => (
-                    <span key={symmetry} className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                    <span
+                      key={symmetry}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
                       Sym: {symmetry}
                       <button onClick={() => toggleSymmetry(symmetry)}>
                         <X className="h-3 w-3" />
@@ -251,7 +282,10 @@ const NaturalDiamond = () => {
                     </span>
                   ))}
                   {selectedCertifications.map((cert) => (
-                    <span key={cert} className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#86198F]">
+                    <span
+                      key={cert}
+                      className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#86198F]"
+                    >
                       {cert}
                       <button onClick={() => toggleCertification(cert)}>
                         <X className="h-3 w-3" />
@@ -260,11 +294,15 @@ const NaturalDiamond = () => {
                   ))}
                   {certificateType && (
                     <span className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#86198F]">
-                      {certificateType === 'certified' ? 'Certified' : 'Non-certified'}
-                      <button onClick={() => {
-                        setCertificateType(null);
-                        setSelectedCertifications([]);
-                      }}>
+                      {certificateType === "certified"
+                        ? "Certified"
+                        : "Non-certified"}
+                      <button
+                        onClick={() => {
+                          setCertificateType(null);
+                          setSelectedCertifications([]);
+                        }}
+                      >
                         <X className="h-3 w-3" />
                       </button>
                     </span>
@@ -288,7 +326,12 @@ const NaturalDiamond = () => {
                   {(caratMin || caratMax) && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       {caratMin || "0"} - {caratMax || "∞"} ct
-                      <button onClick={() => { setCaratMin(""); setCaratMax(""); }}>
+                      <button
+                        onClick={() => {
+                          setCaratMin("");
+                          setCaratMax("");
+                        }}
+                      >
                         <X className="h-3 w-3" />
                       </button>
                     </span>
@@ -361,7 +404,6 @@ const NaturalDiamond = () => {
 
             {/* Main Content Area */}
             <div className="flex-1">
-
               {/* Toolbar */}
               <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
@@ -444,7 +486,9 @@ const NaturalDiamond = () => {
                     <Gem className="w-6 h-6 text-[#1E3A8A]" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold text-[#0F172A]">Filters</h2>
+                    <h2 className="text-sm font-semibold text-[#0F172A]">
+                      Filters
+                    </h2>
                     <p className="text-xs text-[#64748B]">Natural Diamonds</p>
                   </div>
                 </div>

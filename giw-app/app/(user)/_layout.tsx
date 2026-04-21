@@ -137,6 +137,7 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
           // Derive icon per route name
           const iconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
             home: "home",
+            "stock/index": "inventory-2",
             profile: "account-circle",
           };
 
@@ -168,15 +169,33 @@ export default function UserLayout() {
         options={{ title: "Home", tabBarLabel: "Home" }}
       />
       <Tabs.Screen
+        name="stock/index"
+        options={{ title: "My Stock", tabBarLabel: "Stock" }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{ title: "Profile", tabBarLabel: "Profile" }}
+      />
+      <Tabs.Screen
+        name="stock/AddStock"
+        options={{ tabBarButton: () => null }}
+      />
+      <Tabs.Screen name="stock/[id]" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen
+        name="stock/StockListScreen"
+        options={{ tabBarButton: () => null }}
       />
       <Tabs.Screen
         name="diamond/index"
         options={{ tabBarButton: () => null }}
       />
+      <Tabs.Screen name="diamond/[id]" options={{ tabBarButton: () => null }} />
       <Tabs.Screen
         name="diamond/DiamondSearchScreen"
+        options={{ tabBarButton: () => null }}
+      />
+      <Tabs.Screen
+        name="diamond/ShowStock"
         options={{ tabBarButton: () => null }}
       />
       <Tabs.Screen

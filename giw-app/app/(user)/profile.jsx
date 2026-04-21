@@ -364,7 +364,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <LinearGradient
           colors={["#1E3A8A", "#3B82F6"]}
           style={styles.loadingGradient}
@@ -379,7 +379,7 @@ const Profile = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={[styles.container, { paddingTop: insets.top }]}
+      style={styles.container}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
