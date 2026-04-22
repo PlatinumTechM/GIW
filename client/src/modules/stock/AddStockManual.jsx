@@ -540,6 +540,8 @@ const AddStockManual = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState(null);
   const [imagePreview, setImagePreview] = useState({
     diamond_image1: null,
     diamond_image2: null,
@@ -617,8 +619,8 @@ const AddStockManual = () => {
       const fieldNames = missingFields
         .map((field) => field.replace(/_/g, " ").toUpperCase())
         .join(", ");
-      notify.error(
-        "Validation Error",
+      notify.warning(
+        "Required Fields",
         `Please fill in all required fields: ${fieldNames}`,
       );
       return;
@@ -653,10 +655,26 @@ const AddStockManual = () => {
       });
     } catch (error) {
       console.error("Submit error:", error);
-      notify.error(
-        "Error",
-        error.response?.data?.message || "Failed to add stock",
-      );
+      const errorMessage = error.response?.data?.message || "Failed to add stock";
+      
+      // Handle subscription limit error
+      if (errorMessage.includes("Subscription limit")) {
+        setSubscriptionError(errorMessage);
+        setShowSubscriptionModal(true);
+      } 
+      // Handle duplicate stock_id error
+      else if (errorMessage.includes("already exists")) {
+        notify.error(
+          "Duplicate Stock ID",
+          errorMessage
+        );
+      }
+      else {
+        notify.error(
+          "Error",
+          errorMessage,
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1248,6 +1266,7 @@ const AddStockManual = () => {
                     name="discount"
                     type="number"
                     step="0.01"
+                    min={0}
                     value={formData.discount}
                     onChange={handleInputChange}
                     placeholder="0.00"
@@ -1421,6 +1440,102 @@ const AddStockManual = () => {
         </div>
       </div>
 
+      {/* Subscription Limit Modal */}
+      <AnimatePresence>
+        {showSubscriptionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            onClick={() => setShowSubscriptionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Premium Header */}
+              <div className="relative bg-gradient-to-br from-amber-500 via-orange-400 to-red-500 px-6 py-8">
+                <div className="absolute top-0 right-0 opacity-10">
+                  <DollarSign className="w-32 h-32" />
+                </div>
+                <div className="relative flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 border border-white/30">
+                    <DollarSign className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      Limit Reached
+                    </h3>
+                    <p className="text-white/90 text-sm">
+                      Time to grow your business
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message Body */}
+              <div className="px-6 py-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {subscriptionError}
+                  </p>
+                </div>
+
+                {/* Benefits */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Add more stocks</span> with higher limits
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Bulk import</span> unlimited records
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <CheckCircle className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Priority support</span> and advanced features
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                <button
+                  onClick={() => setShowSubscriptionModal(false)}
+                  className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Continue Later
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = "/pricing";
+                    setShowSubscriptionModal(false);
+                  }}
+                  className="flex-1 px-4 py-3 text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:shadow-lg hover:shadow-orange-200 transition-all hover:scale-105"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

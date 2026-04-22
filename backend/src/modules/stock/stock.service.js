@@ -938,6 +938,87 @@ const convertToDbFormat = (mappedData, userId = null) => {
   };
 };
 
+const getSubscriptionRemaining = async (clientOrPool, userId) => {
+  if (!userId) return { totalLimit: 0, uploaded: 0, remaining: Infinity };
+
+  const usageResult = await clientOrPool.query(
+    "SELECT total_limit, uploaded FROM subscription_usage WHERE user_id = $1",
+    [userId]
+  );
+
+  let totalLimit = 0;
+  let uploaded = 0;
+
+  if (usageResult.rows.length > 0) {
+    totalLimit = parseInt(usageResult.rows[0].total_limit);
+    uploaded = parseInt(usageResult.rows[0].uploaded || 0);
+  } else {
+    const subResult = await clientOrPool.query(
+      `
+      SELECT sp.stock_limit 
+      FROM user_subscriptions us
+      JOIN subscription_plans sp ON us.plan_id = sp.id
+      WHERE us.user_id = $1 AND us.status = 'active'
+      ORDER BY us.id DESC LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (subResult.rows.length === 0) {
+      return { totalLimit: 0, uploaded: 0, remaining: 0, noSubscription: true };
+    }
+    totalLimit = parseInt(subResult.rows[0].stock_limit || 0);
+    uploaded = 0;
+  }
+
+  return { totalLimit, uploaded, remaining: totalLimit - uploaded };
+};
+
+const updateSubscriptionUsage = async (clientOrPool, userId, addedStockCount) => {
+  if (!userId || addedStockCount <= 0) return;
+
+  // Check if usage record exists
+  const usageResult = await clientOrPool.query(
+    "SELECT id FROM subscription_usage WHERE user_id = $1",
+    [userId]
+  );
+
+  if (usageResult.rows.length > 0) {
+    // Update existing
+    await clientOrPool.query(
+      `
+      UPDATE subscription_usage 
+      SET uploaded = uploaded + $1, updated_at = CURRENT_TIMESTAMP
+      WHERE user_id = $2
+      `,
+      [addedStockCount, userId]
+    );
+  } else {
+    // Insert new usage record by fetching latest subscription
+    const subResult = await clientOrPool.query(
+      `
+      SELECT us.id as subscription_id, sp.stock_limit 
+      FROM user_subscriptions us
+      JOIN subscription_plans sp ON us.plan_id = sp.id
+      WHERE us.user_id = $1
+      ORDER BY us.id DESC LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (subResult.rows.length > 0) {
+      const { subscription_id, stock_limit } = subResult.rows[0];
+      await clientOrPool.query(
+        `
+        INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
+        VALUES ($1, $2, $3, $4)
+        `,
+        [userId, subscription_id, stock_limit || 0, addedStockCount]
+      );
+    }
+  }
+};
+
 export const bulkUpload = async (stockDataArray, userId = null, importType = null) => {
   const results = {
     insertedCount: 0,
@@ -958,7 +1039,6 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       // Apply import type if provided
       if (importType) {
         dbData.type = importType;
-        console.log(`[bulkUpload] Applied importType: ${importType} to row ${i}, dbData.type: ${dbData.type}`);
       }
       results.validRows.push(dbData);
     } else {
@@ -984,17 +1064,49 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       for (const row of results.validRows) {
         uniqueRowsMap.set(row.stock_id, row);
       }
-      const uniqueRows = Array.from(uniqueRowsMap.values());
+      let uniqueRows = Array.from(uniqueRowsMap.values());
 
       // Step 2: Get all stock_ids from incoming data
       const incomingStockIds = uniqueRows
         .map((row) => row.stock_id)
         .filter((id) => id);
 
-      // Step 3: Delete existing records with same stock_ids (replace behavior)
+      // Identify which stocks are NEW vs EXISTING
+      let existingStockIds = new Set();
       if (incomingStockIds.length > 0) {
+        const checkQuery = `SELECT stock_id FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[])`;
+        const checkRes = await client.query(checkQuery, [incomingStockIds.map(id => id.toUpperCase())]);
+        checkRes.rows.forEach(r => existingStockIds.add(r.stock_id.toUpperCase()));
+      }
+
+      let skippedDueToLimitCount = 0;
+      let limitReached = false;
+      let limitMessage = null;
+
+      if (userId) {
+        const quota = await getSubscriptionRemaining(client, userId);
+        if (quota.noSubscription) {
+          throw new Error("No active subscription found. Cannot add stock.");
+        }
+
+        const newRows = uniqueRows.filter(r => !existingStockIds.has(r.stock_id.toUpperCase()));
+        const existingRows = uniqueRows.filter(r => existingStockIds.has(r.stock_id.toUpperCase()));
+
+        if (newRows.length > quota.remaining) {
+          const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
+          skippedDueToLimitCount = newRows.length - allowedNewRows.length;
+          uniqueRows = [...existingRows, ...allowedNewRows];
+          limitReached = true;
+          limitMessage = `Subscription limit reached. ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan.`;
+        }
+      }
+
+      const finalStockIds = uniqueRows.map(r => r.stock_id).filter(Boolean);
+
+      // Step 3: Delete existing records with same stock_ids (replace behavior)
+      if (finalStockIds.length > 0) {
         const deletedCount = await stockRepo.deleteByStockIds(
-          incomingStockIds,
+          finalStockIds,
           client,
         );
         results.replacedCount = deletedCount;
@@ -1004,7 +1116,18 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       const inserted = await stockRepo.bulkInsert(uniqueRows, client);
       results.insertedCount = inserted;
 
+      const newStockCount = inserted - results.replacedCount;
+      if (newStockCount > 0 && userId) {
+        await updateSubscriptionUsage(client, userId, newStockCount);
+      }
+
       await client.query("COMMIT");
+      
+      if (limitReached) {
+        results.limitReached = true;
+        results.limitMessage = limitMessage;
+        results.skippedDueToLimitCount = skippedDueToLimitCount;
+      }
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -1049,7 +1172,23 @@ export const createStock = async (stockData, userId = null) => {
   const dbData = convertToDbFormat(mappedData, userId);
 
   try {
-    return await stockRepo.create(dbData);
+    if (userId) {
+      const quota = await getSubscriptionRemaining(pool, userId);
+      if (quota.noSubscription) {
+        throw new Error("No active subscription found. Cannot add stock.");
+      }
+      if (quota.remaining <= 0) {
+        throw new Error(`Subscription limit reached. Your stock limit of ${quota.totalLimit} is fully used. Please upgrade your subscription plan.`);
+      }
+    }
+
+    const result = await stockRepo.create(dbData);
+
+    if (userId) {
+      await updateSubscriptionUsage(pool, userId, 1);
+    }
+
+    return result;
   } catch (error) {
     // Handle unique constraint violation for stock_id
     if (error.code === "23505" && error.constraint === "diamond_stock_stock_id_key") {
