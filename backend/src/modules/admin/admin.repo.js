@@ -22,10 +22,7 @@ export const getAllUsers = async () => {
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
     ORDER BY u.created_at DESC
   `;
-export const getAllUsers = async () => {
-  const query = `SELECT id, name, email, password, company, phone, address,
-                 gst, document, is_active, role, created_at
-                 FROM users ORDER BY created_at DESC`;
+
   const result = await pool.query(query);
   return result.rows;
 };
@@ -218,8 +215,13 @@ export const updateUserPlan = async (userId, planId, durationMonths) => {
     VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
     RETURNING id, user_id, plan_id, start_date, end_date, status
   `;
-  const result = await pool.query(insertQuery, [userId, planId, startDate, endDate]);
-  
+  const result = await pool.query(insertQuery, [
+    userId,
+    planId,
+    startDate,
+    endDate,
+  ]);
+
   return result.rows[0];
 };
 

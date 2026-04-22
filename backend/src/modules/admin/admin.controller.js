@@ -58,7 +58,7 @@ export const getSubscriptions = async (req, res) => {
 };
 
 // Get only active subscriptions (for public pricing page)
-const getActiveSubscriptions = async (req, res) => {
+export const getActiveSubscriptions = async (req, res) => {
   try {
     const subscriptions = await adminService.getActiveSubscriptions();
     res.status(200).json({
@@ -225,11 +225,17 @@ export const updateUserPlan = async (req, res) => {
       });
     }
 
-    const result = await adminService.updateUserPlan(userId, planId, durationMonths);
+    const result = await adminService.updateUserPlan(
+      userId,
+      planId,
+      durationMonths,
+    );
 
     res.status(200).json({
       success: true,
-      message: planId ? "User plan updated successfully" : "User plan removed successfully",
+      message: planId
+        ? "User plan updated successfully"
+        : "User plan removed successfully",
       subscription: result.subscription,
       user: result.user,
     });
