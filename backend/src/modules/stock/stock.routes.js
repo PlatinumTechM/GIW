@@ -8,13 +8,13 @@ const router = express.Router();
 
 // NaturalDiamond stocks route
 router.get("/natural", authenticate, (req, res) => {
-  req.query.type = "NATURAL";
+  req.diamondType = "NATURAL";
   return stockController.getAllStocks(req, res);
 });
 
 // LabGrownDiamond stocks route
 router.get("/lab-grown", authenticate, (req, res) => {
-  req.query.type = "LABGROWN";
+  req.diamondType = "LABGROWN";
   return stockController.getAllStocks(req, res);
 });
 

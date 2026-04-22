@@ -28,6 +28,36 @@ const DiamondDetail = () => {
   const [copied, setCopied] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
+  // Calculate available media types based on available URLs
+  const getAvailableMediaTypes = (stock) => {
+    const mediaTypes = [];
+
+    // Check for images (diamond_image1-5)
+    const hasImages = [
+      stock.diamond_image1,
+      stock.diamond_image2,
+      stock.diamond_image3,
+      stock.diamond_image4,
+      stock.diamond_image5,
+    ].some(img => img && img.trim() !== "");
+
+    if (hasImages) mediaTypes.push("Photo");
+
+    // Check for video
+    const hasVideo = stock.diamond_video && stock.diamond_video.trim() !== "" && stock.diamond_video.toUpperCase() !== "NONE";
+    if (hasVideo) mediaTypes.push("Video");
+
+    // Check for certificate
+    const hasCertificate = stock.certificate_image && stock.certificate_image.trim() !== "" && stock.certificate_image.toUpperCase() !== "NONE";
+    if (hasCertificate) mediaTypes.push("Certificate");
+
+    // Return formatted string
+    if (mediaTypes.length === 0) return "None";
+    if (mediaTypes.length === 1) return mediaTypes[0] + " Only";
+    if (mediaTypes.length === 2) return mediaTypes.join(" + ");
+    return mediaTypes.slice(0, -1).join(", ") + " & " + mediaTypes[mediaTypes.length - 1];
+  };
+
   // Map backend data to frontend format (same as ShowStock)
   const mapDiamondData = (stock) => {
     return {
@@ -44,9 +74,12 @@ const DiamondDetail = () => {
       polish: stock.polish,
       symmetry: stock.symmetry,
       fluorescence: stock.fluorescence,
-      price: Math.floor(stock.final_price),
+      price: Math.floor(stock.price_per_carat),
+      finalPrice: stock.final_price ? Math.floor(stock.final_price) : null,
+      discount: stock.discount || null,
       certification: stock.lab,
       certificationNumber: stock.certificate_number,
+      status: stock.status,
       available: stock.status === "AVAILABLE",
       table: stock.table_percentage,
       depth: stock.depth_percentage,
@@ -63,9 +96,31 @@ const DiamondDetail = () => {
       eyeClean: stock.eye_clean,
       shade: stock.shade,
       type: stock.type,
+      fluorescenceColor: stock.fluorescence_color || null,
+      fluorescenceIntensity: stock.fluorescence_intensity || null,
+      treatment: stock.treatment || null,
+      heartArrow: stock.heart_arrow || null,
+      laserDescription: stock.laser_description || null,
+      growthType: stock.growth_type || null,
+      keyToSymbol: stock.key_to_symbol || null,
+      lwRatio: stock.lw_ratio || null,
+      culetCondition: stock.culet_condition || null,
       location: stock.city || "Surat",
-      certificateImage: stock.certificate_image,
-      video360: stock.diamond_video,
+      state: stock.state || null,
+      country: stock.country || null,
+      certificateImage: stock.certificate_image && stock.certificate_image.trim() !== "" && stock.certificate_image.toUpperCase() !== "NONE" ? stock.certificate_image : null,
+      video360: stock.diamond_video && stock.diamond_video.trim() !== "" && stock.diamond_video.toUpperCase() !== "NONE" ? stock.diamond_video : null,
+      // Fancy color fields
+      fancyColor: stock.fancy_color || null,
+      colorIntensity: stock.color_intensity || stock.fancy_color_intensity || null,
+      colorOvertone: stock.color_overtone || stock.fancy_color_overtone || null,
+      // Media fields
+      diamondImage1: stock.diamond_image1,
+      diamondImage2: stock.diamond_image2,
+      diamondImage3: stock.diamond_image3,
+      diamondImage4: stock.diamond_image4,
+      diamondImage5: stock.diamond_image5,
+      mediaAvailable: getAvailableMediaTypes(stock),
     };
   };
 
@@ -419,9 +474,24 @@ const DiamondDetail = () => {
                 className="relative aspect-square overflow-hidden rounded-2xl flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #E2E8F0 100%)` }}
               >
+                {diamond.diamondImage1 ? (
+                  <motion.img
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    src={diamond.diamondImage1}
+                    alt={`${diamond.shape} Diamond`}
+                    className="w-full h-full object-contain p-4"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextElementSibling.style.display = "flex";
+                    }}
+                  />
+                ) : null}
                 <motion.div
                   animate={floatingAnimation}
-                  className="flex flex-col items-center gap-4"
+                  className={`flex flex-col items-center gap-4 ${diamond.diamondImage1 ? "hidden" : "flex"}`}
+                  id="diamond-placeholder"
                 >
                   <div
                     className="flex h-24 w-24 items-center justify-center rounded-2xl shadow-lg"
@@ -501,7 +571,7 @@ const DiamondDetail = () => {
                     <p className="text-sm" style={{ color: theme.textMuted }}>Cert. No: {diamond.certificationNumber}</p>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {diamond.video360 && (
+                    {diamond.video360 ? (
                       <motion.button
                         whileHover={{ scale: 1.05, y: -2 }}
                         whileTap={{ scale: 0.95 }}
@@ -529,8 +599,12 @@ const DiamondDetail = () => {
                         </motion.div>
                         View 360
                       </motion.button>
+                    ) : (
+                      <span className="text-sm font-medium" style={{ color: theme.textMuted }}>
+                        Video Link Not Available
+                      </span>
                     )}
-                    {diamond.certificateImage && (
+                    {diamond.certificateImage ? (
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
@@ -553,6 +627,10 @@ const DiamondDetail = () => {
                         <FileCheck className="h-3.5 w-3.5" />
                         View Report
                       </motion.button>
+                    ) : (
+                      <span className="text-sm font-medium" style={{ color: theme.textMuted }}>
+                        Certificate Link Not Available
+                      </span>
                     )}
                   </div>
                 </div>
@@ -574,27 +652,66 @@ const DiamondDetail = () => {
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { label: "White Inclusion", value: diamond.whiteInclusion || "None" },
-                    { label: "Black Table", value: diamond.blackTable || "None" },
-                    { label: "Black Crown", value: diamond.blackCrown || "None" },
-                    { label: "Open Inclusion", value: diamond.openInclusion || "None" },
                     { label: "Fancy Color", value: diamond.fancyColor || "None" },
                     { label: "Color Intensity", value: diamond.colorIntensity || "None" },
                     { label: "Color Overtone", value: diamond.colorOvertone || "None" },
-                    { label: "Location", value: diamond.location || "Surat" },
-                    { label: "Culet", value: diamond.culet || "None" },
-                    { label: "Luster", value: diamond.luster || "None" },
+                    { label: "City", value: diamond.location || "Surat" },
+                    { label: "State", value: diamond.state || "None" },
+                    { label: "Country", value: diamond.country || "None" },
                     { label: "Fluorescence", value: diamond.fluorescence || "None" },
-                    { label: "Media Available", value: diamond.hasMedia ? "Yes (Video & Images)" : "Photos Only" },
-                    { label: "Origin", value: diamond.type?.toLowerCase().includes("lab") ? "Laboratory Grown" : "Natural Earth Mined" },
-                  ].map((item, idx) => (
+                    diamond.mediaAvailable && diamond.mediaAvailable !== "None" && { label: "Media Available", value: diamond.mediaAvailable },
+                  ].filter(Boolean).map((item, idx) => (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * idx }}
                       className="flex items-center justify-between pb-2 last:pb-0"
-                      style={{ borderBottom: idx < 12 ? `1px solid ${theme.border}` : "none" }}
+                      style={{ borderBottom: idx < 6 ? `1px solid ${theme.border}` : "none" }}
+                    >
+                      <span style={{ color: theme.textMuted }}>{item.label}</span>
+                      <span className="font-semibold" style={{ color: theme.secondary }}>{item.value}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* More Details */}
+              <motion.div
+                variants={itemVariants}
+                whileHover={{ boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.1)" }}
+                className="rounded-xl p-5 transition-all"
+                style={{
+                  background: "transparent",
+                  border: `1px solid ${theme.border}`
+                }}
+              >
+                <h3 className="mb-4 flex items-center gap-2 font-semibold" style={{ color: theme.secondary }}>
+                  <FileCheck className="h-5 w-5" style={{ color: theme.primary }} />
+                  More Details
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Fluorescence Color", value: diamond.fluorescenceColor || "None" },
+                    { label: "Fluorescence Intensity", value: diamond.fluorescenceIntensity || "None" },
+                    { label: "Shade", value: diamond.shade || "None" },
+                    { label: "Milky", value: diamond.milky || "None" },
+                    { label: "Eye Clean", value: diamond.eyeClean || "None" },
+                    { label: "Treatment", value: diamond.treatment || "None" },
+                    { label: "Heart & Arrow", value: diamond.heartArrow || "None" },
+                    { label: "Laser Description", value: diamond.laserDescription || "None" },
+                    { label: "Growth Type", value: diamond.growthType || "None" },
+                    { label: "Key to Symbol", value: diamond.keyToSymbol || "None" },
+                    { label: "L/W Ratio", value: diamond.lwRatio || "None" },
+                    { label: "Culet Condition", value: diamond.culetCondition || "None" },
+                  ].filter(Boolean).map((item, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      className="flex items-center justify-between pb-2 last:pb-0"
+                      style={{ borderBottom: idx < 11 ? `1px solid ${theme.border}` : "none" }}
                     >
                       <span style={{ color: theme.textMuted }}>{item.label}</span>
                       <span className="font-semibold" style={{ color: theme.secondary }}>{item.value}</span>
@@ -629,6 +746,21 @@ const DiamondDetail = () => {
                   <span className="text-sm font-medium" style={{ color: theme.textMuted }}>
                     {diamond.shape} Shape • Surat • {diamond.colorType} Diamond
                   </span>
+                  {diamond.status && ["HOLD", "SOLD", "MEMO"].includes(diamond.status.toUpperCase()) && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="ml-auto rounded-full px-3 py-1 text-xs font-semibold text-white shadow-md"
+                      style={{
+                        background:
+                          diamond.status.toUpperCase() === "SOLD"
+                            ? `linear-gradient(135deg, ${theme.danger} 0%, #DC2626 100%)`
+                            : `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)`
+                      }}
+                    >
+                      Status: {diamond.status.toUpperCase()}
+                    </motion.span>
+                  )}
                 </div>
 
                 <h2 className="text-2xl font-bold" style={{ color: theme.secondary }}>
@@ -719,12 +851,13 @@ const DiamondDetail = () => {
 
 
               {/* Specs Grid */}
-              <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
+              <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
                 {[
-                  { icon: Scale, label: "Carat Weight", value: `${diamond.carat} ct`, sub: `Range: ${diamond.caratMin} - ${diamond.caratMax}` },
+                  { icon: Scale, label: "Carat Weight", value: `${diamond.carat} ct` },
                   { icon: Gem, label: "Shape", value: diamond.shape, sub: `${diamond.colorType} Diamond` },
                   { icon: Sparkles, label: "Color Grade", value: diamond.color },
                   { icon: Eye, label: "Clarity", value: diamond.clarity },
+                  { icon: Diamond, label: "Final Price", value: diamond.finalPrice ? `$${diamond.finalPrice.toLocaleString()}` : "None", sub: "Total Price" },
                 ].map((spec, idx) => (
                   <motion.div
                     key={idx}
@@ -804,32 +937,39 @@ const DiamondDetail = () => {
               >
                 <h3 className="mb-4 flex items-center gap-2 font-semibold" style={{ color: theme.secondary }}>
                   <Ruler className="h-5 w-5" style={{ color: theme.primary }} />
-                  Measurements & Proportions
+                  Measurement Details
+
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Length", value: `${diamond.length} mm` },
-                    { label: "Width", value: `${diamond.width} mm` },
-                    { label: "Height", value: `${diamond.height} mm` },
-                    { label: "Depth", value: `${diamond.depth}%` },
-                    { label: "Table", value: `${diamond.table}%` },
-                    { label: "Culet Size", value: diamond.culetSize },
-                    { label: "Girdle %", value: `${diamond.girdlePercentage}%` },
-                    { label: "Crown Height", value: `${diamond.crownHeight} mm` },
-                    { label: "Crown Angle", value: `${diamond.crownAngle}°` },
-                    { label: "Pavilion Depth", value: `${diamond.pavilionDepth} mm` },
-                    { label: "Pavilion Angle", value: `${diamond.pavilionAngle}°` },
-                  ].map((item, idx) => (
-                    <motion.div
-                      key={idx}
-                      whileHover={{ scale: 1.03 }}
-                      className="rounded-lg p-3 transition-colors"
-                      style={{ background: theme.background }}
-                    >
-                      <p className="text-xs" style={{ color: theme.textMuted }}>{item.label}</p>
-                      <p className="font-bold" style={{ color: theme.secondary }}>{item.value}</p>
-                    </motion.div>
-                  ))}
+                    { label: "Length", value: diamond.length, unit: " mm" },
+                    { label: "Width", value: diamond.width, unit: " mm" },
+                    { label: "Height", value: diamond.height, unit: " mm" },
+                    { label: "Depth", value: diamond.depth, unit: "%" },
+                    { label: "Table", value: diamond.table, unit: "%" },
+                    { label: "Culet Size", value: diamond.culetSize, unit: "" },
+                    { label: "Girdle %", value: diamond.girdlePercentage, unit: "%" },
+                    { label: "Crown Height", value: diamond.crownHeight, unit: ""},
+                    { label: "Crown Angle", value: diamond.crownAngle, unit: "" },
+                    { label: "Pavilion Depth", value: diamond.pavilionDepth, unit: " mm" },
+                    { label: "Pavilion Angle", value: diamond.pavilionAngle, unit: "°" },
+                    { label: "Discount", value: diamond.discount ? `${diamond.discount}%` : "None", unit: "" },
+                  ].map((item, idx) => {
+                    const displayValue = item.value === "None" || item.value === null || item.value === undefined || item.value === ""
+                      ? "None"
+                      : `${item.value}${item.unit}`;
+                    return (
+                      <motion.div
+                        key={idx}
+                        whileHover={{ scale: 1.03 }}
+                        className="rounded-lg p-3 transition-colors"
+                        style={{ background: theme.background }}
+                      >
+                        <p className="text-xs" style={{ color: theme.textMuted }}>{item.label}</p>
+                        <p className="font-bold" style={{ color: theme.secondary }}>{displayValue}</p>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
 

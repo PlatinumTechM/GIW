@@ -961,7 +961,12 @@ export const getStockById = async (id) => {
     throw new Error("Stock not found");
   }
 
-  return stock;
+  // Add availability flags for video and certificate
+  return {
+    ...stock,
+    hasVideo: !!(stock.diamond_video && stock.diamond_video.trim() !== "" && stock.diamond_video.toUpperCase() !== "NONE"),
+    hasCertificate: !!(stock.certificate_image && stock.certificate_image.trim() !== "" && stock.certificate_image.toUpperCase() !== "NONE"),
+  };
 };
 
 export const createStock = async (stockData, userId = null) => {
