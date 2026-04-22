@@ -89,7 +89,7 @@ const Register = () => {
       const data = response.data;
 
 
-      if (response.success === false) {
+      if (data.success === false) {
         notify.error("Registration Failed", data.error || "Please try again");
         throw new Error(data.error || "Registration failed");
       }
@@ -115,8 +115,9 @@ const Register = () => {
         navigate("/login");
       }, 2000);
     } catch (err) {
-      notify.error("Registration Failed", err.message);
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || err.message;
+      notify.error("Registration Failed", errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
