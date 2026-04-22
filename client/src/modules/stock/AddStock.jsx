@@ -1254,7 +1254,7 @@ const AddStock = () => {
                 onClick={() => setViewMode("manual")}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "manual"
-                    ? "bg-[#fab34f] text-white shadow-md"
+                    ? "bg-[#24bef1] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
@@ -1455,12 +1455,12 @@ const AddStock = () => {
                           Cut
                         </label>
                         <div className="flex flex-wrap gap-1">
-                          {["Ideal", "Exc", "VG", "Good", "Fair", "Poor"].map(
+                          {["ID", "EX", "VG", "Good", "Fair", "Poor"].map(
                             (cut, idx) => {
                               const fullNames = [
-                                "Ideal",
-                                "Excellent",
-                                "Very Good",
+                                "IDEAL",
+                                "EXCELLENT",
+                                "VERY GOOD",
                                 "Good",
                                 "Fair",
                                 "Poor",
@@ -1492,7 +1492,7 @@ const AddStock = () => {
                           Lab
                         </label>
                         <div className="flex flex-wrap gap-1">
-                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL"].map(
+                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL", "NON CERTIFIED"].map(
                             (lab) => (
                               <button
                                 key={lab}
@@ -1578,7 +1578,7 @@ const AddStock = () => {
                       <div className="bg-white p-3 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
                         <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                           <DollarSign className="w-4 h-4 text-rose-500" />
-                          Price
+                          Price / Ct
                         </label>
                         <div className="flex gap-2">
                           <input
@@ -2227,8 +2227,9 @@ const AddStock = () => {
             {data.length > 0 && (
               <div className="space-y-4">
                 {/* File Info Bar */}
-                <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] p-4">
+                  {/* File Info - First Row */}
+                  <div className="flex items-center gap-3 mb-4">
                     <FileSpreadsheet className="w-8 h-8 text-emerald-600" />
                     <div>
                       <p className="font-medium text-[#0F172A]">{file?.name}</p>
@@ -2237,45 +2238,63 @@ const AddStock = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {/* Type Dropdown */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-[#64748B]">
-                        Type <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={importType}
-                        onChange={(e) => setImportType(e.target.value)}
-                        className="px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  
+                  {/* Import Controls - Second Row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    {/* Type Dropdown and Mobile Cancel Button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                      {/* Type Dropdown */}
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-[#64748B]">
+                          Type <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={importType}
+                          onChange={(e) => setImportType(e.target.value)}
+                          className="px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="">Select Type</option>
+                          <option value="NATURAL">NATURAL</option>
+                          <option value="LABGROWN">LABGROWN</option>
+                        </select>
+                      </div>
+                      
+                      {/* Cancel Button - Mobile Only */}
+                      <button
+                        onClick={clearFile}
+                        className="px-4 py-2 text-[#64748B] hover:text-red-600 transition-colors sm:hidden"
                       >
-                        <option value="">Select Type</option>
-                        <option value="NATURAL">NATURAL</option>
-                        <option value="LABGROWN">LABGROWN</option>
-                      </select>
+                        Cancel
+                      </button>
                     </div>
-                    <button
-                      onClick={clearFile}
-                      className="px-4 py-2 text-[#64748B] hover:text-red-600 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isImporting || !importType}
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {isImporting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-4 h-4" />
-                          Import {getSaveStats().saveable} Rows
-                        </>
-                      )}
-                    </button>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+                      {/* Cancel Button - Desktop Only */}
+                      <button
+                        onClick={clearFile}
+                        className="px-4 py-2 text-[#64748B] hover:text-red-600 transition-colors hidden sm:block sm:order-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isImporting || !importType}
+                        className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 sm:order-1"
+                      >
+                        {isImporting ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            Import {getSaveStats().saveable} Rows
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

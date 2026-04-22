@@ -5,7 +5,6 @@ import {
   Save,
   X,
   ChevronRight,
-  Upload,
   Image as ImageIcon,
   FileText,
   Package,
@@ -18,17 +17,8 @@ import {
   MapPin,
   Gem,
   CheckCircle,
-  FileSpreadsheet,
-  LayoutGrid,
-  List,
-  Search,
-  Trash2,
-  ChevronLeft,
-  Database,
   RotateCcw,
 } from "lucide-react";
-import * as XLSX from "xlsx";
-import { parse as parseCSV } from "papaparse";
 import notify from "../../utils/notifications";
 import api from "../../services/api";
 
@@ -240,6 +230,15 @@ const EYE_CLEAN_OPTIONS = ["Yes", "No", "VVS"];
 
 const MILKY_OPTIONS = ["None", "Milky", "Slightly Milky", "Heavy Milky"];
 
+const NON_NEGATIVE_FIELDS = new Set([
+  "weight",
+  "price_per_carat",
+  "rap_per_carat",
+  "rs_amount",
+  "dollar_rate",
+  "final_price",
+]);
+
 // Field mappings for Excel import - matches backend logic
 const FIELD_MAPPINGS = {
   type: ["type", "diamond type", "stone type"],
@@ -435,15 +434,15 @@ const SectionCard = React.memo(
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden ${className}`}
+      className={`bg-white rounded-xl sm:rounded-2xl border border-[#E2E8F0] overflow-hidden ${className}`}
     >
-      <div className="px-6 py-4 border-b border-[#E2E8F0] bg-gradient-to-r from-[#F8FAFC] to-white">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-[#E2E8F0] bg-gradient-to-r from-[#F8FAFC] to-white">
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-5 h-5 text-[#1E3A8A]" />}
-          <h3 className="font-semibold text-[#0F172A]">{title}</h3>
+          {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E3A8A]" />}
+          <h3 className="font-semibold text-[#0F172A] text-sm sm:text-base">{title}</h3>
         </div>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-3 sm:p-6 overflow-hidden">{children}</div>
     </motion.div>
   ),
 );
@@ -464,6 +463,7 @@ const InputField = ({
   max,
   step,
   uppercase = true,
+  readonly = false,
 }) => {
   const handleChange = (e) => {
     if (uppercase && type === "text") {
@@ -473,12 +473,12 @@ const InputField = ({
   };
 
   return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-[#0F172A] flex items-center gap-1.5">
+    <div className="space-y-1 sm:space-y-1.5 max-w-full">
+      <label className="text-xs sm:text-sm font-medium text-[#0F172A] flex items-center gap-1">
         {label}
         {required && <span className="text-red-500">*</span>}
       </label>
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {Icon && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] z-10">
             <Icon className="w-4 h-4" />
@@ -489,12 +489,14 @@ const InputField = ({
             name={name}
             value={value}
             onChange={onChange}
-            className={`w-full ${Icon ? "pl-10" : "px-4"} input-field`}
+            required={required}
+            className={`w-full max-w-full text-sm sm:text-base ${Icon ? "pl-10" : "px-3 sm:px-4"} input-field`}
             style={{
               // backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
               backgroundRepeat: "no-repeat",
               backgroundPosition: "right 12px center",
               backgroundSize: "16px",
+              maxWidth: "100%",
             }}
           >
             <option value="">Select {label}</option>
@@ -508,22 +510,24 @@ const InputField = ({
           <textarea
             name={name}
             value={value}
-            onChange={handleChange}
+            onChange={readonly ? () => {} : handleChange}
             placeholder={placeholder}
             rows={3}
-            className={`w-full input-field`}
+            readOnly={readonly}
+            className={`w-full text-sm sm:text-base input-field px-3 sm:px-4 ${readonly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
           />
         ) : (
           <input
             type={type}
             name={name}
             value={value}
-            onChange={handleChange}
+            onChange={readonly ? () => {} : handleChange}
             placeholder={placeholder}
             min={min}
             max={max}
             step={step}
-            className={`w-full ${Icon ? "pl-10" : "px-4"} input-field`}
+            readOnly={readonly}
+            className={`w-full text-sm sm:text-base ${Icon ? "pl-10" : "px-3 sm:px-4"} input-field ${readonly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
           />
         )}
       </div>
@@ -546,34 +550,91 @@ const AddStockManual = () => {
     certificate_image: null,
   });
 
-  // Excel Import State
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importData, setImportData] = useState([]);
-  const [importColumns, setImportColumns] = useState([]);
-  const [importLoading, setImportLoading] = useState(false);
-  const [importPreviewMode, setImportPreviewMode] = useState("grid");
-  const [importSearchTerm, setImportSearchTerm] = useState("");
-  const [importCurrentPage, setImportCurrentPage] = useState(1);
-  const [importRowsPerPage] = useState(50);
-  const [importSortConfig, setImportSortConfig] = useState({
-    key: null,
-    direction: "asc",
-  });
-  const [importResult, setImportResult] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
-
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+
+    if (type === "number" && NON_NEGATIVE_FIELDS.has(name)) {
+      const numericValue = Number(value);
+      if (value !== "" && !Number.isNaN(numericValue) && numericValue < 0) {
+        return;
+      }
+    }
+    
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+      
+      // Auto-calculate final price when price_per_carat or rap_per_carat changesz
+      if (name === 'price_per_carat' || name === 'weight') {
+        const pricePerCarat = parseFloat(updatedData.price_per_carat) || 0;
+        const weight = parseFloat(updatedData.weight) || 0;
+        updatedData.final_price = Math.max(pricePerCarat * weight, 0).toFixed(2);
+      }
+      
+      // Auto-calculate RS amount when final_price or dollar_rate changes
+      if (name === 'final_price' || name === 'dollar_rate') {
+        const finalPrice = parseFloat(updatedData.final_price) || 0;
+        const dollarRate = parseFloat(updatedData.dollar_rate) || 0;
+        updatedData.rs_amount = Math.max(finalPrice * dollarRate, 0).toFixed(2);
+      }
+
+     
+      
+      return updatedData;
+    });
+  };
+
+  const validateForm = () => {
+    const requiredFields = ["stock_id", "type"];
+    const missingFields = [];
+
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].toString().trim() === "") {
+        missingFields.push(field);
+      }
+    });
+
+    const negativeFields = Array.from(NON_NEGATIVE_FIELDS).filter((field) => {
+      const fieldValue = formData[field];
+      if (fieldValue === "" || fieldValue === null || fieldValue === undefined) {
+        return false;
+      }
+      const numericValue = Number(fieldValue);
+      return !Number.isNaN(numericValue) && numericValue < 0;
+    });
+
+    return { missingFields, negativeFields };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    const { missingFields, negativeFields } = validateForm();
+    if (missingFields.length > 0) {
+      const fieldNames = missingFields
+        .map((field) => field.replace(/_/g, " ").toUpperCase())
+        .join(", ");
+      notify.error(
+        "Validation Error",
+        `Please fill in all required fields: ${fieldNames}`,
+      );
+      return;
+    }
+
+    if (negativeFields.length > 0) {
+      const fieldNames = negativeFields
+        .map((field) => field.replace(/_/g, " ").toUpperCase())
+        .join(", ");
+      notify.error(
+        "Validation Error",
+        `Negative values are not allowed for: ${fieldNames}`,
+      );
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -615,240 +676,11 @@ const AddStockManual = () => {
     notify.info("Reset", "Form has been cleared");
   };
 
-  // Excel Import Helper Functions
-  const normalizeColumnName = (name) => {
-    if (!name) return "";
-    return name.toString().toLowerCase().trim().replace(/\s+/g, " ");
-  };
-
-  const findMatchingField = (columnName) => {
-    const normalized = normalizeColumnName(columnName);
-    for (const [field, possibleNames] of Object.entries(FIELD_MAPPINGS)) {
-      if (
-        possibleNames.some((name) => normalized.includes(name.toLowerCase()))
-      ) {
-        return field;
-      }
-    }
-    return columnName.toLowerCase().replace(/\s+/g, "_");
-  };
-
-  const mapRowToDb = (row) => {
-    const mapped = {};
-    Object.entries(row).forEach(([key, value]) => {
-      const field = findMatchingField(key);
-      mapped[field] = value;
-    });
-    return mapped;
-  };
-
-  const hasStockId = (row) => {
-    return row.stock_id && row.stock_id.toString().trim() !== "";
-  };
-
-  const getSaveStats = () => {
-    const total = importData.length;
-    const saveable = importData.filter(hasStockId).length;
-    const skipped = total - saveable;
-    return { total, saveable, skipped };
-  };
-
-  const parseExcelFile = async (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: "array" });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-          resolve(jsonData);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsArrayBuffer(file);
-    });
-  };
-
-  const parseCSVFile = async (file) => {
-    return new Promise((resolve, reject) => {
-      parseCSV(file, {
-        complete: (results) => resolve(results.data),
-        error: (error) => reject(error),
-        header: true,
-        skipEmptyLines: true,
-      });
-    });
-  };
-
-  const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    await processFile(file);
-  };
-
-  const processFile = async (file) => {
-    setImportLoading(true);
-    setImportResult(null);
-
-    try {
-      let parsedData;
-      if (file.name.endsWith(".csv")) {
-        parsedData = await parseCSVFile(file);
-      } else {
-        const rawData = await parseExcelFile(file);
-        if (rawData.length > 0) {
-          const headers = rawData[0];
-          parsedData = rawData.slice(1).map((row) => {
-            const obj = {};
-            headers.forEach((header, index) => {
-              obj[header] = row[index];
-            });
-            return obj;
-          });
-        } else {
-          parsedData = [];
-        }
-      }
-
-      const mappedData = parsedData.map(mapRowToDb);
-      const validData = mappedData.filter((row) => Object.keys(row).length > 0);
-
-      if (validData.length > 0) {
-        setImportColumns(Object.keys(validData[0]));
-      }
-
-      setImportData(validData);
-      setImportFile(file);
-      notify.success(
-        "File Loaded",
-        `Loaded ${validData.length} rows from ${file.name}`,
-      );
-    } catch (error) {
-      console.error("File parsing error:", error);
-      notify.error("Error", "Failed to parse file. Please check the format.");
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (
-      file &&
-      (file.name.endsWith(".csv") ||
-        file.name.endsWith(".xlsx") ||
-        file.name.endsWith(".xls"))
-    ) {
-      await processFile(file);
-    } else {
-      notify.error("Invalid File", "Please upload a CSV or Excel file.");
-    }
-  };
-
-  const clearImportFile = () => {
-    setImportFile(null);
-    setImportData([]);
-    setImportColumns([]);
-    setImportResult(null);
-    setImportCurrentPage(1);
-    setImportSearchTerm("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleImportSubmit = async () => {
-    const { saveable } = getSaveStats();
-    if (saveable === 0) {
-      notify.error("No Valid Data", "No rows with stock_id found to import.");
-      return;
-    }
-
-    setImportLoading(true);
-    try {
-      const validRows = importData.filter(hasStockId);
-      const response = await api.post("/stock/bulk", { stock: validRows });
-
-      if (response.data.success) {
-        setImportResult(response.data.data);
-        notify.success(
-          "Import Complete",
-          `Saved: ${response.data.data.insertedCount}, Skipped: ${response.data.data.skippedCount}`,
-        );
-        setTimeout(() => {
-          clearImportFile();
-          setShowImportModal(false);
-        }, 3000);
-      }
-    } catch (error) {
-      console.error("Import error:", error);
-      notify.error(
-        "Import Failed",
-        error.response?.data?.message || "Failed to import stock",
-      );
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const handleImportSort = (key) => {
-    setImportSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
-    }));
-  };
-
-  const handleImportPageChange = (page) => {
-    setImportCurrentPage(page);
-  };
-
-  const filteredImportData = importData.filter((row) => {
-    if (!importSearchTerm) return true;
-    const search = importSearchTerm.toLowerCase();
-    return Object.values(row).some((val) =>
-      val?.toString().toLowerCase().includes(search),
-    );
-  });
-
-  const sortedImportData = [...filteredImportData].sort((a, b) => {
-    if (!importSortConfig.key) return 0;
-    const aVal = a[importSortConfig.key] || "";
-    const bVal = b[importSortConfig.key] || "";
-    if (importSortConfig.direction === "asc") {
-      return aVal > bVal ? 1 : -1;
-    }
-    return aVal < bVal ? 1 : -1;
-  });
-
-  const importTotalPages = Math.ceil(
-    sortedImportData.length / importRowsPerPage,
-  );
-  const paginatedImportData = sortedImportData.slice(
-    (importCurrentPage - 1) * importRowsPerPage,
-    importCurrentPage * importRowsPerPage,
-  );
-
   const tabs = [
     { id: "basic", label: "Basic Info", icon: Package },
     { id: "grading", label: "Grading", icon: Gem },
     { id: "measurements", label: "Measurements", icon: Ruler },
     { id: "pricing", label: "Pricing", icon: DollarSign },
-    { id: "advanced", label: "Advanced", icon: Sparkles },
     { id: "images", label: "Images", icon: ImageIcon },
     { id: "certificate", label: "Certificate", icon: FileText },
   ];
@@ -857,44 +689,44 @@ const AddStockManual = () => {
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
       <div className="bg-white border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             {/* Left: Title */}
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center shadow-lg shadow-[#3B82F6]/20">
-                <Diamond className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-[#0F172A]">Add Stock</h1>
-                <p className="text-sm text-[#64748B]">
+            <div className="flex items-center gap-3 sm:gap-4">
+             
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">Add Stock</h1>
+                <p className="text-xs sm:text-sm text-[#64748B] hidden sm:block">
                   Manual stock entry form
                 </p>
               </div>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-lg transition-all border border-[#E2E8F0]"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  onClick={handleReset}
+                  className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-lg transition-all border border-[#E2E8F0] flex-1 sm:flex-none"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="hidden sm:inline">Reset</span>
+                </button>
+              </div>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white rounded-lg font-medium hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white rounded-lg font-medium hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base flex-1 sm:flex-none whitespace-nowrap"
               >
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Saving...
+                    <span className="hidden sm:inline">Saving...</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save Stock
+                    <span className="hidden sm:inline">Save Stock</span>
                   </>
                 )}
               </button>
@@ -904,29 +736,30 @@ const AddStockManual = () => {
       </div>
 
       {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-wrap gap-2 mb-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-4 sm:mb-6 -mx-3 px-3 sm:mx-0 sm:px-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
                   activeTab === tab.id
                     ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
                     : "bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0]"
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden text-xs">{tab.label.split(' ')[0]}</span>
               </button>
             );
           })}
         </div>
 
         {/* Form Content */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
           {activeTab === "basic" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -934,10 +767,10 @@ const AddStockManual = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Stock Information */}
                 <SectionCard title="Stock Information" icon={Package}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Stock ID"
                       name="stock_id"
@@ -954,13 +787,7 @@ const AddStockManual = () => {
                       options={TYPE_OPTIONS}
                       required
                     />
-                    {/* <InputField
-                      label="Diamond Type"
-                      name="diamond_type"
-                      value={formData.diamond_type}
-                      onChange={handleInputChange}
-                      options={DIAMOND_TYPE_OPTIONS}
-                    /> */}
+                 
                     <InputField
                       label="Status"
                       name="status"
@@ -980,7 +807,7 @@ const AddStockManual = () => {
 
                 {/* Location */}
                 <SectionCard title="Location" icon={MapPin}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="City"
                       name="city"
@@ -1019,7 +846,7 @@ const AddStockManual = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 4C Grading */}
                 <SectionCard title="4C Grading" icon={Gem}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Shape"
                       name="shape"
@@ -1037,6 +864,7 @@ const AddStockManual = () => {
                       onChange={handleInputChange}
                       placeholder="0.000"
                       required
+                      min={0}
                     />
                     <InputField
                       label="Color"
@@ -1085,7 +913,7 @@ const AddStockManual = () => {
 
                 {/* Fancy Color */}
                 <SectionCard title="Fancy Color Details" icon={Palette}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Fancy Color"
                       name="fancy_color"
@@ -1126,7 +954,7 @@ const AddStockManual = () => {
 
                 {/* Visual Characteristics */}
                 <SectionCard title="Visual Characteristics" icon={Sparkles}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Shade"
                       name="shade"
@@ -1202,10 +1030,10 @@ const AddStockManual = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Basic Measurements */}
                 <SectionCard title="Basic Measurements" icon={Ruler}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Measurements"
                       name="measurements"
@@ -1253,7 +1081,7 @@ const AddStockManual = () => {
 
                 {/* Proportions */}
                 <SectionCard title="Proportions" icon={Percent}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Depth %"
                       name="depth_percentage"
@@ -1284,7 +1112,7 @@ const AddStockManual = () => {
 
                 {/* Girdle */}
                 <SectionCard title="Girdle Details" icon={Ruler}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Girdle Thin"
                       name="gridle_thin"
@@ -1318,7 +1146,7 @@ const AddStockManual = () => {
 
                 {/* Culet */}
                 <SectionCard title="Culet Details" icon={Diamond}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 min-w-0">
                     <InputField
                       label="Culet Size"
                       name="culet_size"
@@ -1342,7 +1170,7 @@ const AddStockManual = () => {
                   icon={Building}
                   className="lg:col-span-2"
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <InputField
                       label="Crown Height"
                       name="crown_height"
@@ -1391,18 +1219,29 @@ const AddStockManual = () => {
               <SectionCard
                 title="Pricing Details"
                 icon={DollarSign}
-                className="max-w-3xl"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <InputField
                     label="RAP Price/Carat"
                     name="rap_per_carat"
                     type="number"
                     step="0.01"
+                    min={0}
                     value={formData.rap_per_carat}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                    icon={DollarSign}
+                   
+                  />
+                  <InputField
+                    label="Price/Carat"
+                    name="price_per_carat"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    value={formData.price_per_carat}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                   
                   />
                   <InputField
                     label="Discount %"
@@ -1412,33 +1251,25 @@ const AddStockManual = () => {
                     value={formData.discount}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                    icon={Percent}
-                  />
-                  <InputField
-                    label="Price/Carat"
-                    name="price_per_carat"
-                    type="number"
-                    step="0.01"
-                    value={formData.price_per_carat}
-                    onChange={handleInputChange}
-                    placeholder="0.00"
-                    icon={DollarSign}
+                   
                   />
                   <InputField
                     label="Final Price"
                     name="final_price"
                     type="number"
                     step="0.01"
+                    min={0}
                     value={formData.final_price}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                    icon={DollarSign}
+                    readonly={true}
                   />
                   <InputField
                     label="Dollar Rate"
                     name="dollar_rate"
                     type="number"
                     step="0.01"
+                    min={0}
                     value={formData.dollar_rate}
                     onChange={handleInputChange}
                     placeholder="0.00"
@@ -1448,25 +1279,21 @@ const AddStockManual = () => {
                     name="rs_amount"
                     type="number"
                     step="0.01"
+                    min={0}
                     value={formData.rs_amount}
                     onChange={handleInputChange}
                     placeholder="0.00"
+                    readonly={true}
                   />
                 </div>
 
                 {/* Price Summary */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-[#EFF6FF] to-[#DBEAFE] rounded-xl border border-[#3B82F6]/20">
-                  <h4 className="font-semibold text-[#1E3A8A] mb-3 flex items-center gap-2">
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-[#EFF6FF] to-[#DBEAFE] rounded-xl border border-[#3B82F6]/20">
+                  <h4 className="font-semibold text-[#1E3A8A] mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                     <CheckCircle className="w-4 h-4" />
                     Price Summary
                   </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-[#64748B]">Weight:</span>
-                      <span className="ml-2 font-medium text-[#0F172A]">
-                        {formData.weight || "0"} ct
-                      </span>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
                     <div>
                       <span className="text-[#64748B]">Price/Carat:</span>
                       <span className="ml-2 font-medium text-[#0F172A]">
@@ -1474,45 +1301,24 @@ const AddStockManual = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#64748B]">Total:</span>
+                      <span className="text-[#64748B]">RAP Price:</span>
+                      <span className="ml-2 font-medium text-[#0F172A]">
+                        ${formData.rap_per_carat || "0"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[#64748B]">Final Price:</span>
                       <span className="ml-2 font-medium text-[#0F172A]">
                         ${formData.final_price || "0"}
                       </span>
                     </div>
+                    <div>
+                      <span className="text-[#64748B]">RS Amount:</span>
+                      <span className="ml-2 font-medium text-[#0F172A]">
+                        ₹{formData.rs_amount || "0"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </SectionCard>
-            </motion.div>
-          )}
-
-          {activeTab === "advanced" && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
-              <SectionCard
-                title="Advanced Details"
-                icon={Sparkles}
-                className="max-w-3xl"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InputField
-                    label="Certificate Number"
-                    name="certificate_number"
-                    type="number"
-                    value={formData.certificate_number}
-                    onChange={handleInputChange}
-                    placeholder="Enter certificate number"
-                  />
-                  <InputField
-                    label="Lab"
-                    name="lab"
-                    value={formData.lab}
-                    onChange={handleInputChange}
-                    options={LAB_OPTIONS}
-                  />
                 </div>
               </SectionCard>
             </motion.div>
@@ -1526,7 +1332,7 @@ const AddStockManual = () => {
               className="space-y-6"
             >
               <SectionCard title="Diamond Images" icon={ImageIcon}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {[
                     "diamond_image1",
                     "diamond_image2",
@@ -1568,9 +1374,9 @@ const AddStockManual = () => {
               transition={{ duration: 0.3 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <SectionCard title="Certificate Image" icon={FileText}>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <InputField
                       label="Certificate Image URL"
                       name="certificate_image"
@@ -1583,7 +1389,7 @@ const AddStockManual = () => {
                 </SectionCard>
 
                 <SectionCard title="Certificate Comments" icon={FileText}>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <InputField
                       label="Certificate Number"
                       name="certificate_number"
@@ -1615,411 +1421,6 @@ const AddStockManual = () => {
         </div>
       </div>
 
-      {/* Import Excel Modal */}
-      <AnimatePresence>
-        {showImportModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={(e) =>
-              e.target === e.currentTarget && setShowImportModal(false)
-            }
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
-            >
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between bg-gradient-to-r from-[#F8FAFC] to-white">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                    <FileSpreadsheet className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-[#0F172A]">
-                      Import from Excel
-                    </h2>
-                    <p className="text-sm text-[#64748B]">
-                      Upload CSV or Excel file with stock data
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowImportModal(false)}
-                  className="p-2 text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-                {!importFile ? (
-                  /* Upload Area */
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${
-                      isDragging
-                        ? "border-[#3B82F6] bg-[#EFF6FF]"
-                        : "border-[#E2E8F0] hover:border-[#94A3B8]"
-                    }`}
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                  >
-                    <div className="w-16 h-16 rounded-xl bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
-                      <Upload className="w-8 h-8 text-[#64748B]" />
-                    </div>
-                    <h3 className="text-lg font-medium text-[#0F172A] mb-2">
-                      Drop your file here
-                    </h3>
-                    <p className="text-[#64748B] mb-4">
-                      or click to browse from your computer
-                    </p>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-6 py-2.5 bg-[#1E3A8A] text-white rounded-xl font-medium hover:bg-[#1E40AF] transition-colors"
-                    >
-                      Select File
-                    </button>
-                    <p className="text-xs text-[#94A3B8] mt-4">
-                      Supports CSV, XLSX, XLS files
-                    </p>
-                  </div>
-                ) : (
-                  /* File Preview */
-                  <div className="space-y-4">
-                    {/* File Info */}
-                    <div className="bg-[#F8FAFC] rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                          {importFile.name.endsWith(".csv") ? (
-                            <FileText className="w-6 h-6 text-green-600" />
-                          ) : (
-                            <FileSpreadsheet className="w-6 h-6 text-green-600" />
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-[#0F172A]">
-                            {importFile.name}
-                          </h4>
-                          <p className="text-sm text-[#64748B]">
-                            {(importFile.size / 1024).toFixed(2)} KB •{" "}
-                            {importData.length} rows
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {/* Stats */}
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="text-green-700 bg-green-100 px-3 py-1 rounded-full">
-                            {getSaveStats().saveable} will save
-                          </span>
-                          <span className="text-red-600 bg-red-100 px-3 py-1 rounded-full">
-                            {getSaveStats().skipped} skipped
-                          </span>
-                        </div>
-                        <button
-                          onClick={clearImportFile}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Search and View Toggle */}
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="relative flex-1 max-w-md">
-                        <Search className="w-5 h-5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          placeholder="Search data..."
-                          value={importSearchTerm}
-                          onChange={(e) => setImportSearchTerm(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-                        />
-                      </div>
-                      <div className="flex bg-[#F1F5F9] rounded-lg p-1">
-                        <button
-                          onClick={() => setImportPreviewMode("grid")}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                            importPreviewMode === "grid"
-                              ? "bg-white text-[#1E3A8A] shadow-sm"
-                              : "text-[#64748B]"
-                          }`}
-                        >
-                          <LayoutGrid className="w-4 h-4" />
-                          Grid
-                        </button>
-                        <button
-                          onClick={() => setImportPreviewMode("list")}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                            importPreviewMode === "list"
-                              ? "bg-white text-[#1E3A8A] shadow-sm"
-                              : "text-[#64748B]"
-                          }`}
-                        >
-                          <List className="w-4 h-4" />
-                          List
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Data Preview */}
-                    {importPreviewMode === "grid" ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
-                        {paginatedImportData.map((row, idx) => {
-                          const actualIndex =
-                            (importCurrentPage - 1) * importRowsPerPage + idx;
-                          const willBeSaved = hasStockId(row);
-                          return (
-                            <div
-                              key={actualIndex}
-                              className={`bg-[#F8FAFC] rounded-xl border p-4 ${
-                                willBeSaved
-                                  ? "border-[#E2E8F0]"
-                                  : "border-red-300 bg-red-50"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="text-xs font-medium text-[#64748B] bg-white px-2 py-1 rounded-full">
-                                  #{actualIndex + 1}
-                                </span>
-                                <span
-                                  className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    willBeSaved
-                                      ? "text-green-700 bg-green-100"
-                                      : "text-red-700 bg-red-100"
-                                  }`}
-                                >
-                                  {willBeSaved ? "Will Save" : "No stock_id"}
-                                </span>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                {Object.entries(row)
-                                  .slice(0, 5)
-                                  .map(([key, val]) => (
-                                    <div
-                                      key={key}
-                                      className="flex justify-between"
-                                    >
-                                      <span className="text-[#64748B]">
-                                        {key}:
-                                      </span>
-                                      <span className="font-medium text-[#0F172A] truncate max-w-[120px]">
-                                        {val || "-"}
-                                      </span>
-                                    </div>
-                                  ))}
-                                {Object.keys(row).length > 5 && (
-                                  <div className="text-xs text-[#94A3B8] text-center pt-2">
-                                    +{Object.keys(row).length - 5} more fields
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto max-h-[400px]">
-                        <table className="w-full text-sm">
-                          <thead className="bg-[#F8FAFC] sticky top-0">
-                            <tr>
-                              <th className="px-3 py-2 text-left text-xs font-semibold text-[#475569] uppercase">
-                                Status
-                              </th>
-                              {importColumns.slice(0, 8).map((col) => (
-                                <th
-                                  key={col}
-                                  className="px-3 py-2 text-left text-xs font-semibold text-[#475569] uppercase cursor-pointer hover:bg-[#F1F5F9]"
-                                  onClick={() => handleImportSort(col)}
-                                >
-                                  {col}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-[#E2E8F0]">
-                            {paginatedImportData.map((row, idx) => {
-                              const actualIndex =
-                                (importCurrentPage - 1) * importRowsPerPage +
-                                idx;
-                              const willBeSaved = hasStockId(row);
-                              return (
-                                <tr
-                                  key={actualIndex}
-                                  className={!willBeSaved ? "bg-red-50" : ""}
-                                >
-                                  <td className="px-3 py-2">
-                                    <span
-                                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                        willBeSaved
-                                          ? "text-green-700 bg-green-100"
-                                          : "text-red-700 bg-red-100"
-                                      }`}
-                                    >
-                                      {willBeSaved ? "Save" : "Skip"}
-                                    </span>
-                                  </td>
-                                  {importColumns.slice(0, 8).map((col) => (
-                                    <td
-                                      key={col}
-                                      className="px-3 py-2 text-[#0F172A] whitespace-nowrap"
-                                    >
-                                      {row[col] || "-"}
-                                    </td>
-                                  ))}
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-
-                    {/* Pagination */}
-                    {importTotalPages > 1 && (
-                      <div className="flex items-center justify-between pt-4 border-t border-[#E2E8F0]">
-                        <p className="text-sm text-[#64748B]">
-                          Page {importCurrentPage} of {importTotalPages}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleImportPageChange(importCurrentPage - 1)
-                            }
-                            disabled={importCurrentPage === 1}
-                            className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                          </button>
-                          {Array.from(
-                            { length: Math.min(5, importTotalPages) },
-                            (_, i) => i + 1,
-                          ).map((page) => (
-                            <button
-                              key={page}
-                              onClick={() => handleImportPageChange(page)}
-                              className={`px-3 py-1 rounded-lg text-sm ${
-                                importCurrentPage === page
-                                  ? "bg-[#1E3A8A] text-white"
-                                  : "border border-[#E2E8F0] hover:bg-[#F1F5F9]"
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          ))}
-                          <button
-                            onClick={() =>
-                              handleImportPageChange(importCurrentPage + 1)
-                            }
-                            disabled={importCurrentPage === importTotalPages}
-                            className="p-2 rounded-lg border border-[#E2E8F0] hover:bg-[#F1F5F9] disabled:opacity-50"
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Footer */}
-              <div className="px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
-                <div className="text-sm text-[#64748B]">
-                  {importFile && (
-                    <span>
-                      <span className="font-medium text-[#0F172A]">
-                        {getSaveStats().saveable}
-                      </span>{" "}
-                      rows with stock_id will be imported
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowImportModal(false)}
-                    className="px-4 py-2 text-[#64748B] hover:text-[#0F172A] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  {importFile && (
-                    <button
-                      onClick={handleImportSubmit}
-                      disabled={importLoading || getSaveStats().saveable === 0}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white rounded-xl font-medium hover:shadow-lg transition-all disabled:opacity-50"
-                    >
-                      {importLoading ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <Database className="w-4 h-4" />
-                          Import {getSaveStats().saveable} Items
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Import Result Toast */}
-      <AnimatePresence>
-        {importResult && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 right-6 bg-white rounded-xl shadow-2xl border border-[#E2E8F0] p-4 z-[70]"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-[#0F172A]">
-                  Import Complete
-                </h4>
-                <p className="text-sm text-[#64748B]">
-                  Saved:{" "}
-                  <span className="text-green-700 font-medium">
-                    {importResult.insertedCount}
-                  </span>{" "}
-                  • Skipped:{" "}
-                  <span className="text-red-600 font-medium">
-                    {importResult.skippedCount}
-                  </span>
-                </p>
-              </div>
-              <button
-                onClick={() => setImportResult(null)}
-                className="ml-4 p-1 text-[#94A3B8] hover:text-[#64748B]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

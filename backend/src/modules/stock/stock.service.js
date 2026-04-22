@@ -469,6 +469,82 @@ const parseString = (value) => {
   return String(value).trim();
 };
 
+// Value mappings for standardizing field values
+const VALUE_MAPPINGS = {
+  // Cut, Polish, Symmetry mappings (short codes and full words to full names)
+  grading: {
+    // Full word variations → full name
+    "EXCELLENT": "EXCELLENT",
+    "VERY GOOD": "VERY GOOD",
+    "VERYGOOD": "VERY GOOD",
+    "IDEAL": "IDEAL",
+    "GOOD": "GOOD",
+    "FAIR": "FAIR",
+    "POOR": "POOR",
+    // Short codes → full name
+    "EX": "EXCELLENT",
+    "VG": "VERY GOOD",
+    "ID": "IDEAL",
+    "GD": "GOOD",
+    "FR": "FAIR",
+    "PR": "POOR",
+  },
+  // Shape mappings (short form to long form)
+  shape: {
+    // Short codes → long form
+    "RD": "ROUND",
+    "PR": "PRINCESS",
+    "PN": "PEAR",
+    "EM": "EMERALD",
+    "MQ": "MARQUISE",
+    "OV": "OVAL",
+    "RAD": "RADIANT",
+    "CUS": "CUSHION",
+    "HT": "HEART",
+    "ASH": "ASSCHER",
+    "BG": "BAGUETTE",
+    "TRI": "TRILLIANT",
+    "TR": "TRILLIANT",
+    // Long forms (pass-through)
+    "ROUND": "ROUND",
+    "PRINCESS": "PRINCESS",
+    "PEAR": "PEAR",
+    "EMERALD": "EMERALD",
+    "MARQUISE": "MARQUISE",
+    "OVAL": "OVAL",
+    "RADIANT": "RADIANT",
+    "CUSHION": "CUSHION",
+    "HEART": "HEART",
+    "ASSCHER": "ASSCHER",
+    "BAGUETTE": "BAGUETTE",
+    "TRILLIANT": "TRILLIANT",
+  },
+  // Status mappings
+  status: {
+    "YES": "AVAILABLE",
+    "AVAILABLE": "AVAILABLE",
+    "AVAIL": "AVAILABLE",
+    "SOLD": "SOLD",
+    "ON HOLD": "ON HOLD",
+    "ONHOLD": "ON HOLD",
+    "IN MEMO": "IN MEMO",
+    "INMEMO": "IN MEMO",
+    "MEMO": "IN MEMO",
+  },
+};
+
+// Map value using VALUE_MAPPINGS
+const mapValue = (value, mappingType) => {
+  if (!value) return null;
+
+  const strValue = String(value).toUpperCase().trim();
+  const mapping = VALUE_MAPPINGS[mappingType];
+
+  if (!mapping) return strValue;
+
+  return mapping[strValue] || strValue;
+};
+
 // Parse boolean value safely
 
 const parseBoolean = (value) => {
@@ -488,7 +564,7 @@ const parseBoolean = (value) => {
 // Check if row has stock_id (required for saving to DB)
 
 const hasStockId = (data) => {
-  return data.stock_id && String(data.stock_id).trim() !== "";
+  return data.stock_id && String(data.stock_id).trim().toUpperCase() !== "";
 };
 
 // Parse measurements string like "7.87-7.93*4.91" into length, width, height
@@ -562,13 +638,13 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     user_id: userId,
 
-    stock_id: parseString(mappedData.stock_id),
+    stock_id: parseString(mappedData.stock_id)?.toUpperCase(),
 
     certificate_number: parseString(mappedData.certificate_number),
 
     weight: parseNumeric(mappedData.weight),
 
-    shape: parseString(mappedData.shape)?.toUpperCase(),
+    shape: mapValue(parseString(mappedData.shape), "shape"),
 
     // Color logic: single char = color field, multiple words = split to fancy_color fields
 
@@ -662,11 +738,11 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     clarity: parseString(mappedData.clarity)?.toUpperCase(),
 
-    cut: parseString(mappedData.cut)?.toUpperCase(),
+    cut: mapValue(parseString(mappedData.cut), "grading"),
 
-    polish: parseString(mappedData.polish)?.toUpperCase(),
+    polish: mapValue(parseString(mappedData.polish), "grading"),
 
-    symmetry: parseString(mappedData.symmetry)?.toUpperCase(),
+    symmetry: mapValue(parseString(mappedData.symmetry), "grading"),
 
     fluorescence: parseString(mappedData.fluorescence)?.toUpperCase(),
 
@@ -838,23 +914,9 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     pavilion_angle: parseString(mappedData.pavilion_angle),
 
-    // Status - convert "YES" to "AVAILABLE", keep "available" as-is
+    // Status - apply value mapping and convert to capital letters
 
-    ...(() => {
-      const statusValue = parseString(mappedData.status)?.toLowerCase();
-
-      let finalStatus = "AVAILABLE"; // default
-
-      if (statusValue === "AVAILABLE" || statusValue === "avail") {
-        finalStatus = "AVAILABLE";
-      } else if (statusValue === "yes") {
-        finalStatus = "AVAILABLE";
-      } else if (statusValue) {
-        finalStatus = statusValue;
-      }
-
-      return { status: finalStatus };
-    })(),
+    status: mapValue(parseString(mappedData.status), "status") || "AVAILABLE",
 
     diamond_type: parseString(mappedData.diamond_type),
 
@@ -896,6 +958,7 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       // Apply import type if provided
       if (importType) {
         dbData.type = importType;
+        console.log(`[bulkUpload] Applied importType: ${importType} to row ${i}, dbData.type: ${dbData.type}`);
       }
       results.validRows.push(dbData);
     } else {
@@ -916,12 +979,19 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
     try {
       await client.query("BEGIN");
 
-      // Step 1: Get all stock_ids from incoming data
-      const incomingStockIds = results.validRows
+      // Step 1: Deduplicate rows by stock_id (keep last occurrence)
+      const uniqueRowsMap = new Map();
+      for (const row of results.validRows) {
+        uniqueRowsMap.set(row.stock_id, row);
+      }
+      const uniqueRows = Array.from(uniqueRowsMap.values());
+
+      // Step 2: Get all stock_ids from incoming data
+      const incomingStockIds = uniqueRows
         .map((row) => row.stock_id)
         .filter((id) => id);
 
-      // Step 2: Delete existing records with same stock_ids (replace behavior)
+      // Step 3: Delete existing records with same stock_ids (replace behavior)
       if (incomingStockIds.length > 0) {
         const deletedCount = await stockRepo.deleteByStockIds(
           incomingStockIds,
@@ -930,8 +1000,8 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
         results.replacedCount = deletedCount;
       }
 
-      // Step 3: Insert new data
-      const inserted = await stockRepo.bulkInsert(results.validRows, client);
+      // Step 4: Insert deduplicated data
+      const inserted = await stockRepo.bulkInsert(uniqueRows, client);
       results.insertedCount = inserted;
 
       await client.query("COMMIT");
@@ -978,7 +1048,16 @@ export const createStock = async (stockData, userId = null) => {
 
   const dbData = convertToDbFormat(mappedData, userId);
 
-  return await stockRepo.create(dbData);
+  try {
+    return await stockRepo.create(dbData);
+  } catch (error) {
+    // Handle unique constraint violation for stock_id
+    if (error.code === "23505" && error.constraint === "diamond_stock_stock_id_key") {
+      throw new Error(`Stock ID "${dbData.stock_id}" already exists. Please use a different Stock ID.`);
+    }
+    // Re-throw other errors
+    throw error;
+  }
 };
 
 export const updateStock = async (id, stockData) => {

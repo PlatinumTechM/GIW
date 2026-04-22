@@ -1,5 +1,9 @@
 // Simplified Filter builder for stock queries
 
+const NON_CERTIFIED_LAB_TOKEN = "NON CERTIFIED";
+const NON_CERTIFIED_CERTIFICATE_CONDITION =
+  "(certificate_number IS NULL OR TRIM(certificate_number) = '')";
+
 // Helper: Add array filter (status, shape, color, etc.)
 // Returns true if filter was added
 const addArrayFilter = (conditions, values, field, filterValue, paramIndex) => {
@@ -57,6 +61,59 @@ const addRangeFilter = (conditions, values, field, minValue, maxValue, paramInde
   return { added: minValue || maxValue, paramIndex: newIndex };
 };
 
+const normalizeLabFilterValue = (value) => {
+  if (value === null || value === undefined) return "";
+  return value
+    .toString()
+    .trim()
+    .replace(/[\s_-]+/g, " ")
+    .toUpperCase();
+};
+
+// Special handling for Lab filter:
+// - Selecting "NON CERTIFIED" returns rows with NULL/empty certificate_number
+// - If combined with other labs, returns (lab in selected OR non-certified)
+const addLabFilter = (conditions, values, filterValue, paramIndex) => {
+  let itemsArray;
+  if (typeof filterValue === "string") {
+    itemsArray = filterValue.split(",");
+  } else if (Array.isArray(filterValue)) {
+    itemsArray = filterValue;
+  } else {
+    return { added: false, paramIndex };
+  }
+
+  const items = itemsArray
+    .map(normalizeLabFilterValue)
+    .filter((v) => v);
+  if (items.length === 0) return { added: false, paramIndex };
+
+  const hasNonCertified = items.includes(NON_CERTIFIED_LAB_TOKEN);
+  const labs = items.filter((v) => v !== NON_CERTIFIED_LAB_TOKEN);
+
+  // Only non-certified selected
+  if (hasNonCertified && labs.length === 0) {
+    conditions.push(`(${NON_CERTIFIED_CERTIFICATE_CONDITION})`);
+    return { added: true, paramIndex };
+  }
+
+  // Only real labs selected
+  if (!hasNonCertified && labs.length > 0) {
+    const placeholders = labs.map((_, i) => `$${paramIndex + i}`).join(",");
+    conditions.push(`UPPER(lab) IN (${placeholders})`);
+    values.push(...labs);
+    return { added: true, paramIndex: paramIndex + labs.length };
+  }
+
+  // Mix of labs + non-certified (OR)
+  const placeholders = labs.map((_, i) => `$${paramIndex + i}`).join(",");
+  conditions.push(
+    `(UPPER(lab) IN (${placeholders}) OR ${NON_CERTIFIED_CERTIFICATE_CONDITION})`,
+  );
+  values.push(...labs);
+  return { added: true, paramIndex: paramIndex + labs.length };
+};
+
 // Main function: Build SQL WHERE conditions from filter object
 export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) => {
   const whereConditions = [...baseConditions];
@@ -87,7 +144,7 @@ export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) 
   result = addArrayFilter(whereConditions, values, "clarity", filters.clarity, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
-  result = addArrayFilter(whereConditions, values, "lab", filters.lab, paramIndex);
+  result = addLabFilter(whereConditions, values, filters.lab, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
   result = addArrayFilter(whereConditions, values, "growth_type", filters.growthType, paramIndex);
