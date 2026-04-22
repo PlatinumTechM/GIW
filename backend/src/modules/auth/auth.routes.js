@@ -16,5 +16,6 @@ router.post(
 router.get("/me", authenticate, authController.getCurrentUser);
 router.put("/profile", authenticate, authController.updateProfile);
 router.post("/logout", authenticate, authController.logout);
+router.post("/purchase-subscription", authenticate, authController.purchaseSubscription);
 
 export { router as authRoutes };

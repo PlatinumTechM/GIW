@@ -36,18 +36,24 @@ const login = async (identifier, password) => {
     },
   );
 
+  // Fetch user with subscription info
+  const userWithSubscription = await authRepo.findUserWithSubscription(user.id);
+
   return {
     token,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      company: user.company,
-      phone: user.phone,
-      address: user.address,
-      gst: user.gst,
-      role: user.role || "user",
-      isActive: user.is_active,
+      id: userWithSubscription.id,
+      name: userWithSubscription.name,
+      email: userWithSubscription.email,
+      company: userWithSubscription.company,
+      phone: userWithSubscription.phone,
+      address: userWithSubscription.address,
+      gst: userWithSubscription.gst,
+      role: userWithSubscription.role || "user",
+      isActive: userWithSubscription.is_active,
+      planName: userWithSubscription.plan_name,
+      planExpiry: userWithSubscription.plan_expiry,
+      subscriptionStatus: userWithSubscription.subscription_status,
     },
   };
 };
@@ -109,7 +115,7 @@ const register = async (userData) => {
 };
 
 const getCurrentUser = async (userId) => {
-  const user = await authRepo.findUserById(userId);
+  const user = await authRepo.findUserWithSubscription(userId);
 
   if (!user) {
     throw new Error("User not found");
@@ -126,6 +132,9 @@ const getCurrentUser = async (userId) => {
     document: user.document,
     role: user.role || "user",
     isActive: user.is_active,
+    planName: user.plan_name,
+    planExpiry: user.plan_expiry,
+    subscriptionStatus: user.subscription_status,
   };
 };
 
@@ -169,9 +178,28 @@ const updateProfile = async (userId, userData) => {
   };
 };
 
+const purchaseSubscription = async (userId, planId, durationMonths) => {
+  if (!planId || !durationMonths) {
+    throw new Error("Plan ID and duration are required");
+  }
+
+  const subscription = await authRepo.createUserSubscription(userId, planId, durationMonths);
+
+  return {
+    id: subscription.id,
+    userId: subscription.user_id,
+    planId: subscription.plan_id,
+    startDate: subscription.start_date,
+    endDate: subscription.end_date,
+    status: subscription.status,
+    createdAt: subscription.created_at,
+  };
+};
+
 export const authService = {
   login,
   register,
   getCurrentUser,
   updateProfile,
+  purchaseSubscription,
 };

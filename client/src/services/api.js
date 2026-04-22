@@ -127,6 +127,30 @@ export const authAPI = {
     const response = await api.delete(`/admin/subscriptions/${id}`);
     return response.data;
   },
+
+  // User subscription purchase
+  purchaseSubscription: async (planId, durationMonths) => {
+    const response = await api.post("/auth/purchase-subscription", {
+      planId,
+      durationMonths,
+    });
+    return response.data;
+  },
+
+  // Get all subscription buyers (admin only)
+  getSubscriptionBuyers: async () => {
+    const response = await api.get("/admin/subscription-buyers");
+    return response.data;
+  },
+
+  // Update user plan (admin only)
+  updateUserPlan: async (userId, planId, durationMonths) => {
+    const response = await api.put(`/admin/users/${userId}/plan`, {
+      planId,
+      durationMonths,
+    });
+    return response.data;
+  },
 };
 
 export const stockAPI = {

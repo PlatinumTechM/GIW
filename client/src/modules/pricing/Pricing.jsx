@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../contexts/AuthContext";
 import { authAPI } from "../../services/api";
 import notify from "../../utils/notifications.jsx";
 import {
@@ -23,11 +24,69 @@ import {
 } from "lucide-react";
 
 const Pricing = () => {
+  const { isAuthenticated, user, setUser } = useAuth();
+  const navigate = useNavigate();
   const [currency, setCurrency] = useState("USD");
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOptions, setSelectedOptions] = useState({});
+  const [purchasingPlan, setPurchasingPlan] = useState(null);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   const exchangeRate = 83;
+
+  const handleSelectOption = (planName, option) => {
+    setSelectedOptions((prev) => {
+      const current = prev[planName];
+      // If clicking same option, unselect it
+      if (current && current.id === option.id) {
+        const { [planName]: _, ...rest } = prev;
+        return rest;
+      }
+      // Otherwise select the new option
+      return {
+        ...prev,
+        [planName]: option,
+      };
+    });
+  };
+
+  const handleBuyPlan = async (planName) => {
+    const selectedOption = selectedOptions[planName];
+    if (!selectedOption) {
+      notify.warning("Select Duration", "Please select a duration option first");
+      return;
+    }
+
+    try {
+      setPurchasingPlan(planName);
+      const response = await authAPI.purchaseSubscription(
+        selectedOption.id,
+        selectedOption.duration
+      );
+
+      if (response.success) {
+        notify.success(
+          "Success",
+          `You have successfully purchased the ${planName} plan for ${selectedOption.durationLabel}!`
+        );
+      } else {
+        notify.error("Error", response.message || "Failed to purchase subscription");
+      }
+    } catch (error) {
+      console.error("Purchase error:", error);
+      notify.error("Error", "Failed to purchase subscription. Please try again.");
+    } finally {
+      setPurchasingPlan(null);
+    }
+  };
+
+  const handleLoginFirst = () => {
+    notify.info("Login Required", "Please login first, then buy the plan");
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 2000);
+  };
 
   // Convert INR price from backend to USD if needed
   const getPrice = (inrPrice) => {
@@ -38,6 +97,31 @@ const Pricing = () => {
   const getCurrencySymbol = () => {
     return currency === "USD" ? "$" : "₹";
   };
+
+  // Check user subscription status and redirect if active
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (isAuthenticated) {
+        try {
+          // Fetch fresh user data to get latest subscription status
+          const userData = await authAPI.getCurrentUser();
+          setUser(userData);
+
+          // Redirect if subscription is active
+          if (userData?.subscriptionStatus === "active") {
+            notify.info("Active Subscription", "You already have an active subscription.");
+            navigate("/user/home");
+            return;
+          }
+        } catch (error) {
+          console.error("Error fetching user subscription:", error);
+        }
+      }
+      setCheckingSubscription(false);
+    };
+
+    checkSubscription();
+  }, [isAuthenticated, navigate, setUser]);
 
   // Fetch subscriptions from backend
   useEffect(() => {
@@ -105,8 +189,8 @@ const Pricing = () => {
           ],
           notIncluded: ["Priority support", "Advanced analytics"],
           popular: false,
-          cta: "Get Started",
-          ctaLink: "/register",
+          cta: isAuthenticated ? "Buy Plan" : "Get Started",
+          ctaLink: isAuthenticated ? "#" : "/register",
           badge: "For Small Businesses",
         },
         {
@@ -132,8 +216,8 @@ const Pricing = () => {
           ],
           notIncluded: ["Dedicated account manager"],
           popular: true,
-          cta: "Start Free Trial",
-          ctaLink: "/register",
+          cta: isAuthenticated ? "Buy Plan" : "Start Free Trial",
+          ctaLink: isAuthenticated ? "#" : "/register",
           badge: "Most Popular",
         },
         {
@@ -195,7 +279,7 @@ const Pricing = () => {
                   ? ["Dedicated account manager", "White-label options"]
                   : [],
             popular: name === "silver",
-            cta: name === "gold" || name === "enterprise" ? "Contact Sales" : "Get Started",
+            cta: name === "gold" || name === "enterprise" ? "Contact Sales" : (isAuthenticated ? "Buy Plan" : "Get Started"),
             ctaLink: "/register",
             badge:
               name === "basic"
@@ -386,7 +470,7 @@ const Pricing = () => {
       {/* Pricing Cards */}
       <section className="relative bg-gradient-to-b from-[#F1F5F9] to-white py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {loading ? (
+          {loading || checkingSubscription ? (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <motion.div
@@ -568,9 +652,11 @@ const Pricing = () => {
                           >
                             {plan.options?.map((option, idx) => {
                               const price = getPrice(option.price);
+                              const isSelected = selectedOptions[plan.name]?.id === option.id;
                               return (
                                 <motion.div
                                   key={option.id}
+                                  onClick={() => handleSelectOption(plan.name, option)}
                                   variants={{
                                     hidden: { opacity: 0, x: -20 },
                                     visible: { opacity: 1, x: 0 },
@@ -582,25 +668,39 @@ const Pricing = () => {
                                     transition: { type: "spring", stiffness: 400 },
                                   }}
                                   className={`group/duration flex items-center justify-between rounded-xl border px-4 py-3 cursor-pointer transition-all duration-300 ${
-                                    plan.popular
-                                      ? "border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/30"
-                                      : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#3B82F6]/40 hover:bg-[#EFF6FF] hover:shadow-md"
+                                    isSelected
+                                      ? plan.popular
+                                        ? "border-white bg-white/30 shadow-lg"
+                                        : "border-[#3B82F6] bg-[#DBEAFE] shadow-md"
+                                      : plan.popular
+                                        ? "border-white/20 bg-white/10 hover:bg-white/20 hover:border-white/30"
+                                        : "border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#3B82F6]/40 hover:bg-[#EFF6FF] hover:shadow-md"
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
                                     <motion.div
                                       initial={false}
                                       className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
-                                        plan.popular
-                                          ? "border-white/40 group-hover/duration:border-white"
-                                          : "border-[#CBD5E1] group-hover/duration:border-[#3B82F6]"
+                                        isSelected
+                                          ? plan.popular
+                                            ? "border-white bg-white"
+                                            : "border-[#3B82F6] bg-[#3B82F6]"
+                                          : plan.popular
+                                            ? "border-white/40 group-hover/duration:border-white"
+                                            : "border-[#CBD5E1] group-hover/duration:border-[#3B82F6]"
                                       }`}
                                     >
                                       <motion.div
-                                        initial={{ scale: 0 }}
-                                        whileHover={{ scale: 1 }}
+                                        initial={false}
+                                        animate={{ scale: isSelected ? 1 : 0 }}
                                         className={`h-2.5 w-2.5 rounded-full ${
-                                          plan.popular ? "bg-white" : "bg-[#3B82F6]"
+                                          isSelected
+                                            ? plan.popular
+                                              ? "bg-[#1E3A8A]"
+                                              : "bg-white"
+                                            : plan.popular
+                                              ? "bg-white"
+                                              : "bg-[#3B82F6]"
                                         }`}
                                       />
                                     </motion.div>
@@ -646,34 +746,95 @@ const Pricing = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                           >
-                            <Link
-                              to={plan.ctaLink}
-                              className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
-                                plan.popular
-                                  ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC] hover:shadow-xl"
-                                  : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30"
-                              }`}
-                            >
-                              <span className="relative z-10">{plan.cta}</span>
-                              <motion.span
-                                animate={{ x: [0, 5, 0] }}
-                                transition={{ duration: 1.5, repeat: Infinity }}
-                                className="relative z-10"
-                              >
-                                <ArrowRight className="h-4 w-4" />
-                              </motion.span>
-                              {/* Shine effect on hover */}
-                              <motion.div
-                                initial={{ x: "-100%" }}
-                                whileHover={{ x: "100%" }}
-                                transition={{ duration: 0.6 }}
-                                className={`absolute inset-0 ${
+                            {plan.cta === "Buy Plan" ? (
+                              <button
+                                onClick={() => handleBuyPlan(plan.name)}
+                                disabled={purchasingPlan === plan.name}
+                                className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
                                   plan.popular
-                                    ? "bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                                    : "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                    ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC] hover:shadow-xl"
+                                    : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30"
                                 }`}
-                              />
-                            </Link>
+                              >
+                                <span className="relative z-10">{purchasingPlan === plan.name ? "Processing..." : plan.cta}</span>
+                                <motion.span
+                                  animate={{ x: [0, 5, 0] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                  className="relative z-10"
+                                >
+                                  <ArrowRight className="h-4 w-4" />
+                                </motion.span>
+                                {/* Shine effect on hover */}
+                                <motion.div
+                                  initial={{ x: "-100%" }}
+                                  whileHover={{ x: "100%" }}
+                                  transition={{ duration: 0.6 }}
+                                  className={`absolute inset-0 ${
+                                    plan.popular
+                                      ? "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                      : "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                  }`}
+                                />
+                              </button>
+                            ) : plan.cta === "Contact Sales" ? (
+                              <Link
+                                to={plan.ctaLink}
+                                className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
+                                  plan.popular
+                                    ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC] hover:shadow-xl"
+                                    : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30"
+                                }`}
+                              >
+                                <span className="relative z-10">{plan.cta}</span>
+                                <motion.span
+                                  animate={{ x: [0, 5, 0] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                  className="relative z-10"
+                                >
+                                  <ArrowRight className="h-4 w-4" />
+                                </motion.span>
+                                {/* Shine effect on hover */}
+                                <motion.div
+                                  initial={{ x: "-100%" }}
+                                  whileHover={{ x: "100%" }}
+                                  transition={{ duration: 0.6 }}
+                                  className={`absolute inset-0 ${
+                                    plan.popular
+                                      ? "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                      : "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                  }`}
+                                />
+                              </Link>
+                            ) : (
+                              <button
+                                onClick={handleLoginFirst}
+                                className={`group/btn relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300 ${
+                                  plan.popular
+                                    ? "bg-white text-[#1E3A8A] shadow-lg hover:bg-[#F8FAFC] hover:shadow-xl"
+                                    : "bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white shadow-lg shadow-[#1E3A8A]/25 hover:shadow-xl hover:shadow-[#1E3A8A]/30"
+                                }`}
+                              >
+                                <span className="relative z-10">{plan.cta}</span>
+                                <motion.span
+                                  animate={{ x: [0, 5, 0] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                  className="relative z-10"
+                                >
+                                  <ArrowRight className="h-4 w-4" />
+                                </motion.span>
+                                {/* Shine effect on hover */}
+                                <motion.div
+                                  initial={{ x: "-100%" }}
+                                  whileHover={{ x: "100%" }}
+                                  transition={{ duration: 0.6 }}
+                                  className={`absolute inset-0 ${
+                                    plan.popular
+                                      ? "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                                      : "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                  }`}
+                                />
+                              </button>
+                            )}
                           </motion.div>
                         </div>
 

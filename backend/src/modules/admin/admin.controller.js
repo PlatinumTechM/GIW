@@ -57,6 +57,23 @@ const getSubscriptions = async (req, res) => {
   }
 };
 
+// Get only active subscriptions (for public pricing page)
+const getActiveSubscriptions = async (req, res) => {
+  try {
+    const subscriptions = await adminService.getActiveSubscriptions();
+    res.status(200).json({
+      success: true,
+      subscriptions,
+    });
+  } catch (error) {
+    console.error("Error at getActiveSubscriptions = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch subscriptions",
+    });
+  }
+};
+
 // Create subscription
 const createSubscription = async (req, res) => {
   try {
@@ -161,11 +178,61 @@ const deleteSubscription = async (req, res) => {
   }
 };
 
+// Get all subscription buyers
+const getSubscriptionBuyers = async (req, res) => {
+  try {
+    const buyers = await adminService.getSubscriptionBuyers();
+    res.status(200).json({
+      success: true,
+      buyers,
+    });
+  } catch (error) {
+    console.error("Error at getSubscriptionBuyers = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch subscription buyers",
+    });
+  }
+};
+
+// Update user plan (admin only)
+const updateUserPlan = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { planId, durationMonths } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const result = await adminService.updateUserPlan(userId, planId, durationMonths);
+
+    res.status(200).json({
+      success: true,
+      message: planId ? "User plan updated successfully" : "User plan removed successfully",
+      subscription: result.subscription,
+      user: result.user,
+    });
+  } catch (error) {
+    console.error("Error at updateUserPlan = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update user plan",
+    });
+  }
+};
+
 export const adminController = {
   verifyAdminPassword,
   getAllUsers,
   getSubscriptions,
+  getActiveSubscriptions,
   createSubscription,
   updateSubscription,
   deleteSubscription,
+  getSubscriptionBuyers,
+  updateUserPlan,
 };
