@@ -1,6 +1,6 @@
 import { pool } from "../../config/db.js";
 
-const findUserByEmail = async (email) => {
+export const findUserByEmail = async (email) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, password, document, is_active, role, created_at 
                  FROM users WHERE email = $1`;
@@ -8,7 +8,7 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
-const findUserById = async (id) => {
+export const findUserById = async (id) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, document, is_active, role, created_at 
                  FROM users WHERE id = $1`;
@@ -16,7 +16,7 @@ const findUserById = async (id) => {
   return result.rows[0];
 };
 
-const findUserByPhone = async (phone) => {
+export const findUserByPhone = async (phone) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, password, document, is_active, role, created_at 
                  FROM users WHERE phone = $1`;
@@ -24,7 +24,7 @@ const findUserByPhone = async (phone) => {
   return result.rows[0];
 };
 
-const createUser = async (userData) => {
+export const createUser = async (userData) => {
   const { name, email, company, phone, address, gst, password, document } =
     userData;
 
@@ -47,7 +47,7 @@ const createUser = async (userData) => {
   return result.rows[0];
 };
 
-const updateUser = async (id, userData) => {
+export const updateUser = async (id, userData) => {
   const { name, company, phone, address, gst } = userData;
 
   const query = `UPDATE users 
@@ -64,12 +64,4 @@ const updateUser = async (id, userData) => {
     id,
   ]);
   return result.rows[0];
-};
-
-export const authRepo = {
-  findUserByEmail,
-  findUserById,
-  findUserByPhone,
-  createUser,
-  updateUser,
 };
