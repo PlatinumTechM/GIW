@@ -232,11 +232,40 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.lab) {
-    const labs = filters.lab.split(",").map((l) => l.trim().toUpperCase());
-    const placeholders = labs.map((_, i) => `$${paramIndex + i}`).join(", ");
-    whereConditions.push(`UPPER(lab) IN (${placeholders})`);
-    values.push(...labs);
-    paramIndex += labs.length;
+    const normalizeLabValue = (v) =>
+      v
+        .toString()
+        .trim()
+        .replace(/[\s_-]+/g, " ")
+        .toUpperCase();
+
+    const rawLabs = filters.lab.split(",").map((l) => l.trim()).filter(Boolean);
+    const labs = rawLabs.map(normalizeLabValue).filter(Boolean);
+
+    const hasNonCertified = labs.includes("NON CERTIFIED");
+    const selectedLabs = labs.filter((l) => l !== "NON CERTIFIED");
+    const nonCertifiedCondition =
+      "(certificate_number IS NULL OR TRIM(certificate_number) = '')";
+
+    if (hasNonCertified && selectedLabs.length === 0) {
+      whereConditions.push(nonCertifiedCondition);
+    } else if (!hasNonCertified && selectedLabs.length > 0) {
+      const placeholders = selectedLabs
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(`UPPER(lab) IN (${placeholders})`);
+      values.push(...selectedLabs);
+      paramIndex += selectedLabs.length;
+    } else if (hasNonCertified && selectedLabs.length > 0) {
+      const placeholders = selectedLabs
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(
+        `(UPPER(lab) IN (${placeholders}) OR ${nonCertifiedCondition})`,
+      );
+      values.push(...selectedLabs);
+      paramIndex += selectedLabs.length;
+    }
   }
 
   // Fancy color filters
@@ -599,12 +628,14 @@ export const deleteStock = async (id) => {
 export const deleteByStockIds = async (stockIds, client = null) => {
   if (stockIds.length === 0) return 0;
 
-  const placeholders = stockIds.map((_, i) => `$${i + 1}`).join(", ");
-  const query = `DELETE FROM diamond_stock WHERE stock_id IN (${placeholders})`;
+  // Normalize stockIds to uppercase for case-insensitive comparison
+  const normalizedStockIds = stockIds.map(id => id.toUpperCase());
+  const placeholders = normalizedStockIds.map((_, i) => `$${i + 1}`).join(", ");
+  const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) IN (${placeholders})`;
 
   const result = client
-    ? await client.query(query, stockIds)
-    : await pool.query(query, stockIds);
+    ? await client.query(query, normalizedStockIds)
+    : await pool.query(query, normalizedStockIds);
 
   return result.rowCount;
 };
