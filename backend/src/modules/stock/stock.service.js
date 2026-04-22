@@ -327,47 +327,112 @@ const FIELD_MAPPINGS = {
   // Media
 
   // diamond_image1: ["image 1", "image1", "photo 1", "pic 1"],
-// diamond_image1: ["image 1", "image1", "photo 1", "pic 1", "diamond_image", "diamond image"],
-diamond_image1: [
-  "image 1", "image1", "photo 1", "pic 1",
-  "image", "photo", "pic", "picture",
-  "diamond_image", "diamond image", "diamondimage",
-  "image_url", "image link", "image_url",
-  "link", "url", "src", "source"
-],  
-// diamond_image2: ["image 2", "image2", "photo 2", "pic 2"],
-diamond_image2: [
-  "image 2", "image2", "photo 2", "pic 2",
-  "image", "photo", "pic", "picture",
-  "diamond_image", "diamond image", "diamondimage",
-  "image_url", "image link", "image_url",
-  "link", "url", "src", "source"
-],
+  // diamond_image1: ["image 1", "image1", "photo 1", "pic 1", "diamond_image", "diamond image"],
+  diamond_image1: [
+    "image 1",
+    "image1",
+    "photo 1",
+    "pic 1",
+    "image",
+    "photo",
+    "pic",
+    "picture",
+    "diamond_image",
+    "diamond image",
+    "diamondimage",
+    "image_url",
+    "image link",
+    "image_url",
+    "link",
+    "url",
+    "src",
+    "source",
+  ],
+  // diamond_image2: ["image 2", "image2", "photo 2", "pic 2"],
+  diamond_image2: [
+    "image 2",
+    "image2",
+    "photo 2",
+    "pic 2",
+    "image",
+    "photo",
+    "pic",
+    "picture",
+    "diamond_image",
+    "diamond image",
+    "diamondimage",
+    "image_url",
+    "image link",
+    "image_url",
+    "link",
+    "url",
+    "src",
+    "source",
+  ],
 
-    // diamond_image3: ["image 3", "image3", "photo 3", "pic 3"],
-diamond_image3: [
-  "image 3", "image3", "photo 3", "pic 3",
-  "image", "photo", "pic", "picture",
-  "diamond_image", "diamond image", "diamondimage",
-  "image_url", "image link", "image_url",
-  "link", "url", "src", "source"
-],
+  // diamond_image3: ["image 3", "image3", "photo 3", "pic 3"],
+  diamond_image3: [
+    "image 3",
+    "image3",
+    "photo 3",
+    "pic 3",
+    "image",
+    "photo",
+    "pic",
+    "picture",
+    "diamond_image",
+    "diamond image",
+    "diamondimage",
+    "image_url",
+    "image link",
+    "image_url",
+    "link",
+    "url",
+    "src",
+    "source",
+  ],
   // diamond_image4: ["image 4", "image4", "photo 4", "pic 4"],
-diamond_image4: [
-  "image 4", "image4", "photo 4", "pic 4",
-  "image", "photo", "pic", "picture",
-  "diamond_image", "diamond image", "diamondimage",
-  "image_url", "image link", "image_url",
-  "link", "url", "src", "source"
-],
+  diamond_image4: [
+    "image 4",
+    "image4",
+    "photo 4",
+    "pic 4",
+    "image",
+    "photo",
+    "pic",
+    "picture",
+    "diamond_image",
+    "diamond image",
+    "diamondimage",
+    "image_url",
+    "image link",
+    "image_url",
+    "link",
+    "url",
+    "src",
+    "source",
+  ],
   // diamond_image5: ["image 5", "image5", "photo 5", "pic 5"],
-diamond_image5: [
-  "image 5", "image5", "photo 5", "pic 5",
-  "image", "photo", "pic", "picture",
-  "diamond_image", "diamond image", "diamondimage",
-  "image_url", "image link", "image_url",
-  "link", "url", "src", "source"
-],
+  diamond_image5: [
+    "image 5",
+    "image5",
+    "photo 5",
+    "pic 5",
+    "image",
+    "photo",
+    "pic",
+    "picture",
+    "diamond_image",
+    "diamond image",
+    "diamondimage",
+    "image_url",
+    "image link",
+    "image_url",
+    "link",
+    "url",
+    "src",
+    "source",
+  ],
 
   diamond_video: ["video", "diamond video", "video link"],
 
@@ -474,62 +539,62 @@ const VALUE_MAPPINGS = {
   // Cut, Polish, Symmetry mappings (short codes and full words to full names)
   grading: {
     // Full word variations → full name
-    "EXCELLENT": "EXCELLENT",
+    EXCELLENT: "EXCELLENT",
     "VERY GOOD": "VERY GOOD",
-    "VERYGOOD": "VERY GOOD",
-    "IDEAL": "IDEAL",
-    "GOOD": "GOOD",
-    "FAIR": "FAIR",
-    "POOR": "POOR",
+    VERYGOOD: "VERY GOOD",
+    IDEAL: "IDEAL",
+    GOOD: "GOOD",
+    FAIR: "FAIR",
+    POOR: "POOR",
     // Short codes → full name
-    "EX": "EXCELLENT",
-    "VG": "VERY GOOD",
-    "ID": "IDEAL",
-    "GD": "GOOD",
-    "FR": "FAIR",
-    "PR": "POOR",
+    EX: "EXCELLENT",
+    VG: "VERY GOOD",
+    ID: "IDEAL",
+    GD: "GOOD",
+    FR: "FAIR",
+    PR: "POOR",
   },
   // Shape mappings (short form to long form)
   shape: {
     // Short codes → long form
-    "RD": "ROUND",
-    "PR": "PRINCESS",
-    "PN": "PEAR",
-    "EM": "EMERALD",
-    "MQ": "MARQUISE",
-    "OV": "OVAL",
-    "RAD": "RADIANT",
-    "CUS": "CUSHION",
-    "HT": "HEART",
-    "ASH": "ASSCHER",
-    "BG": "BAGUETTE",
-    "TRI": "TRILLIANT",
-    "TR": "TRILLIANT",
+    RD: "ROUND",
+    PR: "PRINCESS",
+    PN: "PEAR",
+    EM: "EMERALD",
+    MQ: "MARQUISE",
+    OV: "OVAL",
+    RAD: "RADIANT",
+    CUS: "CUSHION",
+    HT: "HEART",
+    ASH: "ASSCHER",
+    BG: "BAGUETTE",
+    TRI: "TRILLIANT",
+    TR: "TRILLIANT",
     // Long forms (pass-through)
-    "ROUND": "ROUND",
-    "PRINCESS": "PRINCESS",
-    "PEAR": "PEAR",
-    "EMERALD": "EMERALD",
-    "MARQUISE": "MARQUISE",
-    "OVAL": "OVAL",
-    "RADIANT": "RADIANT",
-    "CUSHION": "CUSHION",
-    "HEART": "HEART",
-    "ASSCHER": "ASSCHER",
-    "BAGUETTE": "BAGUETTE",
-    "TRILLIANT": "TRILLIANT",
+    ROUND: "ROUND",
+    PRINCESS: "PRINCESS",
+    PEAR: "PEAR",
+    EMERALD: "EMERALD",
+    MARQUISE: "MARQUISE",
+    OVAL: "OVAL",
+    RADIANT: "RADIANT",
+    CUSHION: "CUSHION",
+    HEART: "HEART",
+    ASSCHER: "ASSCHER",
+    BAGUETTE: "BAGUETTE",
+    TRILLIANT: "TRILLIANT",
   },
   // Status mappings
   status: {
-    "YES": "AVAILABLE",
-    "AVAILABLE": "AVAILABLE",
-    "AVAIL": "AVAILABLE",
-    "SOLD": "SOLD",
+    YES: "AVAILABLE",
+    AVAILABLE: "AVAILABLE",
+    AVAIL: "AVAILABLE",
+    SOLD: "SOLD",
     "ON HOLD": "ON HOLD",
-    "ONHOLD": "ON HOLD",
+    ONHOLD: "ON HOLD",
     "IN MEMO": "IN MEMO",
-    "INMEMO": "IN MEMO",
-    "MEMO": "IN MEMO",
+    INMEMO: "IN MEMO",
+    MEMO: "IN MEMO",
   },
 };
 
@@ -633,7 +698,6 @@ const parseMeasurements = (measurementsStr) => {
 
 const convertToDbFormat = (mappedData, userId = null) => {
   return {
-
     type: parseString(mappedData.type),
 
     user_id: userId,
@@ -1157,8 +1221,16 @@ export const getStockById = async (id) => {
   // Add availability flags for video and certificate
   return {
     ...stock,
-    hasVideo: !!(stock.diamond_video && stock.diamond_video.trim() !== "" && stock.diamond_video.toUpperCase() !== "NONE"),
-    hasCertificate: !!(stock.certificate_image && stock.certificate_image.trim() !== "" && stock.certificate_image.toUpperCase() !== "NONE"),
+    hasVideo: !!(
+      stock.diamond_video &&
+      stock.diamond_video.trim() !== "" &&
+      stock.diamond_video.toUpperCase() !== "NONE"
+    ),
+    hasCertificate: !!(
+      stock.certificate_image &&
+      stock.certificate_image.trim() !== "" &&
+      stock.certificate_image.toUpperCase() !== "NONE"
+    ),
   };
 };
 
@@ -1191,8 +1263,13 @@ export const createStock = async (stockData, userId = null) => {
     return result;
   } catch (error) {
     // Handle unique constraint violation for stock_id
-    if (error.code === "23505" && error.constraint === "diamond_stock_stock_id_key") {
-      throw new Error(`Stock ID "${dbData.stock_id}" already exists. Please use a different Stock ID.`);
+    if (
+      error.code === "23505" &&
+      error.constraint === "diamond_stock_stock_id_key"
+    ) {
+      throw new Error(
+        `Stock ID "${dbData.stock_id}" already exists. Please use a different Stock ID.`,
+      );
     }
     // Re-throw other errors
     throw error;

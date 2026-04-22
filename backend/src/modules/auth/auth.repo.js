@@ -1,6 +1,6 @@
 import { pool } from "../../config/db.js";
 
-const findUserByEmail = async (email) => {
+export const findUserByEmail = async (email) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, password, document, is_active, role, created_at 
                  FROM users WHERE email = $1`;
@@ -8,7 +8,7 @@ const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
-const findUserById = async (id) => {
+export const findUserById = async (id) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, document, is_active, role, created_at 
                  FROM users WHERE id = $1`;
@@ -16,7 +16,24 @@ const findUserById = async (id) => {
   return result.rows[0];
 };
 
-const findUserByPhone = async (phone) => {
+export const findUserWithSubscription = async (id) => {
+  const query = `
+    SELECT 
+      u.id, u.name, u.email, u.company, u.phone, u.address,
+      u.gst, u.document, u.is_active, u.role, u.created_at,
+      sp.name as plan_name,
+      us.end_date as plan_expiry,
+      us.status as subscription_status
+    FROM users u
+    LEFT JOIN user_subscriptions us ON u.id = us.user_id AND us.status = 'active'
+    LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
+    WHERE u.id = $1
+  `;
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
+export const findUserByPhone = async (phone) => {
   const query = `SELECT id, name, email, company, phone, address, 
                  gst, password, document, is_active, role, created_at 
                  FROM users WHERE phone = $1`;
@@ -24,7 +41,7 @@ const findUserByPhone = async (phone) => {
   return result.rows[0];
 };
 
-const createUser = async (userData) => {
+export const createUser = async (userData) => {
   const { name, email, company, phone, address, gst, password, document } =
     userData;
 
@@ -47,7 +64,7 @@ const createUser = async (userData) => {
   return result.rows[0];
 };
 
-const updateUser = async (id, userData) => {
+export const updateUser = async (id, userData) => {
   const { name, company, phone, address, gst } = userData;
 
   const query = `UPDATE users 
@@ -66,10 +83,18 @@ const updateUser = async (id, userData) => {
   return result.rows[0];
 };
 
-export const authRepo = {
-  findUserByEmail,
-  findUserById,
-  findUserByPhone,
-  createUser,
-  updateUser,
+// Create user subscription purchase
+export const createUserSubscription = async (userId, planId, durationMonths) => {
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
+
+  const query = `
+    INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date, status, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
+    RETURNING id, user_id, plan_id, start_date, end_date, status, created_at, updated_at
+  `;
+
+  const result = await pool.query(query, [userId, planId, startDate, endDate]);
+  return result.rows[0];
 };

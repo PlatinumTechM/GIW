@@ -1,6 +1,6 @@
-import { adminService } from "./admin.service.js";
+import * as adminService from "./admin.service.js";
 
-const verifyAdminPassword = async (req, res) => {
+export const verifyAdminPassword = async (req, res) => {
   try {
     const { password } = req.body;
 
@@ -23,7 +23,7 @@ const verifyAdminPassword = async (req, res) => {
   }
 };
 
-const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const users = await adminService.getAllUsers();
 
@@ -41,7 +41,7 @@ const getAllUsers = async (req, res) => {
 };
 
 // Get all subscriptions
-const getSubscriptions = async (req, res) => {
+export const getSubscriptions = async (req, res) => {
   try {
     const subscriptions = await adminService.getSubscriptions();
     res.status(200).json({
@@ -57,10 +57,35 @@ const getSubscriptions = async (req, res) => {
   }
 };
 
-// Create subscription
-const createSubscription = async (req, res) => {
+// Get only active subscriptions (for public pricing page)
+const getActiveSubscriptions = async (req, res) => {
   try {
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
+    const subscriptions = await adminService.getActiveSubscriptions();
+    res.status(200).json({
+      success: true,
+      subscriptions,
+    });
+  } catch (error) {
+    console.error("Error at getActiveSubscriptions = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch subscriptions",
+    });
+  }
+};
+
+// Create subscription
+export const createSubscription = async (req, res) => {
+  try {
+    const {
+      name,
+      durationMonth,
+      price,
+      stockLimit,
+      hasDiamonds,
+      hasJewellery,
+      description,
+    } = req.body;
 
     if (
       !name ||
@@ -100,10 +125,19 @@ const createSubscription = async (req, res) => {
 };
 
 // Update subscription
-const updateSubscription = async (req, res) => {
+export const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
+    const {
+      name,
+      durationMonth,
+      price,
+      stockLimit,
+      hasDiamonds,
+      hasJewellery,
+      description,
+      isActive,
+    } = req.body;
 
     if (
       !name ||
@@ -144,7 +178,7 @@ const updateSubscription = async (req, res) => {
 };
 
 // Delete subscription
-const deleteSubscription = async (req, res) => {
+export const deleteSubscription = async (req, res) => {
   try {
     const { id } = req.params;
     await adminService.deleteSubscription(id);
@@ -161,11 +195,49 @@ const deleteSubscription = async (req, res) => {
   }
 };
 
-export const adminController = {
-  verifyAdminPassword,
-  getAllUsers,
-  getSubscriptions,
-  createSubscription,
-  updateSubscription,
-  deleteSubscription,
+// Get all subscription buyers
+export const getSubscriptionBuyers = async (req, res) => {
+  try {
+    const buyers = await adminService.getSubscriptionBuyers();
+    res.status(200).json({
+      success: true,
+      buyers,
+    });
+  } catch (error) {
+    console.error("Error at getSubscriptionBuyers = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch subscription buyers",
+    });
+  }
+};
+
+// Update user plan (admin only)
+export const updateUserPlan = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { planId, durationMonths } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const result = await adminService.updateUserPlan(userId, planId, durationMonths);
+
+    res.status(200).json({
+      success: true,
+      message: planId ? "User plan updated successfully" : "User plan removed successfully",
+      subscription: result.subscription,
+      user: result.user,
+    });
+  } catch (error) {
+    console.error("Error at updateUserPlan = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update user plan",
+    });
+  }
 };

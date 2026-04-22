@@ -1,5 +1,5 @@
 import express from "express";
-import { adminController } from "./admin.controller.js";
+import * as adminController from "./admin.controller.js";
 import { authenticate } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -12,8 +12,8 @@ router.post(
 );
 router.get("/users", authenticate, adminController.getAllUsers);
 
-// Public subscription endpoint (no auth required)
-router.get("/subscriptions/public", adminController.getSubscriptions);
+// Public subscription endpoint (no auth required) - returns only active subscriptions
+router.get("/subscriptions/public", adminController.getActiveSubscriptions);
 
 // Subscription management routes (admin only)
 router.get("/subscriptions", authenticate, adminController.getSubscriptions);
@@ -28,5 +28,11 @@ router.delete(
   authenticate,
   adminController.deleteSubscription,
 );
+
+// Get all subscription buyers
+router.get("/subscription-buyers", authenticate, adminController.getSubscriptionBuyers);
+
+// Update user plan (admin only)
+router.put("/users/:userId/plan", authenticate, adminController.updateUserPlan);
 
 export { router as adminRoutes };

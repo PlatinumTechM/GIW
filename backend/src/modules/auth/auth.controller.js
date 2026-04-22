@@ -1,6 +1,6 @@
-import { authService } from "./auth.service.js";
+import * as authService from "./auth.service.js";
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
     const result = await authService.login(email, password);
@@ -25,7 +25,7 @@ const login = async (req, res) => {
   }
 };
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const {
       name,
@@ -35,11 +35,13 @@ const register = async (req, res) => {
       address,
       gst,
       password,
-      confirmPassword
+      confirmPassword,
     } = req.body;
-    
+
     // Get document full path if file was uploaded
-    const document = req.file ? `/uploads/documents/${req.file.filename}` : null;
+    const document = req.file
+      ? `/uploads/documents/${req.file.filename}`
+      : null;
 
     const result = await authService.register({
       name,
@@ -50,41 +52,41 @@ const register = async (req, res) => {
       gst,
       password,
       confirmPassword,
-      document
+      document,
     });
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("Error at register = ", error);
-    res.status(400).json({ 
+    res.status(400).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 };
 
-const getCurrentUser = async (req, res) => {
+export const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await authService.getCurrentUser(userId);
-    
+
     res.status(200).json(user);
   } catch (error) {
     console.error("Error at getCurrentUser = ", error);
-    
+
     if (error.message === "User not found") {
       return res.status(404).json({ error: "User not found" });
     }
-    
+
     res.status(500).json({ error: error.message });
   }
 };
 
-const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const { name, company, phone, address, gst } = req.body;
@@ -111,7 +113,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     // Clear the httpOnly cookie
     res.clearCookie("token", {
@@ -134,10 +136,31 @@ const logout = async (req, res) => {
   }
 };
 
-export const authController = {
-  login,
-  register,
-  getCurrentUser,
-  updateProfile,
-  logout
+export const purchaseSubscription = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { planId, durationMonths } = req.body;
+
+    if (!planId || !durationMonths) {
+      return res.status(400).json({
+        success: false,
+        message: "Plan ID and duration months are required",
+      });
+    }
+
+    const subscription = await authService.purchaseSubscription(userId, planId, durationMonths);
+
+    res.status(201).json({
+      success: true,
+      message: "Subscription purchased successfully",
+      subscription,
+    });
+  } catch (error) {
+    console.error("Error at purchaseSubscription = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to purchase subscription",
+    });
+  }
 };
+

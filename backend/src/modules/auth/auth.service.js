@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { authRepo } from "./auth.repo.js";
+import * as authRepo from "./auth.repo.js";
 
-const login = async (identifier, password) => {
+export const login = async (identifier, password) => {
   // Check if identifier is email or phone
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   let user;
@@ -36,23 +36,29 @@ const login = async (identifier, password) => {
     },
   );
 
+  // Fetch user with subscription info
+  const userWithSubscription = await authRepo.findUserWithSubscription(user.id);
+
   return {
     token,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      company: user.company,
-      phone: user.phone,
-      address: user.address,
-      gst: user.gst,
-      role: user.role || "user",
-      isActive: user.is_active,
+      id: userWithSubscription.id,
+      name: userWithSubscription.name,
+      email: userWithSubscription.email,
+      company: userWithSubscription.company,
+      phone: userWithSubscription.phone,
+      address: userWithSubscription.address,
+      gst: userWithSubscription.gst,
+      role: userWithSubscription.role || "user",
+      isActive: userWithSubscription.is_active,
+      planName: userWithSubscription.plan_name,
+      planExpiry: userWithSubscription.plan_expiry,
+      subscriptionStatus: userWithSubscription.subscription_status,
     },
   };
 };
 
-const register = async (userData) => {
+export const register = async (userData) => {
   const {
     name,
     email,
@@ -108,7 +114,7 @@ const register = async (userData) => {
   };
 };
 
-const getCurrentUser = async (userId) => {
+export const getCurrentUser = async (userId) => {
   const user = await authRepo.findUserById(userId);
 
   if (!user) {
@@ -126,10 +132,13 @@ const getCurrentUser = async (userId) => {
     document: user.document,
     role: user.role || "user",
     isActive: user.is_active,
+    planName: user.plan_name,
+    planExpiry: user.plan_expiry,
+    subscriptionStatus: user.subscription_status,
   };
 };
 
-const updateProfile = async (userId, userData) => {
+export const updateProfile = async (userId, userData) => {
   const { name, company, phone, address, gst } = userData;
 
   // Validation
@@ -140,7 +149,9 @@ const updateProfile = async (userId, userData) => {
   // Phone validation
   const phoneRegex = /^[\d\s\-+()]{10,20}$/;
   if (!phoneRegex.test(phone)) {
-    throw new Error("Please enter a valid mobile number with at least 10 digits");
+    throw new Error(
+      "Please enter a valid mobile number with at least 10 digits",
+    );
   }
 
   const updatedUser = await authRepo.updateUser(userId, {
@@ -169,9 +180,20 @@ const updateProfile = async (userId, userData) => {
   };
 };
 
-export const authService = {
-  login,
-  register,
-  getCurrentUser,
-  updateProfile,
+export const purchaseSubscription = async (userId, planId, durationMonths) => {
+  if (!planId || !durationMonths) {
+    throw new Error("Plan ID and duration are required");
+  }
+
+  const subscription = await authRepo.createUserSubscription(userId, planId, durationMonths);
+
+  return {
+    id: subscription.id,
+    userId: subscription.user_id,
+    planId: subscription.plan_id,
+    startDate: subscription.start_date,
+    endDate: subscription.end_date,
+    status: subscription.status,
+    createdAt: subscription.created_at,
+  };
 };
