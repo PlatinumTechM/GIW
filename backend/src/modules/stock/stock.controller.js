@@ -19,9 +19,11 @@ export const bulkUpload = async (req, res) => {
     res.status(201).json({
       success: true,
 
-      message: `Successfully uploaded ${result.insertedCount} stock items`,
+      message: result.limitReached ? result.limitMessage : `Successfully uploaded ${result.insertedCount} stock items`,
 
       data: result,
+      
+      limitReached: result.limitReached || false,
     });
   } catch (error) {
     console.error("Error at bulkUpload = ", error);
