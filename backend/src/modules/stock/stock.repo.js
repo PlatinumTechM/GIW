@@ -15,8 +15,8 @@ import {
 const mapFilterValue = (value) => {
   const upperValue = value.toUpperCase().trim();
   const mappings = {
-    "IDEAL": "ID",
-    "EXCELLENT": "EX",
+    IDEAL: "ID",
+    EXCELLENT: "EX",
     "VERY GOOD": "VG",
   };
   return mappings[upperValue] || value.trim();
@@ -207,7 +207,9 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.cut) {
-    const cuts = filters.cut.split(",").map((c) => mapFilterValue(c).toUpperCase());
+    const cuts = filters.cut
+      .split(",")
+      .map((c) => mapFilterValue(c).toUpperCase());
     const placeholders = cuts.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(cut) IN (${placeholders})`);
     values.push(...cuts);
@@ -256,7 +258,10 @@ export const getAll = async (page, limit, sortBy, filters) => {
         .replace(/[\s_-]+/g, " ")
         .toUpperCase();
 
-    const rawLabs = filters.lab.split(",").map((l) => l.trim()).filter(Boolean);
+    const rawLabs = filters.lab
+      .split(",")
+      .map((l) => l.trim())
+      .filter(Boolean);
     const labs = rawLabs.map(normalizeLabValue).filter(Boolean);
 
     const hasNonCertified = labs.includes("NON CERTIFIED");
@@ -293,8 +298,9 @@ export const getAll = async (page, limit, sortBy, filters) => {
       values.push(`%${fancyColors[0]}%`);
       paramIndex++;
     } else {
-      const placeholders = fancyColors.map((_, i) => `$${paramIndex + i}`).join(", ");
-      console.log("placeholders = ", placeholders);
+      const placeholders = fancyColors
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
       whereConditions.push(`fancy_color ILIKE ANY(ARRAY[${placeholders}])`);
       values.push(...fancyColors.map((c) => `%${c}%`));
       paramIndex += fancyColors.length;
@@ -302,13 +308,17 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.fancyIntensity) {
-    const intensities = filters.fancyIntensity.split(",").map((i) => i.trim().toUpperCase());
+    const intensities = filters.fancyIntensity
+      .split(",")
+      .map((i) => i.trim().toUpperCase());
     if (intensities.length === 1) {
       whereConditions.push(`UPPER(fancy_color_intensity) = $${paramIndex}`);
       values.push(intensities[0]);
       paramIndex++;
     } else {
-      const placeholders = intensities.map((_, i) => `$${paramIndex + i}`).join(", ");
+      const placeholders = intensities
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
       whereConditions.push(`UPPER(fancy_color_intensity) IN (${placeholders})`);
       values.push(...intensities);
       paramIndex += intensities.length;
@@ -316,13 +326,17 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.fancyOvertone) {
-    const overtones = filters.fancyOvertone.split(",").map((o) => o.trim().toUpperCase());
+    const overtones = filters.fancyOvertone
+      .split(",")
+      .map((o) => o.trim().toUpperCase());
     if (overtones.length === 1) {
       whereConditions.push(`UPPER(fancy_color_overtone) = $${paramIndex}`);
       values.push(overtones[0]);
       paramIndex++;
     } else {
-      const placeholders = overtones.map((_, i) => `$${paramIndex + i}`).join(", ");
+      const placeholders = overtones
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
       whereConditions.push(`UPPER(fancy_color_overtone) IN (${placeholders})`);
       values.push(...overtones);
       paramIndex += overtones.length;
@@ -553,9 +567,13 @@ export const getAll = async (page, limit, sortBy, filters) => {
 
   // Certificate type filter (Certified vs Non-Certified)
   if (filters.certificateType === "certified") {
-    whereConditions.push(`(lab IS NOT NULL AND TRIM(lab) <> '' AND UPPER(lab) <> 'NONE')`);
+    whereConditions.push(
+      `(lab IS NOT NULL AND TRIM(lab) <> '' AND UPPER(lab) <> 'NONE')`,
+    );
   } else if (filters.certificateType === "non-certified") {
-    whereConditions.push(`(lab IS NULL OR TRIM(lab) = '' OR UPPER(lab) = 'NONE')`);
+    whereConditions.push(
+      `(lab IS NULL OR TRIM(lab) = '' OR UPPER(lab) = 'NONE')`,
+    );
   }
 
   const whereClause =
@@ -611,7 +629,12 @@ const normalizeNullValues = (data) => {
 
   for (const key in normalized) {
     const value = normalized[key];
-    if (value === null || value === undefined || value === "" || value === "null") {
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      value === "null"
+    ) {
       normalized[key] = "None";
     }
   }
@@ -693,7 +716,7 @@ export const deleteByStockIds = async (stockIds, client = null) => {
   if (stockIds.length === 0) return 0;
 
   // Normalize stockIds to uppercase for case-insensitive comparison
-  const normalizedStockIds = stockIds.map(id => id.toUpperCase());
+  const normalizedStockIds = stockIds.map((id) => id.toUpperCase());
   const placeholders = normalizedStockIds.map((_, i) => `$${i + 1}`).join(", ");
   const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) IN (${placeholders})`;
 
