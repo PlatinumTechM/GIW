@@ -16,6 +16,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
   const itemsPerPage = 9;
 
   const openDiamondDetail = (diamond) => {
+    if (!diamond.id || diamond.id === "None" || isNaN(Number(diamond.id))) {
+      console.error("Invalid diamond ID:", diamond.id);
+      return;
+    }
     navigate(`/user/diamond/${type}/${diamond.id}`);
   };
 
@@ -76,7 +80,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
 
         // Add filters to params
         if (filters?.shapes?.length > 0) params.shape = filters.shapes.join(",");
-        if (filters?.colors?.length > 0) params.color = filters.colors.join(",");
+        // Only send color filter for White diamonds, not Fancy
+        if (filters?.colors?.length > 0 && filters?.colorType === "White") {
+          params.color = filters.colors.join(",");
+        }
         if (filters?.clarities?.length > 0) params.clarity = filters.clarities.join(",");
         if (filters?.caratMin) params.minCarat = filters.caratMin;
         if (filters?.caratMax) params.maxCarat = filters.caratMax;
@@ -90,8 +97,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
         if (filters?.symmetry?.length > 0) params.symmetry = filters.symmetry.join(",");
         if (filters?.fluorescence?.length > 0) params.fluorescence = filters.fluorescence.join(",");
         if (filters?.certifications?.length > 0) params.lab = filters.certifications.join(",");
+        if (filters?.fancyColors?.length > 0) params.fancyColor = filters.fancyColors.join(",");
         if (filters?.fancyIntensity) params.fancyIntensity = filters.fancyIntensity;
         if (filters?.fancyOvertone) params.fancyOvertone = filters.fancyOvertone;
+        if (filters?.certificateType) params.certificateType = filters.certificateType;
         if (filters?.available) params.availability = "AVAILABLE";
         if (filters?.showOnlyMedia) params.hasMedia = "true";
 
@@ -134,9 +143,9 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
 
         // Use dedicated routes based on type - backend handles type filtering
         let response;
-        if (type === "natural-diamonds" || type === "NaturalDiamond") {
+        if (type === "natural" || type === "natural-diamonds" || type === "NaturalDiamond") {
           response = await stockAPI.getNaturalDiamonds(params);
-        } else if (type === "lab-grown-diamonds" || type === "LabGrownDiamond") {
+        } else if (type === "lab-grown" || type === "lab-grown-diamonds" || type === "LabGrownDiamond") {
           response = await stockAPI.getLabGrownDiamonds(params);
         } else {
           response = await stockAPI.getAllStocks(params);
@@ -159,7 +168,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     };
 
     fetchStocks();
-  }, [type, currentPage, filters, searchQuery]);
+  }, [type, currentPage, filters, searchQuery, sortBy]);
 
   // Reset to page 1 when filters or search change
   useEffect(() => {
@@ -256,8 +265,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
         // List View
         <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
           {/* Table Header */}
-          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
-            <div>Shape</div>
+          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
             <div>Carat</div>
             <div>Color</div>
             <div>Clarity</div>
@@ -290,37 +298,23 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                 className="group border-b border-[#E2E8F0] last:border-b-0 hover:bg-[#F8FAFC] transition-all duration-300"
               >
                 {/* Desktop Row */}
-                <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex items-center justify-center overflow-hidden cursor-pointer"
-                        onClick={() => openDiamondDetail(item)}
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.shape}
-                          className="w-10 h-10 object-cover rounded"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#0F172A]">{item.shape}</p>
-                        {item.badge && (
-                          <span className="text-xs text-[#1E3A8A] bg-[#DBEAFE] px-2 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
+                <div
+                  className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center cursor-pointer"
+                  onClick={() => openDiamondDetail(item)}
+                >
+                  <div className="flex items-center gap-2">
                     <span className="font-medium text-[#0F172A]">{item.carat}ct</span>
+                    {item.badge && (
+                      <span className="text-xs text-[#1E3A8A] bg-[#DBEAFE] px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
                   </div>
                   <div>
-                    <span className={`font-medium ${item.colorType === "Fancy" ? "text-pink-600" : "text-[#0F172A]"}`}>
+                    <span className="font-medium text-[#0F172A]">
                       {item.colorType === "Fancy" && item.fancyIntensity ? `${item.fancyIntensity} ` : ""}
                       {item.color}
-                      {item.fancyOvertone && item.fancyOvertone !== "None" ? `/${item.fancyOvertone}` : ""}
+                      {item.fancyOvertone && item.fancyOvertone !== "None" ? ` ${item.fancyOvertone}` : ""}
                     </span>
                   </div>
                   <div>
@@ -355,12 +349,12 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                 </div>
 
                 {/* Mobile Card */}
-                <div className="lg:hidden p-4">
+                <div
+                  className="lg:hidden p-4 cursor-pointer"
+                  onClick={() => openDiamondDetail(item)}
+                >
                   <div className="flex gap-4">
-                    <div
-                      className="w-20 h-20 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex-shrink-0 overflow-hidden cursor-pointer"
-                      onClick={() => openDiamondDetail(item)}
-                    >
+                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex-shrink-0 overflow-hidden">
                       <img
                         src={item.image}
                         alt={item.shape}
@@ -421,12 +415,12 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
               variants={scaleIn}
               onMouseEnter={() => setHoveredItem(item.id)}
               onMouseLeave={() => setHoveredItem(null)}
-              className="group relative bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden hover:shadow-[0_20px_50px_rgba(30,58,138,0.15)] transition-all duration-500"
+              onClick={() => openDiamondDetail(item)}
+              className="group relative bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden hover:shadow-[0_20px_50px_rgba(30,58,138,0.15)] transition-all duration-500 cursor-pointer"
             >
               {/* Image Container - Aspect Square like JewelryGrid */}
               <div
-                className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] cursor-pointer"
-                onClick={() => openDiamondDetail(item)}
+                className="relative aspect-square overflow-hidden bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9]"
               >
                 <motion.img
                   src={item.image}

@@ -14,7 +14,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
-import Input from "../../../components/ui/Input";
 import JewelryFilters from "./JewelryFilters";
 
 const LabGrownJewelry = () => {
@@ -253,7 +252,7 @@ const LabGrownJewelry = () => {
     setTempMetals((prev) =>
       prev.includes(metalId)
         ? prev.filter((id) => id !== metalId)
-        : [...prev, metalId]
+        : [...prev, metalId],
     );
   };
 
@@ -261,7 +260,7 @@ const LabGrownJewelry = () => {
     setSelectedShapes((prev) =>
       prev.includes(shapeId)
         ? prev.filter((id) => id !== shapeId)
-        : [...prev, shapeId]
+        : [...prev, shapeId],
     );
   };
 
@@ -403,7 +402,8 @@ const LabGrownJewelry = () => {
                 Lab-Grown Jewelry Collection
               </motion.h1>
               <motion.p variants={fadeInUp} className="text-sm text-[#64748B]">
-                {filteredItems.length} products • GIA Certified • Premium Quality
+                {filteredItems.length} products • GIA Certified • Premium
+                Quality
               </motion.p>
             </div>
             <Link
@@ -490,7 +490,9 @@ const LabGrownJewelry = () => {
                   {(caratRange.min || caratRange.max) && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       {caratRange.min || "0"} - {caratRange.max || "∞"} ct
-                      <button onClick={() => setCaratRange({ min: "", max: "" })}>
+                      <button
+                        onClick={() => setCaratRange({ min: "", max: "" })}
+                      >
                         <X className="h-3 w-3" />
                       </button>
                     </span>
@@ -517,13 +519,12 @@ const LabGrownJewelry = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <Input
+              <input
                 type="text"
                 placeholder="Search lab-grown jewelry..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="h-4 w-4 text-[#64748B]" />}
-                className="w-48 sm:w-64 bg-white rounded-lg"
+                className="input-field"
               />
 
               <button
@@ -568,7 +569,9 @@ const LabGrownJewelry = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 type="lab-grown"
-                onItemClick={(item) => navigate(`/user/jewelry/lab-grown/${item.id}`)}
+                onItemClick={(item) =>
+                  navigate(`/user/jewelry/lab-grown/${item.id}`)
+                }
                 onAddToCart={(item) => console.log("Add to cart:", item.name)}
                 onAddToWishlist={(item) =>
                   console.log("Add to wishlist:", item.name)
@@ -599,7 +602,6 @@ const LabGrownJewelry = () => {
           </div>
         </div>
       </section>
-
     </motion.div>
   );
 };

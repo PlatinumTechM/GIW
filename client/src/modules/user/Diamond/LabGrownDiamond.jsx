@@ -49,7 +49,6 @@ const staggerContainer = {
 
 const LabGrownDiamond = () => {
   const [activeTab, setActiveTab] = useState("Single Stone");
-  const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,7 +61,10 @@ const LabGrownDiamond = () => {
     pendingFiltersCount,
     clearAllFilters,
     applyFilters,
-    syncPendingToApplied,
+    sortBy,
+    setSortBy,
+    pendingSortBy,
+    setPendingSortBy,
     selectedShapes,
     selectedWhiteColors,
     selectedFancyColors,
@@ -94,11 +96,6 @@ const LabGrownDiamond = () => {
     toggleSymmetry,
     toggleCertification,
   } = filters;
-
-  // Sync pending filters to applied on initial mount
-  useEffect(() => {
-    syncPendingToApplied();
-  }, []);
 
   const filterContentJsx = <DiamondFilterContent filters={filters} />;
 
@@ -352,7 +349,7 @@ const LabGrownDiamond = () => {
                   placeholder="Search diamonds..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-32 sm:w-48 lg:w-64 bg-white rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]"
+                  className="w-32 input-field"
                 />
               </div>
             </div>
@@ -407,7 +404,10 @@ const LabGrownDiamond = () => {
                   <span className="text-sm text-[#64748B]">Sort by:</span>
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setPendingSortBy(e.target.value);
+                    }}
                     className="rounded-lg border border-[#E2E8F0] bg-white py-2 px-3 text-sm"
                   >
                     {sorts.map((sort) => (

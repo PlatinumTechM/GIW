@@ -9,7 +9,7 @@ export const pool = new Pool({
   user: process.env.DB_USER,
   password: String(process.env.DB_PASS),
   database: process.env.DB_NAME,
-  max: 10, // connection pool
+  max: 10,
 });
 
 pool.on("error", (err) => {

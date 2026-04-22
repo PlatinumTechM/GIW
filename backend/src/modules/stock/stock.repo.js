@@ -5,6 +5,23 @@ import {
   buildWhereClause,
 } from "./stock.filter.js";
 
+/**
+ * Map frontend filter values to database codes
+ * Ideal -> ID, Excellent -> EX, Very Good -> VG
+ * Good, Fair, Poor remain as-is
+ * @param {string} value - Filter value from frontend
+ * @returns {string} - Mapped database code
+ */
+const mapFilterValue = (value) => {
+  const upperValue = value.toUpperCase().trim();
+  const mappings = {
+    IDEAL: "ID",
+    EXCELLENT: "EX",
+    "VERY GOOD": "VG",
+  };
+  return mappings[upperValue] || value.trim();
+};
+
 // All columns from diamond_stock table
 
 const ALL_COLUMNS = [
@@ -190,7 +207,9 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.cut) {
-    const cuts = filters.cut.split(",").map((c) => c.trim().toUpperCase());
+    const cuts = filters.cut
+      .split(",")
+      .map((c) => mapFilterValue(c).toUpperCase());
     const placeholders = cuts.map((_, i) => `$${paramIndex + i}`).join(", ");
     whereConditions.push(`UPPER(cut) IN (${placeholders})`);
     values.push(...cuts);
@@ -200,7 +219,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
   if (filters.polish) {
     const polishes = filters.polish
       .split(",")
-      .map((p) => p.trim().toUpperCase());
+      .map((p) => mapFilterValue(p).toUpperCase());
     const placeholders = polishes
       .map((_, i) => `$${paramIndex + i}`)
       .join(", ");
@@ -212,7 +231,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
   if (filters.symmetry) {
     const symmetries = filters.symmetry
       .split(",")
-      .map((s) => s.trim().toUpperCase());
+      .map((s) => mapFilterValue(s).toUpperCase());
     const placeholders = symmetries
       .map((_, i) => `$${paramIndex + i}`)
       .join(", ");
@@ -232,32 +251,96 @@ export const getAll = async (page, limit, sortBy, filters) => {
   }
 
   if (filters.lab) {
-    const labs = filters.lab.split(",").map((l) => l.trim().toUpperCase());
-    const placeholders = labs.map((_, i) => `$${paramIndex + i}`).join(", ");
-    whereConditions.push(`UPPER(lab) IN (${placeholders})`);
-    values.push(...labs);
-    paramIndex += labs.length;
+    const normalizeLabValue = (v) =>
+      v
+        .toString()
+        .trim()
+        .replace(/[\s_-]+/g, " ")
+        .toUpperCase();
+
+    const rawLabs = filters.lab
+      .split(",")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const labs = rawLabs.map(normalizeLabValue).filter(Boolean);
+
+    const hasNonCertified = labs.includes("NON CERTIFIED");
+    const selectedLabs = labs.filter((l) => l !== "NON CERTIFIED");
+    const nonCertifiedCondition =
+      "(certificate_number IS NULL OR TRIM(certificate_number) = '')";
+
+    if (hasNonCertified && selectedLabs.length === 0) {
+      whereConditions.push(nonCertifiedCondition);
+    } else if (!hasNonCertified && selectedLabs.length > 0) {
+      const placeholders = selectedLabs
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(`UPPER(lab) IN (${placeholders})`);
+      values.push(...selectedLabs);
+      paramIndex += selectedLabs.length;
+    } else if (hasNonCertified && selectedLabs.length > 0) {
+      const placeholders = selectedLabs
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(
+        `(UPPER(lab) IN (${placeholders}) OR ${nonCertifiedCondition})`,
+      );
+      values.push(...selectedLabs);
+      paramIndex += selectedLabs.length;
+    }
   }
 
-  // Fancy color filters
+  // Fancy color filters (can be comma-separated for multiple)
   if (filters.fancyColor) {
-    whereConditions.push(`fancy_color ILIKE $${paramIndex}`);
-    values.push(`%${filters.fancyColor}%`);
-    paramIndex++;
+    const fancyColors = filters.fancyColor.split(",").map((c) => c.trim());
+    if (fancyColors.length === 1) {
+      whereConditions.push(`fancy_color ILIKE $${paramIndex}`);
+      values.push(`%${fancyColors[0]}%`);
+      paramIndex++;
+    } else {
+      const placeholders = fancyColors
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(`fancy_color ILIKE ANY(ARRAY[${placeholders}])`);
+      values.push(...fancyColors.map((c) => `%${c}%`));
+      paramIndex += fancyColors.length;
+    }
   }
 
   if (filters.fancyIntensity) {
-    whereConditions.push(
-      `UPPER(fancy_color_intensity) = UPPER($${paramIndex})`,
-    );
-    values.push(filters.fancyIntensity);
-    paramIndex++;
+    const intensities = filters.fancyIntensity
+      .split(",")
+      .map((i) => i.trim().toUpperCase());
+    if (intensities.length === 1) {
+      whereConditions.push(`UPPER(fancy_color_intensity) = $${paramIndex}`);
+      values.push(intensities[0]);
+      paramIndex++;
+    } else {
+      const placeholders = intensities
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(`UPPER(fancy_color_intensity) IN (${placeholders})`);
+      values.push(...intensities);
+      paramIndex += intensities.length;
+    }
   }
 
   if (filters.fancyOvertone) {
-    whereConditions.push(`UPPER(fancy_color_overtone) = UPPER($${paramIndex})`);
-    values.push(filters.fancyOvertone);
-    paramIndex++;
+    const overtones = filters.fancyOvertone
+      .split(",")
+      .map((o) => o.trim().toUpperCase());
+    if (overtones.length === 1) {
+      whereConditions.push(`UPPER(fancy_color_overtone) = $${paramIndex}`);
+      values.push(overtones[0]);
+      paramIndex++;
+    } else {
+      const placeholders = overtones
+        .map((_, i) => `$${paramIndex + i}`)
+        .join(", ");
+      whereConditions.push(`UPPER(fancy_color_overtone) IN (${placeholders})`);
+      values.push(...overtones);
+      paramIndex += overtones.length;
+    }
   }
 
   // Status/Availability
@@ -482,8 +565,20 @@ export const getAll = async (page, limit, sortBy, filters) => {
     paramIndex++;
   }
 
+  // Certificate type filter (Certified vs Non-Certified)
+  if (filters.certificateType === "certified") {
+    whereConditions.push(
+      `(lab IS NOT NULL AND TRIM(lab) <> '' AND UPPER(lab) <> 'NONE')`,
+    );
+  } else if (filters.certificateType === "non-certified") {
+    whereConditions.push(
+      `(lab IS NULL OR TRIM(lab) = '' OR UPPER(lab) = 'NONE')`,
+    );
+  }
+
   const whereClause =
     whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
   // Build filters using filter module
   // const {} = buildStockFilters(filters, 1);
   // const whereClause = buildWhereClause(whereConditions);
@@ -526,12 +621,33 @@ export const getAll = async (page, limit, sortBy, filters) => {
   };
 };
 
+// Helper function to replace null/empty values with "None"
+const normalizeNullValues = (data) => {
+  if (!data) return null;
+
+  const normalized = { ...data };
+
+  for (const key in normalized) {
+    const value = normalized[key];
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      value === "null"
+    ) {
+      normalized[key] = "None";
+    }
+  }
+
+  return normalized;
+};
+
 export const getById = async (id) => {
   const query = "SELECT * FROM diamond_stock WHERE id = $1";
 
   const result = await pool.query(query, [id]);
 
-  return result.rows[0] || null;
+  return normalizeNullValues(result.rows[0]);
 };
 
 export const create = async (stockData) => {
@@ -599,12 +715,14 @@ export const deleteStock = async (id) => {
 export const deleteByStockIds = async (stockIds, client = null) => {
   if (stockIds.length === 0) return 0;
 
-  const placeholders = stockIds.map((_, i) => `$${i + 1}`).join(", ");
-  const query = `DELETE FROM diamond_stock WHERE stock_id IN (${placeholders})`;
+  // Normalize stockIds to uppercase for case-insensitive comparison
+  const normalizedStockIds = stockIds.map((id) => id.toUpperCase());
+  const placeholders = normalizedStockIds.map((_, i) => `$${i + 1}`).join(", ");
+  const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) IN (${placeholders})`;
 
   const result = client
-    ? await client.query(query, stockIds)
-    : await pool.query(query, stockIds);
+    ? await client.query(query, normalizedStockIds)
+    : await pool.query(query, normalizedStockIds);
 
   return result.rowCount;
 };

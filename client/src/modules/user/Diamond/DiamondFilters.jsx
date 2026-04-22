@@ -1,6 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
-import { ChevronDown, Sparkles, ChevronDown as ChevronDownIcon } from "lucide-react";
-import Input from "../../../components/ui/Input";
+import {
+  ChevronDown,
+  Sparkles,
+  ChevronDown as ChevronDownIcon,
+} from "lucide-react";
 
 // Constants
 export const shapes = [
@@ -15,29 +18,113 @@ export const shapes = [
   { name: "RADIANT", icon: "/diamond%20shap%20icon/radiant.svg" },
   { name: "BAGUETTE", icon: "/diamond%20shap%20icon/Baguette.svg" },
   { name: "HEXAGONAL", icon: "/diamond%20shap%20icon/Hexagonal.svg" },
-  { name: "SQUARE EMERALD", icon: "/diamond%20shap%20icon/Square%20Emerald.svg" },
+  {
+    name: "SQUARE EMERALD",
+    icon: "/diamond%20shap%20icon/Square%20Emerald.svg",
+  },
   { name: "BRIOLETTE", icon: "/diamond%20shap%20icon/Briolette.svg" },
   { name: "TRILLIANT", icon: "/diamond%20shap%20icon/Trilliant.svg" },
   { name: "HALF MOON", icon: "/diamond%20shap%20icon/half%20moon.svg" },
   { name: "ROSE CUT", icon: "/diamond%20shap%20icon/rose%20cut.svg" },
   { name: "KITE", icon: "/diamond%20shap%20icon/kite.svg" },
   { name: "OTHER", icon: "/diamond%20shap%20icon/other.svg" },
-  
 ];
 
 export const whiteColors = ["D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
-export const fancyColorsRow1 = ["Yellow", "Blue", "Pink", "Red", "Green", "Purple", "Orange", "Violet", "Gray", "Black", "Brown", "Other"];
-export const fancyIntensities = ["Faint", "Very Light", "Light", "Fancy Light", "Fancy", "Fancy Dark", "Fancy Intense", "Fancy Vivid", "Fancy Deep"];
-export const fancyOvertones = ["None", "Yellow", "Blue", "Pink", "Green", "Orange", "Brown", "Gray", "Purple", "Red"];
-export const clarities = ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2"];
+export const fancyColorsRow1 = [
+  "Yellow",
+  "Blue",
+  "Pink",
+  "Red",
+  "Green",
+  "Purple",
+  "Orange",
+  "Violet",
+  "Gray",
+  "Black",
+  "Brown",
+  "Other",
+];
+export const fancyIntensities = [
+  "Faint",
+  "Very Light",
+  "Light",
+  "Fancy Light",
+  "Fancy",
+  "Fancy Dark",
+  "Fancy Intense",
+  "Fancy Vivid",
+  "Fancy Deep",
+];
+export const fancyOvertones = [
+  "None",
+  "Yellow",
+  "Blue",
+  "Pink",
+  "Green",
+  "Orange",
+  "Brown",
+  "Gray",
+  "Purple",
+  "Red",
+];
+export const clarities = [
+  "FL",
+  "IF",
+  "VVS1",
+  "VVS2",
+  "VS1",
+  "VS2",
+  "SI1",
+  "SI2",
+  "I1",
+  "I2",
+];
 export const cuts = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
-export const polishes = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
-export const symmetries = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
-export const certificationLabs = ["GIA", "IGI", "HRD", "AGS", "GSI", "SGL", "GSAL", "Other", "None"];
-export const fluorescenceOptions = ["NONE", "Very Slight", "Slight", "Medium", "Strong", "Very Strong"];
+export const polishes = [
+  "Ideal",
+  "Excellent",
+  "Very Good",
+  "Good",
+  "Fair",
+  "Poor",
+];
+export const symmetries = [
+  "Ideal",
+  "Excellent",
+  "Very Good",
+  "Good",
+  "Fair",
+  "Poor",
+];
+export const certificationLabs = [
+  "GIA",
+  "IGI",
+  "HRD",
+  "AGS",
+  "GSI",
+  "SGL",
+  "GSAL",
+  "Other",
+  "None",
+];
+export const fluorescenceOptions = [
+  "NONE",
+  "Very Slight",
+  "Slight",
+  "Medium",
+  "Strong",
+  "Very Strong",
+];
 
 // FilterSection Component
-const FilterSection = ({ title, section, children, expandedSections, toggleSection }) => (
+const FilterSection = ({
+  title,
+  section,
+  children,
+  expandedSections,
+  toggleSection,
+}) => (
   <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
     <button
       onClick={() => toggleSection(section)}
@@ -140,6 +227,8 @@ export const useDiamondFilters = () => {
   const [pendingMilky, setPendingMilky] = useState("");
   const [pendingEyeClean, setPendingEyeClean] = useState("");
   const [pendingShade, setPendingShade] = useState("");
+  // Sort by - Pending
+  const [pendingSortBy, setPendingSortBy] = useState("featured");
 
   // Advanced Filters - Applied
   const [lengthMin, setLengthMin] = useState("");
@@ -167,59 +256,67 @@ export const useDiamondFilters = () => {
   const [milky, setMilky] = useState("");
   const [eyeClean, setEyeClean] = useState("");
   const [shade, setShade] = useState("");
+  // Sort by - Applied
+  const [sortBy, setSortBy] = useState("featured");
 
   // Toggle functions for pending states
   const toggleShape = useCallback((shape) => {
     setPendingShapes((prev) =>
-      prev.includes(shape) ? prev.filter((s) => s !== shape) : [...prev, shape]
+      prev.includes(shape) ? prev.filter((s) => s !== shape) : [...prev, shape],
     );
   }, []);
 
   const toggleWhiteColor = useCallback((color) => {
     setPendingWhiteColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
     );
   }, []);
 
   const toggleFancyColor = useCallback((color) => {
     setPendingFancyColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
     );
   }, []);
 
   const toggleClarity = useCallback((clarity) => {
     setPendingClarities((prev) =>
-      prev.includes(clarity) ? prev.filter((c) => c !== clarity) : [...prev, clarity]
+      prev.includes(clarity)
+        ? prev.filter((c) => c !== clarity)
+        : [...prev, clarity],
     );
   }, []);
 
   const toggleCut = useCallback((cut) => {
     setPendingCuts((prev) =>
-      prev.includes(cut) ? prev.filter((c) => c !== cut) : [...prev, cut]
+      prev.includes(cut) ? prev.filter((c) => c !== cut) : [...prev, cut],
     );
   }, []);
 
   const togglePolish = useCallback((polish) => {
     setPendingPolish((prev) =>
-      prev.includes(polish) ? prev.filter((p) => p !== polish) : [...prev, polish]
+      prev.includes(polish)
+        ? prev.filter((p) => p !== polish)
+        : [...prev, polish],
     );
   }, []);
 
   const toggleSymmetry = useCallback((symmetry) => {
     setPendingSymmetry((prev) =>
-      prev.includes(symmetry) ? prev.filter((s) => s !== symmetry) : [...prev, symmetry]
+      prev.includes(symmetry)
+        ? prev.filter((s) => s !== symmetry)
+        : [...prev, symmetry],
     );
   }, []);
 
   const toggleCertification = useCallback((cert) => {
     setPendingCertifications((prev) =>
-      prev.includes(cert) ? prev.filter((c) => c !== cert) : [...prev, cert]
+      prev.includes(cert) ? prev.filter((c) => c !== cert) : [...prev, cert],
     );
   }, []);
 
   const toggleFluorescence = useCallback((fluor) => {
     setPendingFluorescence((prev) =>
-      prev.includes(fluor) ? prev.filter((f) => f !== fluor) : [...prev, fluor]
+      prev.includes(fluor) ? prev.filter((f) => f !== fluor) : [...prev, fluor],
     );
   }, []);
 
@@ -228,7 +325,9 @@ export const useDiamondFilters = () => {
   }, []);
 
   const showMoreShapes = useCallback(() => {
-    setVisibleShapesCount((prev) => Math.min(prev + SHAPES_BATCH_SIZE, shapes.length));
+    setVisibleShapesCount((prev) =>
+      Math.min(prev + SHAPES_BATCH_SIZE, shapes.length),
+    );
   }, []);
 
   const resetVisibleShapes = useCallback(() => {
@@ -281,20 +380,53 @@ export const useDiamondFilters = () => {
     setMilky(pendingMilky);
     setEyeClean(pendingEyeClean);
     setShade(pendingShade);
+    setSortBy(pendingSortBy);
   }, [
-    pendingShapes, pendingShowOnlyMedia, pendingAvailableItems,
-    pendingCaratMin, pendingCaratMax, pendingPriceMin, pendingPriceMax,
-    pendingColorType, pendingWhiteColors, pendingFancyColors,
-    pendingFancyIntensity, pendingFancyOvertone, pendingClarities,
-    pendingCuts, pendingPolish, pendingSymmetry, pendingCertifications,
-    pendingCertificateType, pendingFluorescence, pendingLengthMin,
-    pendingLengthMax, pendingWidthMin, pendingWidthMax, pendingHeightMin,
-    pendingHeightMax, pendingRatioMin, pendingRatioMax, pendingDepthMin,
-    pendingDepthMax, pendingTableMin, pendingTableMax, pendingCrownHeightMin,
-    pendingCrownHeightMax, pendingCrownAngleMin, pendingCrownAngleMax,
-    pendingPavilionDepthMin, pendingPavilionDepthMax, pendingPavilionAngleMin,
-    pendingPavilionAngleMax, pendingGirdleMin, pendingGirdleMax, pendingMilky,
-    pendingEyeClean, pendingShade,
+    pendingShapes,
+    pendingShowOnlyMedia,
+    pendingAvailableItems,
+    pendingSortBy,
+    pendingCaratMin,
+    pendingCaratMax,
+    pendingPriceMin,
+    pendingPriceMax,
+    pendingColorType,
+    pendingWhiteColors,
+    pendingFancyColors,
+    pendingFancyIntensity,
+    pendingFancyOvertone,
+    pendingClarities,
+    pendingCuts,
+    pendingPolish,
+    pendingSymmetry,
+    pendingCertifications,
+    pendingCertificateType,
+    pendingFluorescence,
+    pendingLengthMin,
+    pendingLengthMax,
+    pendingWidthMin,
+    pendingWidthMax,
+    pendingHeightMin,
+    pendingHeightMax,
+    pendingRatioMin,
+    pendingRatioMax,
+    pendingDepthMin,
+    pendingDepthMax,
+    pendingTableMin,
+    pendingTableMax,
+    pendingCrownHeightMin,
+    pendingCrownHeightMax,
+    pendingCrownAngleMin,
+    pendingCrownAngleMax,
+    pendingPavilionDepthMin,
+    pendingPavilionDepthMax,
+    pendingPavilionAngleMin,
+    pendingPavilionAngleMax,
+    pendingGirdleMin,
+    pendingGirdleMax,
+    pendingMilky,
+    pendingEyeClean,
+    pendingShade,
   ]);
 
   // Sync applied filters to pending (used on initial load or when clearing)
@@ -343,16 +475,53 @@ export const useDiamondFilters = () => {
     setPendingMilky(milky);
     setPendingEyeClean(eyeClean);
     setPendingShade(shade);
+    setPendingSortBy(sortBy);
   }, [
-    selectedShapes, showOnlyMedia, availableItems, caratMin, caratMax,
-    priceMin, priceMax, colorType, selectedWhiteColors, selectedFancyColors,
-    selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
-    selectedCuts, selectedPolish, selectedSymmetry, selectedCertifications,
-    certificateType, selectedFluorescence, lengthMin, lengthMax, widthMin,
-    widthMax, heightMin, heightMax, ratioMin, ratioMax, depthMin, depthMax,
-    tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin,
-    crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin,
-    pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade,
+    selectedShapes,
+    showOnlyMedia,
+    availableItems,
+    caratMin,
+    caratMax,
+    sortBy,
+    priceMin,
+    priceMax,
+    colorType,
+    selectedWhiteColors,
+    selectedFancyColors,
+    selectedFancyIntensity,
+    selectedFancyOvertone,
+    selectedClarities,
+    selectedCuts,
+    selectedPolish,
+    selectedSymmetry,
+    selectedCertifications,
+    certificateType,
+    selectedFluorescence,
+    lengthMin,
+    lengthMax,
+    widthMin,
+    widthMax,
+    heightMin,
+    heightMax,
+    ratioMin,
+    ratioMax,
+    depthMin,
+    depthMax,
+    tableMin,
+    tableMax,
+    crownHeightMin,
+    crownHeightMax,
+    crownAngleMin,
+    crownAngleMax,
+    pavilionDepthMin,
+    pavilionDepthMax,
+    pavilionAngleMin,
+    pavilionAngleMax,
+    girdleMin,
+    girdleMax,
+    milky,
+    eyeClean,
+    shade,
   ]);
 
   const clearAllFilters = useCallback(() => {
@@ -401,6 +570,7 @@ export const useDiamondFilters = () => {
     setPendingMilky("");
     setPendingEyeClean("");
     setPendingShade("");
+    setPendingSortBy("featured");
     // Clear applied states
     setSelectedShapes([]);
     setSelectedWhiteColors([]);
@@ -446,156 +616,270 @@ export const useDiamondFilters = () => {
     setMilky("");
     setEyeClean("");
     setShade("");
+    setSortBy("featured");
   }, []);
 
-  const appliedFilters = useMemo(() => ({
-    shapes: selectedShapes,
-    colors: colorType === "White" ? selectedWhiteColors : selectedFancyColors,
-    colorType,
-    fancyIntensity: selectedFancyIntensity,
-    fancyOvertone: selectedFancyOvertone,
-    clarities: selectedClarities,
-    cuts: selectedCuts,
-    polish: selectedPolish,
-    symmetry: selectedSymmetry,
-    certifications: selectedCertifications,
-    certificateType,
-    available: availableItems,
-    showOnlyMedia,
-    caratMin,
-    caratMax,
-    priceMin,
-    priceMax,
-    lengthMin,
-    lengthMax,
-    widthMin,
-    widthMax,
-    heightMin,
-    heightMax,
-    ratioMin,
-    ratioMax,
-    depthMin,
-    depthMax,
-    tableMin,
-    tableMax,
-    crownHeightMin,
-    crownHeightMax,
-    crownAngleMin,
-    crownAngleMax,
-    pavilionDepthMin,
-    pavilionDepthMax,
-    pavilionAngleMin,
-    pavilionAngleMax,
-    girdleMin,
-    girdleMax,
-    milky,
-    eyeClean,
-    shade,
-  }), [
-    selectedShapes, selectedWhiteColors, selectedFancyColors, colorType,
-    selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
-    selectedCuts, selectedPolish, selectedSymmetry, selectedCertifications,
-    certificateType, availableItems, showOnlyMedia, caratMin, caratMax,
-    priceMin, priceMax, lengthMin, lengthMax, widthMin, widthMax,
-    heightMin, heightMax, ratioMin, ratioMax, depthMin, depthMax,
-    tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin,
-    crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin,
-    pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade,
-  ]);
-
-  const activeFiltersCount = useMemo(() =>
-    selectedShapes.length +
-    selectedWhiteColors.length +
-    selectedFancyColors.length +
-    (selectedFancyIntensity ? 1 : 0) +
-    (selectedFancyOvertone ? 1 : 0) +
-    selectedClarities.length +
-    selectedCuts.length +
-    selectedPolish.length +
-    selectedSymmetry.length +
-    selectedCertifications.length +
-    (certificateType ? 1 : 0) +
-    (caratMin || caratMax ? 1 : 0) +
-    (priceMin || priceMax ? 1 : 0) +
-    (showOnlyMedia ? 1 : 0) +
-    (availableItems ? 1 : 0) +
-    selectedFluorescence.length +
-    (lengthMin || lengthMax ? 1 : 0) +
-    (widthMin || widthMax ? 1 : 0) +
-    (heightMin || heightMax ? 1 : 0) +
-    (ratioMin || ratioMax ? 1 : 0) +
-    (depthMin || depthMax ? 1 : 0) +
-    (tableMin || tableMax ? 1 : 0) +
-    (crownHeightMin || crownHeightMax ? 1 : 0) +
-    (crownAngleMin || crownAngleMax ? 1 : 0) +
-    (pavilionDepthMin || pavilionDepthMax ? 1 : 0) +
-    (pavilionAngleMin || pavilionAngleMax ? 1 : 0) +
-    (girdleMin || girdleMax ? 1 : 0) +
-    (milky ? 1 : 0) +
-    (eyeClean ? 1 : 0) +
-    (shade ? 1 : 0),
+  const appliedFilters = useMemo(
+    () => ({
+      shapes: selectedShapes,
+      colors: colorType === "White" ? selectedWhiteColors : selectedFancyColors,
+      colorType,
+      fancyColors: colorType === "Fancy" ? selectedFancyColors : [],
+      fancyIntensity: selectedFancyIntensity,
+      fancyOvertone: selectedFancyOvertone,
+      clarities: selectedClarities,
+      cuts: selectedCuts,
+      polish: selectedPolish,
+      symmetry: selectedSymmetry,
+      certifications: selectedCertifications,
+      certificateType,
+      available: availableItems,
+      showOnlyMedia,
+      caratMin,
+      caratMax,
+      priceMin,
+      priceMax,
+      lengthMin,
+      lengthMax,
+      widthMin,
+      widthMax,
+      heightMin,
+      heightMax,
+      ratioMin,
+      ratioMax,
+      depthMin,
+      depthMax,
+      tableMin,
+      tableMax,
+      crownHeightMin,
+      crownHeightMax,
+      crownAngleMin,
+      crownAngleMax,
+      pavilionDepthMin,
+      pavilionDepthMax,
+      pavilionAngleMin,
+      pavilionAngleMax,
+      girdleMin,
+      girdleMax,
+      milky,
+      eyeClean,
+      shade,
+      sortBy,
+    }),
     [
-      selectedShapes, selectedWhiteColors, selectedFancyColors,
-      selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
-      selectedCuts, selectedPolish, selectedSymmetry, selectedCertifications,
-      certificateType, caratMin, caratMax, priceMin, priceMax, showOnlyMedia,
-      availableItems, selectedFluorescence, lengthMin, lengthMax, widthMin,
-      widthMax, heightMin, heightMax, ratioMin, ratioMax, depthMin, depthMax,
-      tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin,
-      crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin,
-      pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade,
-    ]
+      selectedShapes,
+      selectedWhiteColors,
+      selectedFancyColors,
+      colorType,
+      selectedFancyIntensity,
+      selectedFancyOvertone,
+      selectedClarities,
+      selectedCuts,
+      selectedPolish,
+      selectedSymmetry,
+      selectedCertifications,
+      certificateType,
+      availableItems,
+      showOnlyMedia,
+      caratMin,
+      caratMax,
+      priceMin,
+      priceMax,
+      lengthMin,
+      lengthMax,
+      widthMin,
+      widthMax,
+      heightMin,
+      heightMax,
+      ratioMin,
+      ratioMax,
+      depthMin,
+      depthMax,
+      tableMin,
+      tableMax,
+      crownHeightMin,
+      crownHeightMax,
+      crownAngleMin,
+      crownAngleMax,
+      pavilionDepthMin,
+      pavilionDepthMax,
+      pavilionAngleMin,
+      pavilionAngleMax,
+      girdleMin,
+      girdleMax,
+      milky,
+      eyeClean,
+      shade,
+      sortBy,
+    ],
+  );
+
+  const activeFiltersCount = useMemo(
+    () =>
+      selectedShapes.length +
+      selectedWhiteColors.length +
+      selectedFancyColors.length +
+      (selectedFancyIntensity ? 1 : 0) +
+      (selectedFancyOvertone ? 1 : 0) +
+      selectedClarities.length +
+      selectedCuts.length +
+      selectedPolish.length +
+      selectedSymmetry.length +
+      selectedCertifications.length +
+      (certificateType ? 1 : 0) +
+      (caratMin || caratMax ? 1 : 0) +
+      (priceMin || priceMax ? 1 : 0) +
+      (showOnlyMedia ? 1 : 0) +
+      (availableItems ? 1 : 0) +
+      selectedFluorescence.length +
+      (lengthMin || lengthMax ? 1 : 0) +
+      (widthMin || widthMax ? 1 : 0) +
+      (heightMin || heightMax ? 1 : 0) +
+      (ratioMin || ratioMax ? 1 : 0) +
+      (depthMin || depthMax ? 1 : 0) +
+      (tableMin || tableMax ? 1 : 0) +
+      (crownHeightMin || crownHeightMax ? 1 : 0) +
+      (crownAngleMin || crownAngleMax ? 1 : 0) +
+      (pavilionDepthMin || pavilionDepthMax ? 1 : 0) +
+      (pavilionAngleMin || pavilionAngleMax ? 1 : 0) +
+      (girdleMin || girdleMax ? 1 : 0) +
+      (milky ? 1 : 0) +
+      (eyeClean ? 1 : 0) +
+      (shade ? 1 : 0) +
+      (sortBy !== "featured" ? 1 : 0),
+    [
+      selectedShapes,
+      selectedWhiteColors,
+      selectedFancyColors,
+      selectedFancyIntensity,
+      selectedFancyOvertone,
+      selectedClarities,
+      selectedCuts,
+      selectedPolish,
+      selectedSymmetry,
+      selectedCertifications,
+      certificateType,
+      caratMin,
+      caratMax,
+      priceMin,
+      priceMax,
+      showOnlyMedia,
+      availableItems,
+      selectedFluorescence,
+      lengthMin,
+      lengthMax,
+      widthMin,
+      widthMax,
+      heightMin,
+      heightMax,
+      ratioMin,
+      ratioMax,
+      depthMin,
+      depthMax,
+      tableMin,
+      tableMax,
+      crownHeightMin,
+      crownHeightMax,
+      crownAngleMin,
+      crownAngleMax,
+      pavilionDepthMin,
+      pavilionDepthMax,
+      pavilionAngleMin,
+      pavilionAngleMax,
+      girdleMin,
+      girdleMax,
+      milky,
+      eyeClean,
+      shade,
+      sortBy,
+    ],
   );
 
   // Count filters that are selected but not yet applied
-  const pendingFiltersCount = useMemo(() =>
-    pendingShapes.length +
-    pendingWhiteColors.length +
-    pendingFancyColors.length +
-    (pendingFancyIntensity ? 1 : 0) +
-    (pendingFancyOvertone ? 1 : 0) +
-    pendingClarities.length +
-    pendingCuts.length +
-    pendingPolish.length +
-    pendingSymmetry.length +
-    pendingCertifications.length +
-    (pendingCertificateType ? 1 : 0) +
-    (pendingCaratMin || pendingCaratMax ? 1 : 0) +
-    (pendingPriceMin || pendingPriceMax ? 1 : 0) +
-    (pendingShowOnlyMedia ? 1 : 0) +
-    (pendingAvailableItems ? 1 : 0) +
-    pendingFluorescence.length +
-    (pendingLengthMin || pendingLengthMax ? 1 : 0) +
-    (pendingWidthMin || pendingWidthMax ? 1 : 0) +
-    (pendingHeightMin || pendingHeightMax ? 1 : 0) +
-    (pendingRatioMin || pendingRatioMax ? 1 : 0) +
-    (pendingDepthMin || pendingDepthMax ? 1 : 0) +
-    (pendingTableMin || pendingTableMax ? 1 : 0) +
-    (pendingCrownHeightMin || pendingCrownHeightMax ? 1 : 0) +
-    (pendingCrownAngleMin || pendingCrownAngleMax ? 1 : 0) +
-    (pendingPavilionDepthMin || pendingPavilionDepthMax ? 1 : 0) +
-    (pendingPavilionAngleMin || pendingPavilionAngleMax ? 1 : 0) +
-    (pendingGirdleMin || pendingGirdleMax ? 1 : 0) +
-    (pendingMilky ? 1 : 0) +
-    (pendingEyeClean ? 1 : 0) +
-    (pendingShade ? 1 : 0),
-    [
-      pendingShapes, pendingWhiteColors, pendingFancyColors,
-      pendingFancyIntensity, pendingFancyOvertone, pendingClarities,
-      pendingCuts, pendingPolish, pendingSymmetry, pendingCertifications,
-      pendingCertificateType, pendingCaratMin, pendingCaratMax, pendingPriceMin,
-      pendingPriceMax, pendingShowOnlyMedia, pendingAvailableItems,
-      pendingFluorescence, pendingLengthMin, pendingLengthMax, pendingWidthMin,
-      pendingWidthMax, pendingHeightMin, pendingHeightMax, pendingRatioMin,
-      pendingRatioMax, pendingDepthMin, pendingDepthMax, pendingTableMin,
-      pendingTableMax, pendingCrownHeightMin, pendingCrownHeightMax,
-      pendingCrownAngleMin, pendingCrownAngleMax, pendingPavilionDepthMin,
-      pendingPavilionDepthMax, pendingPavilionAngleMin, pendingPavilionAngleMax,
-      pendingGirdleMin, pendingGirdleMax, pendingMilky, pendingEyeClean, pendingShade,
-    ]
-  );
+  const pendingFiltersCount = useMemo(() => {
+    const count =
+      pendingShapes.length +
+      pendingWhiteColors.length +
+      pendingFancyColors.length +
+      (pendingFancyIntensity ? 1 : 0) +
+      (pendingFancyOvertone ? 1 : 0) +
+      pendingClarities.length +
+      pendingCuts.length +
+      pendingPolish.length +
+      pendingSymmetry.length +
+      pendingCertifications.length +
+      (pendingCertificateType ? 1 : 0) +
+      (pendingCaratMin || pendingCaratMax ? 1 : 0) +
+      (pendingPriceMin || pendingPriceMax ? 1 : 0) +
+      (pendingShowOnlyMedia ? 1 : 0) +
+      (pendingAvailableItems ? 1 : 0) +
+      pendingFluorescence.length +
+      (pendingLengthMin || pendingLengthMax ? 1 : 0) +
+      (pendingWidthMin || pendingWidthMax ? 1 : 0) +
+      (pendingHeightMin || pendingHeightMax ? 1 : 0) +
+      (pendingRatioMin || pendingRatioMax ? 1 : 0) +
+      (pendingDepthMin || pendingDepthMax ? 1 : 0) +
+      (pendingTableMin || pendingTableMax ? 1 : 0) +
+      (pendingCrownHeightMin || pendingCrownHeightMax ? 1 : 0) +
+      (pendingCrownAngleMin || pendingCrownAngleMax ? 1 : 0) +
+      (pendingPavilionDepthMin || pendingPavilionDepthMax ? 1 : 0) +
+      (pendingPavilionAngleMin || pendingPavilionAngleMax ? 1 : 0) +
+      (pendingGirdleMin || pendingGirdleMax ? 1 : 0) +
+      (pendingMilky ? 1 : 0) +
+      (pendingEyeClean ? 1 : 0) +
+      (pendingShade ? 1 : 0);
+    return count;
+  }, [
+    pendingShapes,
+    pendingWhiteColors,
+    pendingFancyColors,
+    pendingFancyIntensity,
+    pendingFancyOvertone,
+    pendingClarities,
+    pendingCuts,
+    pendingPolish,
+    pendingSymmetry,
+    pendingCertifications,
+    pendingCertificateType,
+    pendingCaratMin,
+    pendingCaratMax,
+    pendingPriceMin,
+    pendingPriceMax,
+    pendingShowOnlyMedia,
+    pendingAvailableItems,
+    pendingFluorescence,
+    pendingLengthMin,
+    pendingLengthMax,
+    pendingWidthMin,
+    pendingWidthMax,
+    pendingHeightMin,
+    pendingHeightMax,
+    pendingRatioMin,
+    pendingRatioMax,
+    pendingDepthMin,
+    pendingDepthMax,
+    pendingTableMin,
+    pendingTableMax,
+    pendingCrownHeightMin,
+    pendingCrownHeightMax,
+    pendingCrownAngleMin,
+    pendingCrownAngleMax,
+    pendingPavilionDepthMin,
+    pendingPavilionDepthMax,
+    pendingPavilionAngleMin,
+    pendingPavilionAngleMax,
+    pendingGirdleMin,
+    pendingGirdleMax,
+    pendingMilky,
+    pendingEyeClean,
+    pendingShade,
+  ]);
 
   return {
+    // Sort by
+    sortBy,
+    pendingSortBy,
+    setPendingSortBy,
     // Applied States (for display in active filters)
     selectedShapes,
     showOnlyMedia,
@@ -763,6 +1047,7 @@ export const useDiamondFilters = () => {
     setMilky,
     setEyeClean,
     setShade,
+    setSortBy,
     // Toggles
     toggleShape,
     toggleWhiteColor,
@@ -786,9 +1071,7 @@ export const useDiamondFilters = () => {
 };
 
 // Filter Content Component
-export const DiamondFilterContent = ({
-  filters,
-}) => {
+export const DiamondFilterContent = ({ filters }) => {
   const {
     // Use pending states for UI controls
     pendingShapes: selectedShapes,
@@ -886,7 +1169,12 @@ export const DiamondFilterContent = ({
   return (
     <div className="space-y-4">
       {/* Shape Filter */}
-      <FilterSection title="Shape" section="shape" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Shape"
+        section="shape"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="grid grid-cols-4 gap-1.5">
           {shapes.slice(0, visibleShapesCount).map((shape) => (
             <button
@@ -927,7 +1215,12 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Color Filter */}
-      <FilterSection title="Color" section="color" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Color"
+        section="color"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setColorType("White")}
@@ -969,8 +1262,7 @@ export const DiamondFilterContent = ({
               ))}
             </div>
             <div className="mt-2 text-xs text-[#64748B] flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              D is the highest color grade
+              <Sparkles className="w-3 h-3" />D is the highest color grade
             </div>
           </div>
         )}
@@ -994,7 +1286,9 @@ export const DiamondFilterContent = ({
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">Color Intensity</label>
+                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">
+                  Color Intensity
+                </label>
                 <select
                   value={selectedFancyIntensity}
                   onChange={(e) => setSelectedFancyIntensity(e.target.value)}
@@ -1002,12 +1296,16 @@ export const DiamondFilterContent = ({
                 >
                   <option value="">Select Intensity</option>
                   {fancyIntensities.map((intensity) => (
-                    <option key={intensity} value={intensity}>{intensity}</option>
+                    <option key={intensity} value={intensity}>
+                      {intensity}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">Color Overtone</label>
+                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">
+                  Color Overtone
+                </label>
                 <select
                   value={selectedFancyOvertone}
                   onChange={(e) => setSelectedFancyOvertone(e.target.value)}
@@ -1015,7 +1313,9 @@ export const DiamondFilterContent = ({
                 >
                   <option value="">Select Overtone</option>
                   {fancyOvertones.map((overtone) => (
-                    <option key={overtone} value={overtone}>{overtone}</option>
+                    <option key={overtone} value={overtone}>
+                      {overtone}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1025,27 +1325,32 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Carat Filter */}
-      <FilterSection title="Carat Weight" section="carat" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Carat Weight"
+        section="carat"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="flex items-center gap-2">
           <div className="flex-1">
-            <Input
+            <input
               type="number"
               step="0.01"
               placeholder="ct min"
               value={caratMin}
               onChange={(e) => setCaratMin(e.target.value)}
-              className="rounded-lg py-2.5 text-sm text-gray-900"
+              className="input-field"
             />
           </div>
           <span className="text-[#64748B]">-</span>
           <div className="flex-1">
-            <Input
+            <input
               type="number"
               step="0.01"
               placeholder="ct max"
               value={caratMax}
               onChange={(e) => setCaratMax(e.target.value)}
-              className="rounded-lg py-2.5 text-sm text-gray-900"
+              className="input-field"
             />
           </div>
         </div>
@@ -1066,32 +1371,42 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Price Filter */}
-      <FilterSection title="Price Range" section="price" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Price Range"
+        section="price"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="flex items-center gap-2">
           <div className="flex-1">
-            <Input
+            <input
               type="number"
               placeholder="$ min"
               value={priceMin}
               onChange={(e) => setPriceMin(e.target.value)}
-              className="rounded-lg py-2.5 text-sm text-gray-900"
+              className="input-field"
             />
           </div>
           <span className="text-[#64748B]">-</span>
           <div className="flex-1">
-            <Input
+            <input
               type="number"
               placeholder="$ max"
               value={priceMax}
               onChange={(e) => setPriceMax(e.target.value)}
-              className="rounded-lg py-2.5 text-sm text-gray-900"
+              className="input-field"
             />
           </div>
         </div>
       </FilterSection>
 
       {/* Clarity Filter */}
-      <FilterSection title="Clarity" section="clarity" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Clarity"
+        section="clarity"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="grid grid-cols-2 gap-1.5">
           {clarities.map((clarity) => (
             <button
@@ -1110,7 +1425,12 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Cut Filter */}
-      <FilterSection title="Cut Quality" section="cut" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Cut Quality"
+        section="cut"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="space-y-1.5">
           {cuts.map((cut) => (
             <button
@@ -1130,7 +1450,12 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Polish Filter */}
-      <FilterSection title="Polish" section="polish" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Polish"
+        section="polish"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="space-y-1.5">
           {polishes.map((polish) => (
             <button
@@ -1143,14 +1468,21 @@ export const DiamondFilterContent = ({
               }`}
             >
               {polish}
-              {selectedPolish.includes(polish) && <Sparkles className="w-4 h-4" />}
+              {selectedPolish.includes(polish) && (
+                <Sparkles className="w-4 h-4" />
+              )}
             </button>
           ))}
         </div>
       </FilterSection>
 
       {/* Symmetry Filter */}
-      <FilterSection title="Symmetry" section="symmetry" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Symmetry"
+        section="symmetry"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="space-y-1.5">
           {symmetries.map((symmetry) => (
             <button
@@ -1163,14 +1495,21 @@ export const DiamondFilterContent = ({
               }`}
             >
               {symmetry}
-              {selectedSymmetry.includes(symmetry) && <Sparkles className="w-4 h-4" />}
+              {selectedSymmetry.includes(symmetry) && (
+                <Sparkles className="w-4 h-4" />
+              )}
             </button>
           ))}
         </div>
       </FilterSection>
 
       {/* Fluorescence Filter */}
-      <FilterSection title="Fluorescence" section="fluorescence" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Fluorescence"
+        section="fluorescence"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="flex flex-wrap gap-2">
           {fluorescenceOptions.map((fluor) => (
             <button
@@ -1189,12 +1528,17 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Certification Filter */}
-      <FilterSection title="Certificate" section="certification" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Certificate"
+        section="certification"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="flex gap-2 mb-4">
           <button
-            onClick={() => setCertificateType('certified')}
+            onClick={() => setCertificateType("certified")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              certificateType === 'certified'
+              certificateType === "certified"
                 ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
                 : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
             }`}
@@ -1203,10 +1547,10 @@ export const DiamondFilterContent = ({
           </button>
           <button
             onClick={() => {
-              setCertificateType('non-certified');
+              setCertificateType("non-certified");
             }}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              certificateType === 'non-certified'
+              certificateType === "non-certified"
                 ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
                 : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
             }`}
@@ -1215,7 +1559,7 @@ export const DiamondFilterContent = ({
           </button>
         </div>
 
-        {certificateType === 'certified' && (
+        {certificateType === "certified" && (
           <div className="grid grid-cols-3 gap-1.5">
             {certificationLabs.map((lab) => (
               <button
@@ -1235,55 +1579,144 @@ export const DiamondFilterContent = ({
       </FilterSection>
 
       {/* Advanced Filters */}
-      <FilterSection title="Advanced Filters" section="advanced" expandedSections={expandedSections} toggleSection={toggleSection}>
+      <FilterSection
+        title="Advanced Filters"
+        section="advanced"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
         <div className="space-y-4">
           {/* Measurements */}
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Length (mm)</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Length (mm)
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={lengthMin} onChange={(e) => setLengthMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={lengthMin}
+                onChange={(e) => setLengthMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={lengthMax} onChange={(e) => setLengthMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={lengthMax}
+                onChange={(e) => setLengthMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Width (mm)</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Width (mm)
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={widthMin} onChange={(e) => setWidthMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={widthMin}
+                onChange={(e) => setWidthMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={widthMax} onChange={(e) => setWidthMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={widthMax}
+                onChange={(e) => setWidthMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Height (mm)</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Height (mm)
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={heightMin} onChange={(e) => setHeightMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={heightMin}
+                onChange={(e) => setHeightMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={heightMax} onChange={(e) => setHeightMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={heightMax}
+                onChange={(e) => setHeightMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Ratio</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Ratio
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={ratioMin} onChange={(e) => setRatioMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={ratioMin}
+                onChange={(e) => setRatioMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={ratioMax} onChange={(e) => setRatioMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={ratioMax}
+                onChange={(e) => setRatioMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Depth %</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Depth %
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={depthMin} onChange={(e) => setDepthMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={depthMin}
+                onChange={(e) => setDepthMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={depthMax} onChange={(e) => setDepthMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={depthMax}
+                onChange={(e) => setDepthMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">Table %</label>
+            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+              Table %
+            </label>
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="min" value={tableMin} onChange={(e) => setTableMin(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="min"
+                value={tableMin}
+                onChange={(e) => setTableMin(e.target.value)}
+                className="input-field"
+              />
               <span className="text-[#64748B]">-</span>
-              <Input type="number" placeholder="max" value={tableMax} onChange={(e) => setTableMax(e.target.value)} className="rounded-lg py-2 text-sm" />
+              <input
+                type="number"
+                placeholder="max"
+                value={tableMax}
+                onChange={(e) => setTableMax(e.target.value)}
+                className="input-field"
+              />
             </div>
           </div>
         </div>
