@@ -22,6 +22,7 @@ import {
   Crown,
   TrendingUp,
   Sparkles,
+  Clock,
 } from "lucide-react";
 
 const DURATION_OPTIONS = [
@@ -99,6 +100,11 @@ const ManageSubscription = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Subscription buyers state
+  const [buyers, setBuyers] = useState([]);
+  const [buyersLoading, setBuyersLoading] = useState(true);
+  const [buyersSearchTerm, setBuyersSearchTerm] = useState("");
+
   // Form state
   const [formData, setFormData] = useState({
     id: null,
@@ -114,9 +120,10 @@ const ManageSubscription = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
-  // Fetch subscriptions
+  // Fetch subscriptions and buyers
   useEffect(() => {
     fetchSubscriptions();
+    fetchSubscriptionBuyers();
   }, []);
 
   const fetchSubscriptions = async () => {
@@ -136,6 +143,36 @@ const ManageSubscription = () => {
     }
   };
 
+  // Fetch subscription buyers
+  const fetchSubscriptionBuyers = async () => {
+    try {
+      setBuyersLoading(true);
+      const response = await authAPI.getSubscriptionBuyers();
+      if (response.success) {
+        setBuyers(response.buyers || []);
+      } else {
+        notify.error("Error", "Failed to fetch subscription buyers");
+      }
+    } catch (error) {
+      console.error("Fetch buyers error:", error);
+      notify.error("Error", "Failed to fetch subscription buyers");
+    } finally {
+      setBuyersLoading(false);
+    }
+  };
+
+  // Filter buyers
+  const filteredBuyers = buyers.filter((buyer) => {
+    const searchLower = buyersSearchTerm.toLowerCase();
+    return (
+      buyer.userName?.toLowerCase().includes(searchLower) ||
+      buyer.userEmail?.toLowerCase().includes(searchLower) ||
+      buyer.userCompany?.toLowerCase().includes(searchLower) ||
+      buyer.planName?.toLowerCase().includes(searchLower) ||
+      buyer.userPhone?.includes(buyersSearchTerm)
+    );
+  });
+
   // Filter subscriptions
   const filteredSubscriptions = subscriptions.filter((sub) => {
     const matchesSearch =
@@ -143,6 +180,13 @@ const ManageSubscription = () => {
       sub.durationMonth?.toString().includes(searchTerm);
     return matchesSearch;
   });
+
+  // Calculate buyers per plan (excluding cancelled subscriptions)
+  const getBuyersCountForPlan = (planId) => {
+    return buyers.filter(
+      (buyer) => buyer.planId === planId && buyer.status?.toLowerCase() !== "cancelled"
+    ).length;
+  };
 
   // Group subscriptions by name for display
   const groupedByName = filteredSubscriptions.reduce((acc, sub) => {
@@ -495,6 +539,9 @@ const ManageSubscription = () => {
                   <th className="w-[14%] px-4 py-3 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wider whitespace-nowrap align-top">
                     Stock Limit
                   </th>
+                  <th className="w-[10%] px-4 py-3 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wider whitespace-nowrap align-top">
+                    Active Users
+                  </th>
                   <th className="w-[12%] px-4 py-3 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wider whitespace-nowrap align-top">
                     Status
                   </th>
@@ -577,6 +624,14 @@ const ManageSubscription = () => {
                         <Hash className="w-4 h-4 text-[#94A3B8] flex-shrink-0" />
                         <span className="text-sm">
                           {sub.stockLimit?.toLocaleString()}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-[#3B82F6] flex-shrink-0" />
+                        <span className="text-sm font-semibold text-[#0F172A]">
+                          {getBuyersCountForPlan(sub.id)}
                         </span>
                       </div>
                     </td>

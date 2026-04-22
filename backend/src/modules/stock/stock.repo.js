@@ -576,6 +576,17 @@ export const getAll = async (page, limit, sortBy, filters) => {
     );
   }
 
+  // Lab filter - handles both specific lab names and "Non certified"
+  if (filters.lab) {
+    if (filters.lab === "Non certified") {
+      whereConditions.push(`(certificate_number IS NULL OR TRIM(certificate_number) = '' OR certificate_number = 'NONE')`);
+    } else {
+      whereConditions.push(`UPPER(lab) = UPPER($${paramIndex})`);
+      values.push(filters.lab);
+      paramIndex++;
+    }
+  }
+
   const whereClause =
     whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
 
@@ -721,8 +732,8 @@ export const deleteByStockIds = async (stockIds, client = null) => {
   const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) IN (${placeholders})`;
 
   const result = client
-    ? await client.query(query, normalizedStockIds)
-    : await pool.query(query, normalizedStockIds);
+    ? await client.query(query, [normalizedStockIds])
+    : await pool.query(query, [normalizedStockIds]);
 
   return result.rowCount;
 };
@@ -795,13 +806,15 @@ export const getFilterOptions = async () => {
   const colorQuery = `SELECT DISTINCT UPPER(color) as value FROM diamond_stock WHERE color IS NOT NULL AND color != '' ORDER BY value`;
   const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock WHERE fancy_color IS NOT NULL AND fancy_color != '' ORDER BY value`;
   const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock WHERE clarity IS NOT NULL AND clarity != '' ORDER BY value`;
+  const labQuery = `SELECT DISTINCT UPPER(lab) as value FROM diamond_stock WHERE lab IS NOT NULL AND lab != '' ORDER BY value`;
 
-  const [shapeResult, colorResult, fancyColorResult, clarityResult] =
+  const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult] =
     await Promise.all([
       pool.query(shapeQuery),
       pool.query(colorQuery),
       pool.query(fancyColorQuery),
       pool.query(clarityQuery),
+      pool.query(labQuery),
     ]);
 
   // Combine colors and fancy colors, remove duplicates
@@ -809,10 +822,15 @@ export const getFilterOptions = async () => {
   const dbFancyColors = fancyColorResult.rows.map((r) => r.value);
   const allColors = [...new Set([...dbColors, ...dbFancyColors])];
 
+  // Add lab options - include "Non certified" for null certificate values
+  const labOptions = labResult.rows.map((r) => r.value);
+  labOptions.unshift("Non certified"); // Add at the beginning
+
   return {
     shapes: shapeResult.rows.map((r) => r.value),
     colors: allColors,
     clarities: clarityResult.rows.map((r) => r.value),
+    labs: labOptions,
   };
 };
 

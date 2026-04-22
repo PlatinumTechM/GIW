@@ -553,7 +553,7 @@ const AddStock = () => {
     setFilterClarity("");
     setFilterStatus("");
   };
-//share
+  //share
   // Handle share functionality - open markup modal first
   const handleShare = () => {
     setMarkupPercentage("");
@@ -584,13 +584,19 @@ const AddStock = () => {
         setShowMarkupModal(false);
         setShowShareModal(true);
         setCopied(false);
-        notify.success("Share Link Created", markupPercentage
-          ? `Link created with ${markupPercentage}% markup on prices!`
-          : "Your stock link is ready to share!");
+        notify.success(
+          "Share Link Created",
+          markupPercentage
+            ? `Link created with ${markupPercentage}% markup on prices!`
+            : "Your stock link is ready to share!",
+        );
       }
     } catch (error) {
       console.error("Share error:", error);
-      notify.error("Error", error.response?.data?.message || "Failed to create share link");
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to create share link",
+      );
     } finally {
       setShareLoading(false);
     }
@@ -887,6 +893,8 @@ const AddStock = () => {
     stage: "",
     message: "",
   });
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState(null);
 
   const handleSubmit = async () => {
     if (data.length === 0) {
@@ -913,7 +921,23 @@ const AddStock = () => {
       });
       const result = response.data;
 
-      if (result.data) {
+      if (result.limitReached) {
+        // Show subscription limit modal
+        setSubscriptionError(result.message);
+        setShowSubscriptionModal(true);
+
+        // Still show success for partially imported items
+        if (result.data?.insertedCount > 0) {
+          const replaceMsg =
+            result.data.replacedCount > 0
+              ? `, replaced ${result.data.replacedCount} existing`
+              : "";
+          notify.warning(
+            "Import Partial",
+            `Saved ${result.data.insertedCount} rows${replaceMsg}. ${result.message}`,
+          );
+        }
+      } else if (result.data) {
         const replaceMsg =
           result.data.replacedCount > 0
             ? `, replaced ${result.data.replacedCount} existing`
@@ -1164,7 +1188,9 @@ const AddStock = () => {
         className={`${rowBgClass} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}
       >
         {/* Row Number - Continuous across pages */}
-        <td className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-10 w-10 font-medium ${rowBgClass}`}>
+        <td
+          className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-10 w-10 font-medium ${rowBgClass}`}
+        >
           {rowNumber}
         </td>
 
@@ -1492,21 +1518,27 @@ const AddStock = () => {
                           Lab
                         </label>
                         <div className="flex flex-wrap gap-1">
-                          {["GIA", "IGI", "HRD", "AGS", "EGL", "CGL", "NON CERTIFIED"].map(
-                            (lab) => (
-                              <button
-                                key={lab}
-                                onClick={() => toggleArrayFilter("lab", lab)}
-                                className={`px-2 py-1 rounded text-xs transition-all ${
-                                  pendingFilters.lab.includes(lab)
-                                    ? "bg-cyan-600 text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
-                              >
-                                {lab}
-                              </button>
-                            ),
-                          )}
+                          {[
+                            "GIA",
+                            "IGI",
+                            "HRD",
+                            "AGS",
+                            "EGL",
+                            "CGL",
+                            "NON CERTIFIED",
+                          ].map((lab) => (
+                            <button
+                              key={lab}
+                              onClick={() => toggleArrayFilter("lab", lab)}
+                              className={`px-2 py-1 rounded text-xs transition-all ${
+                                pendingFilters.lab.includes(lab)
+                                  ? "bg-cyan-600 text-white"
+                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                              }`}
+                            >
+                              {lab}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -2238,7 +2270,7 @@ const AddStock = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Import Controls - Second Row */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     {/* Type Dropdown and Mobile Cancel Button */}
@@ -2258,7 +2290,7 @@ const AddStock = () => {
                           <option value="LABGROWN">LABGROWN</option>
                         </select>
                       </div>
-                      
+
                       {/* Cancel Button - Mobile Only */}
                       <button
                         onClick={clearFile}
@@ -2267,7 +2299,7 @@ const AddStock = () => {
                         Cancel
                       </button>
                     </div>
-                    
+
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                       {/* Cancel Button - Desktop Only */}
@@ -2432,7 +2464,8 @@ const AddStock = () => {
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">
-                      Leave empty for no markup. Price per carat will be increased by this percentage.
+                      Leave empty for no markup. Price per carat will be
+                      increased by this percentage.
                     </p>
                   </div>
 
@@ -2440,8 +2473,11 @@ const AddStock = () => {
                   {markupPercentage && parseFloat(markupPercentage) > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                       <p className="text-sm text-amber-800">
-                        <span className="font-semibold">Preview:</span> Price per carat will be increased by{" "}
-                        <span className="font-semibold">{markupPercentage}%</span>
+                        <span className="font-semibold">Preview:</span> Price
+                        per carat will be increased by{" "}
+                        <span className="font-semibold">
+                          {markupPercentage}%
+                        </span>
                       </p>
                     </div>
                   )}
@@ -2567,8 +2603,9 @@ const AddStock = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                     <p className="text-sm text-amber-800 flex items-center gap-2">
                       <span className="font-medium">Note:</span>
-                      Anyone with this link can view your filtered stock data for 24 hours.
-                      Pricing information is hidden in shared view.
+                      Anyone with this link can view your filtered stock data
+                      for 24 hours. Pricing information is hidden in shared
+                      view.
                     </p>
                   </div>
                 </div>
@@ -2585,6 +2622,106 @@ const AddStock = () => {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Subscription Limit Modal - Bulk Upload */}
+      <AnimatePresence>
+        {showSubscriptionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            onClick={() => setShowSubscriptionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Premium Header */}
+              <div className="relative bg-gradient-to-br from-amber-500 via-orange-400 to-red-500 px-6 py-8">
+                <div className="absolute top-0 right-0 opacity-10">
+                  <DollarSign className="w-32 h-32" />
+                </div>
+                <div className="relative flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 border border-white/30">
+                    <DollarSign className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      Limit Reached
+                    </h3>
+                    <p className="text-white/90 text-sm">
+                      Time to grow your business
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message Body */}
+              <div className="px-6 py-6">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {subscriptionError}
+                  </p>
+                </div>
+
+                {/* Benefits */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Add more stocks</span>{" "}
+                      with higher limits
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Bulk import</span>{" "}
+                      unlimited records
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-green-600" />
+                    </div>
+                    <p className="text-sm text-gray-700">
+                      <span className="font-semibold">Priority support</span>{" "}
+                      and advanced features
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+                <button
+                  onClick={() => setShowSubscriptionModal(false)}
+                  className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  Continue Later
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = "/pricing";
+                    setShowSubscriptionModal(false);
+                  }}
+                  className="flex-1 px-4 py-3 text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:shadow-lg hover:shadow-orange-200 transition-all hover:scale-105"
+                >
+                  Upgrade Plan
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

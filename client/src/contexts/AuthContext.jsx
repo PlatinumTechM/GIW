@@ -88,6 +88,19 @@ function AuthProvider({ children }) {
     setSessionExpired(false);
   };
 
+  // Refresh user data from server
+  const refreshUser = async () => {
+    try {
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
+      localStorage.setItem("role", userData.role || "user");
+      return { success: true, user: userData };
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -96,6 +109,7 @@ function AuthProvider({ children }) {
     logout,
     handleSessionExpired,
     clearSessionExpired,
+    refreshUser,
     isAuthenticated: !!user,
     loading,
     sessionExpired,
