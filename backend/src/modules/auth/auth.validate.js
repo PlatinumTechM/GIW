@@ -48,7 +48,7 @@ export const validateRegister = (req, res, next) => {
   if (!phoneRegex.test(phone)) {
     return res.status(400).json({ 
       success: false,
-      error: "Invalid phone number format" 
+      error: "Please enter a valid mobile number with at least 10 digits" 
     });
   }
   

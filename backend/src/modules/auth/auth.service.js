@@ -140,7 +140,7 @@ const updateProfile = async (userId, userData) => {
   // Phone validation
   const phoneRegex = /^[\d\s\-+()]{10,20}$/;
   if (!phoneRegex.test(phone)) {
-    throw new Error("Invalid phone number format");
+    throw new Error("Please enter a valid mobile number with at least 10 digits");
   }
 
   const updatedUser = await authRepo.updateUser(userId, {
