@@ -1,7 +1,7 @@
-import { adminRepo } from "./admin.repo.js";
+import * as adminRepo from "./admin.repo.js";
 
 // Verify admin password
-const verifyAdminPassword = async (password) => {
+export const verifyAdminPassword = async (password) => {
   const admin = await adminRepo.verifyAdmin(password);
   if (!admin) {
     throw new Error("Invalid admin password");
@@ -13,7 +13,7 @@ const verifyAdminPassword = async (password) => {
 };
 
 // Get all users
-const getAllUsers = async () => {
+export const getAllUsers = async () => {
   const users = await adminRepo.getAllUsers();
   return users.map((user) => ({
     id: user.id,
@@ -35,7 +35,7 @@ const getAllUsers = async () => {
 };
 
 // Get all subscriptions
-const getSubscriptions = async () => {
+export const getSubscriptions = async () => {
   const subscriptions = await adminRepo.getSubscriptions();
   return subscriptions;
 };
@@ -49,7 +49,7 @@ const getActiveSubscriptions = async () => {
 const VALID_DURATIONS = [1, 3, 6, 12];
 
 // Validate duration
-const validateDuration = (duration) => {
+export const validateDuration = (duration) => {
   if (!VALID_DURATIONS.includes(parseInt(duration))) {
     throw new Error(
       `Duration must be one of: ${VALID_DURATIONS.join(", ")} months`,
@@ -58,7 +58,7 @@ const validateDuration = (duration) => {
 };
 
 // Validate price and stock limit
-const validatePricingData = (price, stockLimit) => {
+export const validatePricingData = (price, stockLimit) => {
   if (price < 0) {
     throw new Error("Price cannot be negative");
   }
@@ -68,14 +68,16 @@ const validatePricingData = (price, stockLimit) => {
 };
 
 // Validate plan type (at least one must be selected)
-const validatePlanType = (hasDiamonds, hasJewellery) => {
+export const validatePlanType = (hasDiamonds, hasJewellery) => {
   if (!hasDiamonds && !hasJewellery) {
-    throw new Error("At least one plan type (Diamonds or Jewellery) must be selected");
+    throw new Error(
+      "At least one plan type (Diamonds or Jewellery) must be selected",
+    );
   }
 };
 
 // Create subscription
-const createSubscription = async (data) => {
+export const createSubscription = async (data) => {
   validateDuration(data.durationMonth);
   validatePricingData(data.price, data.stockLimit);
   validatePlanType(data.hasDiamonds, data.hasJewellery);
@@ -84,7 +86,7 @@ const createSubscription = async (data) => {
 };
 
 // Update subscription
-const updateSubscription = async (id, data) => {
+export const updateSubscription = async (id, data) => {
   validateDuration(data.durationMonth);
   validatePricingData(data.price, data.stockLimit);
   validatePlanType(data.hasDiamonds, data.hasJewellery);
@@ -93,13 +95,13 @@ const updateSubscription = async (id, data) => {
 };
 
 // Delete subscription
-const deleteSubscription = async (id) => {
+export const deleteSubscription = async (id) => {
   await adminRepo.deleteSubscription(id);
   return { success: true };
 };
 
 // Get all subscription buyers
-const getSubscriptionBuyers = async () => {
+export const getSubscriptionBuyers = async () => {
   const buyers = await adminRepo.getSubscriptionBuyers();
   return buyers.map((buyer) => ({
     subscriptionId: buyer.subscription_id,
@@ -147,16 +149,4 @@ const updateUserPlan = async (userId, planId, durationMonths) => {
       subscriptionStatus: updatedUser.subscription_status,
     } : null,
   };
-};
-
-export const adminService = {
-  verifyAdminPassword,
-  getAllUsers,
-  getSubscriptions,
-  getActiveSubscriptions,
-  createSubscription,
-  updateSubscription,
-  deleteSubscription,
-  getSubscriptionBuyers,
-  updateUserPlan,
 };

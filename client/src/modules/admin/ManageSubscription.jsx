@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { authAPI } from "../../services/api";
 import notify from "../../utils/notifications.jsx";
-import Input from "../../components/ui/Input.jsx";
 import {
   Plus,
   Edit2,
@@ -22,8 +21,6 @@ import {
   Check,
   Crown,
   TrendingUp,
-  Users,
-  CreditCard,
   Sparkles,
   Clock,
 } from "lucide-react";
@@ -393,7 +390,6 @@ const ManageSubscription = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header */}
-     
 
       {/* Search */}
       <motion.div
@@ -412,27 +408,30 @@ const ManageSubscription = () => {
             className="input-field"
           />
         </div>
-         <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-6 sm:mb-8"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-            whileHover={{ scale: 1.02, boxShadow: "0 10px 40px -10px rgba(30, 58, 138, 0.3)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleAddNew}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white font-medium rounded-xl shadow-lg shadow-[#1E3A8A]/20 transition-all duration-300"
-          >
-            <Plus className="w-5 h-5" />
-            Add Plan
-          </motion.button>
-        </div>
-      </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6 sm:mb-8"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0 10px 40px -10px rgba(30, 58, 138, 0.3)",
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAddNew}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white font-medium rounded-xl shadow-lg shadow-[#1E3A8A]/20 transition-all duration-300"
+            >
+              <Plus className="w-5 h-5" />
+              Add Plan
+            </motion.button>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Plans Table */}
@@ -501,7 +500,9 @@ const ManageSubscription = () => {
               transition={{ delay: 0.4 }}
               className="text-sm text-[#64748B] mt-1"
             >
-              {searchTerm ? "Try adjusting your search" : "Create your first plan to get started"}
+              {searchTerm
+                ? "Try adjusting your search"
+                : "Create your first plan to get started"}
             </motion.p>
             {!searchTerm && (
               <motion.button
@@ -574,7 +575,11 @@ const ManageSubscription = () => {
                           <motion.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 500, delay: 0.1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              delay: 0.1,
+                            }}
                             className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200"
                           >
                             <Diamond className="w-3 h-3" />
@@ -585,7 +590,11 @@ const ManageSubscription = () => {
                           <motion.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 500, delay: 0.15 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              delay: 0.15,
+                            }}
                             className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-blue-100 to-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200"
                           >
                             <Gem className="w-3 h-3" />
@@ -597,7 +606,9 @@ const ManageSubscription = () => {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1 text-[#475569]">
                         <Calendar className="w-4 h-4 text-[#94A3B8] flex-shrink-0" />
-                        <span className="text-sm">{getDurationLabel(sub.durationMonth)}</span>
+                        <span className="text-sm">
+                          {getDurationLabel(sub.durationMonth)}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -611,7 +622,9 @@ const ManageSubscription = () => {
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-1 text-[#475569]">
                         <Hash className="w-4 h-4 text-[#94A3B8] flex-shrink-0" />
-                        <span className="text-sm">{sub.stockLimit?.toLocaleString()}</span>
+                        <span className="text-sm">
+                          {sub.stockLimit?.toLocaleString()}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -626,21 +639,33 @@ const ManageSubscription = () => {
                       <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          delay: 0.2,
+                        }}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                           sub.isActive
                             ? "bg-[#D1FAE5] text-[#065F46] border border-[#A7F3D0]"
                             : "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]"
                         }`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${sub.isActive ? "bg-[#10B981]" : "bg-[#94A3B8]"}`} />
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${sub.isActive ? "bg-[#10B981]" : "bg-[#94A3B8]"}`}
+                        />
                         {sub.isActive ? "Active" : "Inactive"}
                       </motion.span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="px-4 py-3 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex items-center justify-end gap-1">
                         <motion.button
-                          whileHover={{ scale: 1.15, backgroundColor: "rgba(59, 130, 246, 0.15)" }}
+                          whileHover={{
+                            scale: 1.15,
+                            backgroundColor: "rgba(59, 130, 246, 0.15)",
+                          }}
                           whileTap={{ scale: 0.9 }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -652,7 +677,10 @@ const ManageSubscription = () => {
                           <Edit2 className="w-4 h-4" />
                         </motion.button>
                         <motion.button
-                          whileHover={{ scale: 1.15, backgroundColor: "rgba(239, 68, 68, 0.15)" }}
+                          whileHover={{
+                            scale: 1.15,
+                            backgroundColor: "rgba(239, 68, 68, 0.15)",
+                          }}
                           whileTap={{ scale: 0.9 }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -695,7 +723,9 @@ const ManageSubscription = () => {
               {/* Modal Header */}
               <div className="flex items-center justify-between p-6 border-b border-[#E2E8F0] bg-gradient-to-r from-white to-[#F8FAFC]">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl ${isEditing ? "bg-[#DBEAFE]" : "bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6]"}`}>
+                  <div
+                    className={`p-2 rounded-xl ${isEditing ? "bg-[#DBEAFE]" : "bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6]"}`}
+                  >
                     {isEditing ? (
                       <Edit2 className="w-5 h-5 text-[#1E3A8A]" />
                     ) : (
@@ -728,13 +758,13 @@ const ManageSubscription = () => {
                   <label className="block text-sm font-medium text-[#475569] mb-2">
                     Plan Name *
                   </label>
-                  <Input
+                  <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="e.g., Basic, Pro, Enterprise"
                     icon={<Tag className="w-5 h-5" />}
-                    className={`${formErrors.name ? "border-[#EF4444]" : "border-[#E2E8F0]"} rounded-xl py-3`}
+                    className={`${formErrors.name ? "border-[#EF4444]" : "border-[#E2E8F0]"} input-field`}
                   />
                   {formErrors.name && (
                     <motion.p
@@ -807,7 +837,10 @@ const ManageSubscription = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() =>
-                        handleInputChange("hasJewellery", !formData.hasJewellery)
+                        handleInputChange(
+                          "hasJewellery",
+                          !formData.hasJewellery,
+                        )
                       }
                       className={`flex-1 flex items-center gap-3 p-3 border-2 rounded-xl transition-all ${
                         formData.hasJewellery
@@ -865,7 +898,7 @@ const ManageSubscription = () => {
                   <label className="block text-sm font-medium text-[#475569] mb-2">
                     Duration (Months) *
                   </label>
-                  <div className="relative">
+                  <div className="relative input-with-icon">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                     <select
                       value={formData.durationMonth}
@@ -873,7 +906,7 @@ const ManageSubscription = () => {
                         handleInputChange("durationMonth", e.target.value)
                       }
                       disabled={isEditing}
-                      className={`w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-md text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all appearance-none ${
+                      className={`w-full input-field ${
                         formErrors.durationMonth
                           ? "border-[#EF4444]"
                           : "border-gray-200"
@@ -911,15 +944,17 @@ const ManageSubscription = () => {
                     <label className="block text-sm font-medium text-[#475569] mb-2">
                       Price (₹) *
                     </label>
-                    <Input
+                    <input
                       type="number"
                       min="0"
                       step="0.01"
                       value={formData.price}
-                      onChange={(e) => handleInputChange("price", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("price", e.target.value)
+                      }
                       placeholder="e.g., 2499"
                       icon={<DollarSign className="w-5 h-5" />}
-                      className={`${formErrors.price ? "border-[#EF4444]" : "border-[#E2E8F0]"} rounded-xl py-3`}
+                      className={`${formErrors.price ? "border-[#EF4444]" : "border-[#E2E8F0]"} input-field`}
                     />
                     {formErrors.price && (
                       <motion.p
@@ -937,14 +972,16 @@ const ManageSubscription = () => {
                     <label className="block text-sm font-medium text-[#475569] mb-2">
                       Stock Limit *
                     </label>
-                    <Input
+                    <input
                       type="number"
                       min="0"
                       value={formData.stockLimit}
-                      onChange={(e) => handleInputChange("stockLimit", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("stockLimit", e.target.value)
+                      }
                       placeholder="e.g., 5000"
                       icon={<Hash className="w-5 h-5" />}
-                      className={`${formErrors.stockLimit ? "border-[#EF4444]" : "border-[#E2E8F0]"} rounded-xl py-3`}
+                      className={`${formErrors.stockLimit ? "border-[#EF4444]" : "border-[#E2E8F0]"} input-field`}
                     />
                     {formErrors.stockLimit && (
                       <motion.p
@@ -1004,7 +1041,11 @@ const ManageSubscription = () => {
                     >
                       <motion.span
                         layout
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
                         className={`inline-block h-4 w-4 transform rounded-full bg-white ${
                           formData.isActive ? "translate-x-6" : "translate-x-1"
                         }`}

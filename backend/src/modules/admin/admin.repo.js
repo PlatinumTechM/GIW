@@ -1,6 +1,6 @@
 import { pool } from "../../config/db.js";
 
-const verifyAdmin = async (password) => {
+export const verifyAdmin = async (password) => {
   const query = `SELECT id from users 
               WHERE role = 'admin'
               AND password = $1
@@ -9,7 +9,7 @@ const verifyAdmin = async (password) => {
   return result.rows[0];
 };
 
-const getAllUsers = async () => {
+export const getAllUsers = async () => {
   const query = `
     SELECT 
       u.id, u.name, u.email, u.password, u.company, u.phone, u.address,
@@ -22,13 +22,17 @@ const getAllUsers = async () => {
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
     ORDER BY u.created_at DESC
   `;
+export const getAllUsers = async () => {
+  const query = `SELECT id, name, email, password, company, phone, address,
+                 gst, document, is_active, role, created_at
+                 FROM users ORDER BY created_at DESC`;
   const result = await pool.query(query);
   return result.rows;
 };
 
 // Get all subscription plans
-const getSubscriptions = async () => {
-  const query = `SELECT id, name, duration_month, price, stock_limit, is_active,
+export const getSubscriptions = async () => {
+  const query = `SELECT id, name, duration_month, price, stock_limit, is_active, 
                         has_diamonds, has_jewellery, description, created_at
                  FROM subscription_plans ORDER BY name ASC, duration_month ASC`;
   const result = await pool.query(query);
@@ -69,8 +73,16 @@ const getActiveSubscriptions = async () => {
 };
 
 // Create subscription plan
-const createSubscription = async (data) => {
-  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = data;
+export const createSubscription = async (data) => {
+  const {
+    name,
+    durationMonth,
+    price,
+    stockLimit,
+    hasDiamonds,
+    hasJewellery,
+    description,
+  } = data;
   const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description)
                  VALUES ($1, $2, $3, $4, $5, $6, $7)
                  RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
@@ -99,8 +111,17 @@ const createSubscription = async (data) => {
 };
 
 // Update subscription plan
-const updateSubscription = async (id, data) => {
-  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = data;
+export const updateSubscription = async (id, data) => {
+  const {
+    name,
+    durationMonth,
+    price,
+    stockLimit,
+    hasDiamonds,
+    hasJewellery,
+    description,
+    isActive,
+  } = data;
   const query = `UPDATE subscription_plans
                  SET name = $1, duration_month = $2, price = $3, stock_limit = $4, 
                      has_diamonds = $5, has_jewellery = $6, description = $7, is_active = $8
@@ -136,7 +157,7 @@ const updateSubscription = async (id, data) => {
 };
 
 // Delete subscription
-const deleteSubscription = async (id) => {
+export const deleteSubscription = async (id) => {
   const query = `DELETE FROM subscription_plans WHERE id = $1 RETURNING id`;
   const result = await pool.query(query, [id]);
   if (result.rows.length === 0) {
@@ -173,7 +194,7 @@ const getSubscriptionBuyers = async () => {
 };
 
 // Update user plan (admin only)
-const updateUserPlan = async (userId, planId, durationMonths) => {
+export const updateUserPlan = async (userId, planId, durationMonths) => {
   // First, cancel any existing active subscription for the user
   const deactivateQuery = `
     UPDATE user_subscriptions 
@@ -203,7 +224,11 @@ const updateUserPlan = async (userId, planId, durationMonths) => {
 };
 
 // Check if plan with same name and duration already exists
-const checkDuplicatePlan = async (name, durationMonth, excludeId = null) => {
+export const checkDuplicatePlan = async (
+  name,
+  durationMonth,
+  excludeId = null,
+) => {
   let query = `SELECT id FROM subscription_plans WHERE name = $1 AND duration_month = $2`;
   const params = [name, durationMonth];
 
@@ -214,17 +239,4 @@ const checkDuplicatePlan = async (name, durationMonth, excludeId = null) => {
 
   const result = await pool.query(query, params);
   return result.rows.length > 0;
-};
-
-export const adminRepo = {
-  verifyAdmin,
-  getAllUsers,
-  getSubscriptions,
-  getActiveSubscriptions,
-  createSubscription,
-  updateSubscription,
-  deleteSubscription,
-  checkDuplicatePlan,
-  getSubscriptionBuyers,
-  updateUserPlan,
 };

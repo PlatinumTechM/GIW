@@ -1,6 +1,6 @@
-import { adminService } from "./admin.service.js";
+import * as adminService from "./admin.service.js";
 
-const verifyAdminPassword = async (req, res) => {
+export const verifyAdminPassword = async (req, res) => {
   try {
     const { password } = req.body;
 
@@ -23,7 +23,7 @@ const verifyAdminPassword = async (req, res) => {
   }
 };
 
-const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const users = await adminService.getAllUsers();
 
@@ -41,7 +41,7 @@ const getAllUsers = async (req, res) => {
 };
 
 // Get all subscriptions
-const getSubscriptions = async (req, res) => {
+export const getSubscriptions = async (req, res) => {
   try {
     const subscriptions = await adminService.getSubscriptions();
     res.status(200).json({
@@ -75,9 +75,17 @@ const getActiveSubscriptions = async (req, res) => {
 };
 
 // Create subscription
-const createSubscription = async (req, res) => {
+export const createSubscription = async (req, res) => {
   try {
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
+    const {
+      name,
+      durationMonth,
+      price,
+      stockLimit,
+      hasDiamonds,
+      hasJewellery,
+      description,
+    } = req.body;
 
     if (
       !name ||
@@ -117,10 +125,19 @@ const createSubscription = async (req, res) => {
 };
 
 // Update subscription
-const updateSubscription = async (req, res) => {
+export const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
+    const {
+      name,
+      durationMonth,
+      price,
+      stockLimit,
+      hasDiamonds,
+      hasJewellery,
+      description,
+      isActive,
+    } = req.body;
 
     if (
       !name ||
@@ -161,7 +178,7 @@ const updateSubscription = async (req, res) => {
 };
 
 // Delete subscription
-const deleteSubscription = async (req, res) => {
+export const deleteSubscription = async (req, res) => {
   try {
     const { id } = req.params;
     await adminService.deleteSubscription(id);
@@ -179,7 +196,7 @@ const deleteSubscription = async (req, res) => {
 };
 
 // Get all subscription buyers
-const getSubscriptionBuyers = async (req, res) => {
+export const getSubscriptionBuyers = async (req, res) => {
   try {
     const buyers = await adminService.getSubscriptionBuyers();
     res.status(200).json({
@@ -196,7 +213,7 @@ const getSubscriptionBuyers = async (req, res) => {
 };
 
 // Update user plan (admin only)
-const updateUserPlan = async (req, res) => {
+export const updateUserPlan = async (req, res) => {
   try {
     const { userId } = req.params;
     const { planId, durationMonths } = req.body;
@@ -223,16 +240,4 @@ const updateUserPlan = async (req, res) => {
       message: error.message || "Failed to update user plan",
     });
   }
-};
-
-export const adminController = {
-  verifyAdminPassword,
-  getAllUsers,
-  getSubscriptions,
-  getActiveSubscriptions,
-  createSubscription,
-  updateSubscription,
-  deleteSubscription,
-  getSubscriptionBuyers,
-  updateUserPlan,
 };

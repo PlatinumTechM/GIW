@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { authRepo } from "./auth.repo.js";
+import * as authRepo from "./auth.repo.js";
 
-const login = async (identifier, password) => {
+export const login = async (identifier, password) => {
   // Check if identifier is email or phone
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   let user;
@@ -58,7 +58,7 @@ const login = async (identifier, password) => {
   };
 };
 
-const register = async (userData) => {
+export const register = async (userData) => {
   const {
     name,
     email,
@@ -114,8 +114,8 @@ const register = async (userData) => {
   };
 };
 
-const getCurrentUser = async (userId) => {
-  const user = await authRepo.findUserWithSubscription(userId);
+export const getCurrentUser = async (userId) => {
+  const user = await authRepo.findUserById(userId);
 
   if (!user) {
     throw new Error("User not found");
@@ -138,7 +138,7 @@ const getCurrentUser = async (userId) => {
   };
 };
 
-const updateProfile = async (userId, userData) => {
+export const updateProfile = async (userId, userData) => {
   const { name, company, phone, address, gst } = userData;
 
   // Validation
@@ -149,7 +149,9 @@ const updateProfile = async (userId, userData) => {
   // Phone validation
   const phoneRegex = /^[\d\s\-+()]{10,20}$/;
   if (!phoneRegex.test(phone)) {
-    throw new Error("Please enter a valid mobile number with at least 10 digits");
+    throw new Error(
+      "Please enter a valid mobile number with at least 10 digits",
+    );
   }
 
   const updatedUser = await authRepo.updateUser(userId, {
@@ -178,7 +180,7 @@ const updateProfile = async (userId, userData) => {
   };
 };
 
-const purchaseSubscription = async (userId, planId, durationMonths) => {
+export const purchaseSubscription = async (userId, planId, durationMonths) => {
   if (!planId || !durationMonths) {
     throw new Error("Plan ID and duration are required");
   }
@@ -194,12 +196,4 @@ const purchaseSubscription = async (userId, planId, durationMonths) => {
     status: subscription.status,
     createdAt: subscription.created_at,
   };
-};
-
-export const authService = {
-  login,
-  register,
-  getCurrentUser,
-  updateProfile,
-  purchaseSubscription,
 };

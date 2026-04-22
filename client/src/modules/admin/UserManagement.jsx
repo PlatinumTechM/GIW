@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Input from "../../components/ui/Input";
 import { authAPI } from "../../services/api";
 import notify from "../../utils/notifications.jsx";
 import {
@@ -358,8 +357,22 @@ const UserManagement = () => {
       >
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1">
-            <Input
+          <div className="flex-1 input-with-icon">
+            <svg
+              className="w-5 h-5 icon"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              className="input-field"
               type="text"
               placeholder="Search users..."
               value={searchTerm}
@@ -499,6 +512,40 @@ const UserManagement = () => {
                             {user.phone || "N/A"}
                           </p>
                         </div>
+                      </td>
+                      {/* Document */}
+                      <td className="px-4 py-4 text-center">
+                        {user.document ? (
+                          <a
+                            href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}${user.document}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all shadow-sm"
+                            title="View Document"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span className="text-sm text-slate-400">N/A</span>
+                        )}
                       </td>
                       {/* Password */}
                       <td className="px-4 py-4 text-center">
@@ -991,7 +1038,7 @@ const UserManagement = () => {
                     </div>
                     {selectedUser.document ? (
                       <a
-                        href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')}${selectedUser.document}`}
+                        href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}${selectedUser.document}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white text-sm font-medium rounded-lg hover:from-[#F59E0B] hover:to-[#D97706] transition-all shadow-md shadow-[#FBBF24]/30"
