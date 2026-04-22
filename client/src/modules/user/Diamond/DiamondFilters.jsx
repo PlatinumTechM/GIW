@@ -140,6 +140,8 @@ export const useDiamondFilters = () => {
   const [pendingMilky, setPendingMilky] = useState("");
   const [pendingEyeClean, setPendingEyeClean] = useState("");
   const [pendingShade, setPendingShade] = useState("");
+  // Sort by - Pending
+  const [pendingSortBy, setPendingSortBy] = useState("featured");
 
   // Advanced Filters - Applied
   const [lengthMin, setLengthMin] = useState("");
@@ -167,6 +169,8 @@ export const useDiamondFilters = () => {
   const [milky, setMilky] = useState("");
   const [eyeClean, setEyeClean] = useState("");
   const [shade, setShade] = useState("");
+  // Sort by - Applied
+  const [sortBy, setSortBy] = useState("featured");
 
   // Toggle functions for pending states
   const toggleShape = useCallback((shape) => {
@@ -281,8 +285,9 @@ export const useDiamondFilters = () => {
     setMilky(pendingMilky);
     setEyeClean(pendingEyeClean);
     setShade(pendingShade);
+    setSortBy(pendingSortBy);
   }, [
-    pendingShapes, pendingShowOnlyMedia, pendingAvailableItems,
+    pendingShapes, pendingShowOnlyMedia, pendingAvailableItems, pendingSortBy,
     pendingCaratMin, pendingCaratMax, pendingPriceMin, pendingPriceMax,
     pendingColorType, pendingWhiteColors, pendingFancyColors,
     pendingFancyIntensity, pendingFancyOvertone, pendingClarities,
@@ -343,8 +348,9 @@ export const useDiamondFilters = () => {
     setPendingMilky(milky);
     setPendingEyeClean(eyeClean);
     setPendingShade(shade);
+    setPendingSortBy(sortBy);
   }, [
-    selectedShapes, showOnlyMedia, availableItems, caratMin, caratMax,
+    selectedShapes, showOnlyMedia, availableItems, caratMin, caratMax, sortBy,
     priceMin, priceMax, colorType, selectedWhiteColors, selectedFancyColors,
     selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
     selectedCuts, selectedPolish, selectedSymmetry, selectedCertifications,
@@ -401,6 +407,7 @@ export const useDiamondFilters = () => {
     setPendingMilky("");
     setPendingEyeClean("");
     setPendingShade("");
+    setPendingSortBy("featured");
     // Clear applied states
     setSelectedShapes([]);
     setSelectedWhiteColors([]);
@@ -446,12 +453,14 @@ export const useDiamondFilters = () => {
     setMilky("");
     setEyeClean("");
     setShade("");
+    setSortBy("featured");
   }, []);
 
   const appliedFilters = useMemo(() => ({
     shapes: selectedShapes,
     colors: colorType === "White" ? selectedWhiteColors : selectedFancyColors,
     colorType,
+    fancyColors: colorType === "Fancy" ? selectedFancyColors : [],
     fancyIntensity: selectedFancyIntensity,
     fancyOvertone: selectedFancyOvertone,
     clarities: selectedClarities,
@@ -491,6 +500,7 @@ export const useDiamondFilters = () => {
     milky,
     eyeClean,
     shade,
+    sortBy,
   }), [
     selectedShapes, selectedWhiteColors, selectedFancyColors, colorType,
     selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
@@ -500,7 +510,7 @@ export const useDiamondFilters = () => {
     heightMin, heightMax, ratioMin, ratioMax, depthMin, depthMax,
     tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin,
     crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin,
-    pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade,
+    pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade, sortBy,
   ]);
 
   const activeFiltersCount = useMemo(() =>
@@ -533,7 +543,8 @@ export const useDiamondFilters = () => {
     (girdleMin || girdleMax ? 1 : 0) +
     (milky ? 1 : 0) +
     (eyeClean ? 1 : 0) +
-    (shade ? 1 : 0),
+    (shade ? 1 : 0) +
+    (sortBy !== "featured" ? 1 : 0),
     [
       selectedShapes, selectedWhiteColors, selectedFancyColors,
       selectedFancyIntensity, selectedFancyOvertone, selectedClarities,
@@ -544,12 +555,13 @@ export const useDiamondFilters = () => {
       tableMin, tableMax, crownHeightMin, crownHeightMax, crownAngleMin,
       crownAngleMax, pavilionDepthMin, pavilionDepthMax, pavilionAngleMin,
       pavilionAngleMax, girdleMin, girdleMax, milky, eyeClean, shade,
+      sortBy,
     ]
   );
 
   // Count filters that are selected but not yet applied
-  const pendingFiltersCount = useMemo(() =>
-    pendingShapes.length +
+  const pendingFiltersCount = useMemo(() => {
+    const count = pendingShapes.length +
     pendingWhiteColors.length +
     pendingFancyColors.length +
     (pendingFancyIntensity ? 1 : 0) +
@@ -578,8 +590,9 @@ export const useDiamondFilters = () => {
     (pendingGirdleMin || pendingGirdleMax ? 1 : 0) +
     (pendingMilky ? 1 : 0) +
     (pendingEyeClean ? 1 : 0) +
-    (pendingShade ? 1 : 0),
-    [
+    (pendingShade ? 1 : 0);
+    return count;
+  }, [
       pendingShapes, pendingWhiteColors, pendingFancyColors,
       pendingFancyIntensity, pendingFancyOvertone, pendingClarities,
       pendingCuts, pendingPolish, pendingSymmetry, pendingCertifications,
@@ -596,6 +609,10 @@ export const useDiamondFilters = () => {
   );
 
   return {
+    // Sort by
+    sortBy,
+    pendingSortBy,
+    setPendingSortBy,
     // Applied States (for display in active filters)
     selectedShapes,
     showOnlyMedia,
@@ -763,6 +780,7 @@ export const useDiamondFilters = () => {
     setMilky,
     setEyeClean,
     setShade,
+    setSortBy,
     // Toggles
     toggleShape,
     toggleWhiteColor,

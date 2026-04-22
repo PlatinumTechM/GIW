@@ -50,7 +50,6 @@ const staggerContainer = {
 
 const NaturalDiamond = () => {
   const [activeTab, setActiveTab] = useState("Single Stone");
-  const [sortBy, setSortBy] = useState("featured");
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,7 +62,10 @@ const NaturalDiamond = () => {
     pendingFiltersCount,
     clearAllFilters,
     applyFilters,
-    syncPendingToApplied,
+    sortBy,
+    setSortBy,
+    pendingSortBy,
+    setPendingSortBy,
     selectedShapes,
     selectedWhiteColors,
     selectedFancyColors,
@@ -95,11 +97,6 @@ const NaturalDiamond = () => {
     toggleSymmetry,
     toggleCertification,
   } = filters;
-
-  // Sync pending filters to applied on initial mount
-  useEffect(() => {
-    syncPendingToApplied();
-  }, []);
 
   const filterContentJsx = <DiamondFilterContent filters={filters} />;
 
@@ -410,7 +407,10 @@ const NaturalDiamond = () => {
                   <span className="text-sm text-[#64748B]">Sort by:</span>
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setPendingSortBy(e.target.value);
+                    }}
                     className="rounded-lg border border-[#E2E8F0] bg-white py-2 px-3 text-sm"
                   >
                     {sorts.map((sort) => (

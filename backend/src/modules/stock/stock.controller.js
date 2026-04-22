@@ -93,6 +93,7 @@ export const getAllStocks = async (req, res) => {
       eyeClean,
       shade,
       hasMedia,
+      certificateType,
     } = req.query;
 
     const filters = {
@@ -107,7 +108,7 @@ export const getAllStocks = async (req, res) => {
       minPrice: minPrice ? parseFloat(minPrice) : null,
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
       search,
-      type,
+      type: req.diamondType || type,
       // Detailed filters
       cut,
       polish,
@@ -143,6 +144,7 @@ export const getAllStocks = async (req, res) => {
       eyeClean,
       shade,
       hasMedia: hasMedia === "true",
+      certificateType,
       weight,
       minWeight: minWeight ? parseFloat(minWeight) : null,
       maxWeight: maxWeight ? parseFloat(maxWeight) : null,
@@ -182,6 +184,13 @@ export const getAllStocks = async (req, res) => {
 export const getStockById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id || id === "None" || isNaN(Number(id))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid stock ID provided",
+      });
+    }
 
     const stock = await stockService.getStockById(id);
 
