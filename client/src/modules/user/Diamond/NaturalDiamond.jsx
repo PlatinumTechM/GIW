@@ -2,12 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Diamond,
-  Sparkles,
-  Heart,
-  Star,
   Gem,
-  Crown,
   Filter,
   FlaskConical,
   X,
@@ -18,7 +13,6 @@ import {
   List,
 } from "lucide-react";
 import ShowStock from "./ShowStock";
-import Input from "../../../components/ui/Input";
 import { DiamondFilterContent, useDiamondFilters } from "./DiamondFilters";
 
 const sorts = [
@@ -346,13 +340,13 @@ const NaturalDiamond = () => {
             <div className="flex items-center gap-3">
               {/* Search Bar - Like Jewelry.jsx */}
               <div className="block">
-                <Input
+                <input
                   type="text"
                   placeholder="Search diamonds..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   icon={<Search className="h-4 w-4 text-[#64748B]" />}
-                  className="w-32 sm:w-48 lg:w-64 bg-white rounded-lg"
+                  className="w-32 input-field"
                 />
               </div>
             </div>
