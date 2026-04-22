@@ -21,10 +21,12 @@ import {
   Save,
   X,
   CheckCircle,
+  Clock,
+  Crown,
 } from "lucide-react";
 
 const Profile = () => {
-  const { user, isAuthenticated, loading: authLoading, setUser } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, setUser, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -38,6 +40,13 @@ const Profile = () => {
     address: "",
     gst: "",
   });
+
+  // Refresh user data when profile loads to get latest subscription info
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshUser();
+    }
+  }, [isAuthenticated]);
 
   // Update form data when user changes
   useEffect(() => {
@@ -207,6 +216,44 @@ const Profile = () => {
                   <span className="text-sm font-semibold text-[#8B6914] capitalize">
                     {user?.role || "Member"}
                   </span>
+                </div>
+
+                {/* Plan & Expiry */}
+                <div className="mt-4 space-y-2">
+                  {/* Plan Name */}
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ${user?.planName ? "bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200" : "bg-gray-50 border border-gray-200"}`}>
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${user?.planName ? "bg-purple-100" : "bg-gray-100"}`}>
+                      <Crown className={`w-4 h-4 ${user?.planName ? "text-purple-600" : "text-gray-400"}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-[10px] text-gray-500 uppercase font-medium">Plan</p>
+                      <p className={`text-xs font-semibold ${user?.planName ? "text-purple-700" : "text-gray-400"}`}>
+                        {user?.planName || "No Plan"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Expiry Date */}
+                  {user?.planExpiry && (
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${new Date(user.planExpiry) > new Date() ? "bg-gradient-to-r from-emerald-500/10 to-green-500/10 border-emerald-200" : "bg-gradient-to-r from-rose-500/10 to-red-500/10 border-rose-200"}`}>
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${new Date(user.planExpiry) > new Date() ? "bg-emerald-100" : "bg-rose-100"}`}>
+                        <Clock className={`w-4 h-4 ${new Date(user.planExpiry) > new Date() ? "text-emerald-600" : "text-rose-600"}`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-[10px] text-gray-500 uppercase font-medium">Expires</p>
+                        <p className={`text-xs font-semibold ${new Date(user.planExpiry) > new Date() ? "text-emerald-700" : "text-rose-700"}`}>
+                          {new Date(user.planExpiry).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${new Date(user.planExpiry) > new Date() ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                        {new Date(user.planExpiry) > new Date() ? "Active" : "Expired"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stats */}

@@ -135,3 +135,32 @@ export const logout = async (req, res) => {
     });
   }
 };
+
+export const purchaseSubscription = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { planId, durationMonths } = req.body;
+
+    if (!planId || !durationMonths) {
+      return res.status(400).json({
+        success: false,
+        message: "Plan ID and duration months are required",
+      });
+    }
+
+    const subscription = await authService.purchaseSubscription(userId, planId, durationMonths);
+
+    res.status(201).json({
+      success: true,
+      message: "Subscription purchased successfully",
+      subscription,
+    });
+  } catch (error) {
+    console.error("Error at purchaseSubscription = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to purchase subscription",
+    });
+  }
+};
+
