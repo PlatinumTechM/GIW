@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Diamond,
@@ -10,56 +11,326 @@ import {
   X,
   SlidersHorizontal,
 } from "lucide-react";
-import Input from "../../../components/ui/Input";
+
 
 const JewelryFilters = ({
-  // Desktop filters
-  tempCategory,
-  setTempCategory,
-  tempPriceRange,
-  setTempPriceRange,
-  tempMetals,
-  toggleMetal,
-  expandedSections,
-  toggleSection,
-  applyFilters,
-  clearAllFilters,
-  // Mobile filters
-  mobileFiltersOpen,
-  setMobileFiltersOpen,
-  // Data
-  categories,
-  metalTypes,
-  filteredItemsCount,
-  // Optional
+  items,
+  onFilterChange,
+  children,
   isLabGrown = false,
 }) => {
-  return (
-    <>
-      {/* Mobile Filter Button */}
-      <button
-        onClick={() => setMobileFiltersOpen(true)}
-        className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
-      >
-        <SlidersHorizontal className="h-4 w-4" />
-        <span>Filters</span>
+  // UI state
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    category: true,
+    price: false,
+    metal: true,
+    shape: true,
+    carat: false,
+  });
+  const [shapeDisplayCount, setShapeDisplayCount] = useState(8);
+
+  // Ref for sidebar scroll container to preserve scroll position
+  const sidebarScrollRef = useRef(null);
+  const scrollPositionRef = useRef(0);
+
+  // ========== APPLIED FILTER STATES (what's actually filtering the results) ==========
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [priceRange, setPriceRange] = useState([0, 0]);
+  const [selectedMetals, setSelectedMetals] = useState([]);
+  const [selectedShapes, setSelectedShapes] = useState([]);
+  const [centerStoneWeightRange, setCenterStoneWeightRange] = useState([0, 0]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+
+  // ========== PENDING FILTER STATES (what user is selecting in UI) ==========
+  const [pendingCategory, setPendingCategory] = useState("all");
+  const [pendingPriceRange, setPendingPriceRange] = useState([0, 0]);
+  const [pendingMetals, setPendingMetals] = useState([]);
+  const [pendingShapes, setPendingShapes] = useState([]);
+  const [pendingCenterStoneWeightRange, setPendingCenterStoneWeightRange] = useState([0, 0]);
+
+  const categories = [
+    { id: "all", label: "All Types", icon: Diamond, count: items?.length || 0 },
+    { id: "engagement-rings", label: "Engagement Rings", icon: Sparkles, count: items?.filter(i => i.category === "engagement-rings").length || 0 },
+    { id: "wedding-bands", label: "Wedding Bands", icon: Crown, count: items?.filter(i => i.category === "wedding-bands").length || 0 },
+    { id: "fashion-women", label: "Fashion Women", icon: Gem, count: items?.filter(i => i.category === "fashion-women").length || 0 },
+    { id: "fashion-men", label: "Fashion Men", icon: Star, count: items?.filter(i => i.category === "fashion-men").length || 0 },
+    { id: "earrings", label: "Earrings", icon: Gem, count: items?.filter(i => i.category === "earrings").length || 0 },
+    { id: "bracelets", label: "Bracelets", icon: Star, count: items?.filter(i => i.category === "bracelets").length || 0 },
+    { id: "necklaces", label: "Necklaces", icon: Crown, count: items?.filter(i => i.category === "necklaces").length || 0 },
+    { id: "pearl-jewelry", label: "Pearl Jewelry", icon: Gem, count: items?.filter(i => i.category === "pearl-jewelry").length || 0 },
+    { id: "accessories", label: "Accessories", icon: Diamond, count: items?.filter(i => i.category === "accessories").length || 0 },
+  ];
+
+  const metalTypes = [
+    { id: "white-gold", label: "White Gold", color: "#F5F5F5" },
+    { id: "yellow-gold", label: "Yellow Gold", color: "#FFD700" },
+    { id: "rose-gold", label: "Rose Gold", color: "#E8B4B4" },
+    { id: "platinum", label: "Platinum", color: "#A8A8A8" },
+    { id: "silver", label: "Silver", color: "#C0C0C0" },
+    { id: "two-tone", label: "Two Tone", color: "linear-gradient(135deg, #FFD700 50%, #E8E8E8 50%)" },
+    { id: "other", label: "Other", color: "#808080" },
+  ];
+
+  const shapeTypes = [
+    { id: "round", label: "Round", icon: "/diamond shap icon/round.svg" },
+    { id: "pear", label: "Pear", icon: "/diamond shap icon/pear.svg" },
+    { id: "oval", label: "Oval", icon: "/diamond shap icon/oval.svg" },
+    { id: "princess", label: "Princess", icon: "/diamond shap icon/princess.svg" },
+    { id: "emerald", label: "Emerald", icon: "/diamond shap icon/emerald.svg" },
+    { id: "cushion", label: "Cushion", icon: "/diamond shap icon/cub.svg" },
+    { id: "marquise", label: "Marquise", icon: "/diamond shap icon/marquise.svg" },
+    { id: "heart", label: "Heart", icon: "/diamond shap icon/heart.svg" },
+    { id: "radiant", label: "Radiant", icon: "/diamond shap icon/radiant.svg" },
+    { id: "baguette", label: "Baguette", icon: "/diamond shap icon/Baguette.svg" },
+    { id: "hexagonal", label: "Hexagonal", icon: "/diamond shap icon/Hexagonal.svg" },
+    { id: "asscher", label: "SQUARE EMERALD", icon: "/diamond shap icon/Square Emerald.svg" },
+    { id: "briolette", label: "Briolette", icon: "/diamond shap icon/Briolette.svg" },
+    { id: "trilliant", label: "Trilliant", icon: "/diamond shap icon/Trilliant.svg" },
+    { id: "half-moon", label: "Half Moon", icon: "/diamond shap icon/half moon.svg" },
+    { id: "rose-cut", label: "Rose Cut", icon: "/diamond shap icon/rose cut.svg" },
+    { id: "kite", label: "Kite", icon: "/diamond shap icon/kite.svg" },
+    { id: "other", label: "Other", icon: "/diamond shap icon/other.svg" },
+  ];
+
+  // Compute filtered items
+  const filteredItems = useMemo(() => {
+    let result = items?.filter((item) => {
+      const categoryMatch =
+        activeCategory === "all" || item.category === activeCategory;
+      const priceMatch =
+        (priceRange[0] === 0 && priceRange[1] === 0) ||
+        (item.price >= priceRange[0] && item.price <= priceRange[1]);
+      const metalMatch =
+        selectedMetals.length === 0 || selectedMetals.includes(item.metal);
+      const shapeMatch =
+        selectedShapes.length === 0 || selectedShapes.includes(item.shape);
+      const searchMatch =
+        searchQuery === "" ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return categoryMatch && priceMatch && metalMatch && shapeMatch && searchMatch;
+    }) || [];
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return a.price - b.price;
+        case "price-high":
+          return b.price - a.price;
+        case "rating":
+          return b.rating - a.rating;
+        case "newest":
+          return b.id - a.id;
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [items, activeCategory, priceRange, selectedMetals, selectedShapes, searchQuery, sortBy]);
+
+  // Define functions before hooks that use them
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Category selection - only update pending state
+  const handleCategorySelect = useCallback((categoryId) => {
+    setPendingCategory(categoryId);
+  }, []);
+
+  // Price range change - only update pending state
+  const handlePriceChange = useCallback((min, max) => {
+    setPendingPriceRange([min, max]);
+  }, []);
+
+  // Carat weight change - only update pending state
+  const handleCaratChange = useCallback((min, max) => {
+    setPendingCenterStoneWeightRange([min, max]);
+  }, []);
+
+  // Toggle functions for pending states (no immediate application)
+  const toggleMetal = useCallback((metalId) => {
+    setPendingMetals((prev) =>
+      prev.includes(metalId)
+        ? prev.filter((id) => id !== metalId)
+        : [...prev, metalId]
+    );
+  }, []);
+
+  const toggleShape = useCallback((shapeId) => {
+    setPendingShapes((prev) =>
+      prev.includes(shapeId)
+        ? prev.filter((id) => id !== shapeId)
+        : [...prev, shapeId]
+    );
+  }, []);
+
+  // Apply pending filters to applied filters (like DiamondFilters)
+  const applyFilters = useCallback(() => {
+    // Save current scroll position before applying filters
+    if (sidebarScrollRef.current) {
+      scrollPositionRef.current = sidebarScrollRef.current.scrollTop;
+    }
+
+    setActiveCategory(pendingCategory);
+    setPriceRange(pendingPriceRange);
+    setSelectedMetals(pendingMetals);
+    setSelectedShapes(pendingShapes);
+    setCenterStoneWeightRange(pendingCenterStoneWeightRange);
+
+    // Restore scroll position after state update
+    setTimeout(() => {
+      if (sidebarScrollRef.current) {
+        sidebarScrollRef.current.scrollTop = scrollPositionRef.current;
+      }
+    }, 0);
+  }, [pendingCategory, pendingPriceRange, pendingMetals, pendingShapes, pendingCenterStoneWeightRange]);
+
+  // Clear all filters - both pending and applied (like DiamondFilters)
+  const clearAllFilters = useCallback(() => {
+    // Clear applied states
+    setActiveCategory("all");
+    setPriceRange([0, 0]);
+    setSelectedMetals([]);
+    setSelectedShapes([]);
+    setCenterStoneWeightRange([0, 0]);
+    setSearchQuery("");
+    setSortBy("featured");
+    // Clear pending states
+    setPendingCategory("all");
+    setPendingPriceRange([0, 0]);
+    setPendingMetals([]);
+    setPendingShapes([]);
+    setPendingCenterStoneWeightRange([0, 0]);
+    setShapeDisplayCount(8);
+  }, []);
+
+  // Store callback refs to avoid recreating functions
+  const callbacksRef = useRef({
+    onFilterChange,
+    clearAllFilters,
+    setActiveCategory,
+    setSearchQuery,
+    setSortBy,
+  });
+
+  // Update refs when values change
+  useEffect(() => {
+    callbacksRef.current = {
+      onFilterChange,
+      clearAllFilters,
+      setActiveCategory,
+      setSearchQuery,
+      setSortBy,
+    };
+  }, [onFilterChange, clearAllFilters, setActiveCategory, setSearchQuery, setSortBy]);
+
+  // Notify parent only when filters are applied (not on temp changes)
+  useEffect(() => {
+    callbacksRef.current.onFilterChange?.({
+      filteredItems,
+      filteredItemsCount: filteredItems.length,
+      activeCategory,
+      priceRange,
+      selectedMetals,
+      selectedShapes,
+      searchQuery,
+      sortBy,
+      clearAllFilters: callbacksRef.current.clearAllFilters,
+      setActiveCategory: callbacksRef.current.setActiveCategory,
+      setSearchQuery: callbacksRef.current.setSearchQuery,
+      setSortBy: callbacksRef.current.setSortBy,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredItems, activeCategory, priceRange, selectedMetals, selectedShapes, searchQuery, sortBy]);
+
+  // Body scroll lock for mobile
+  useEffect(() => {
+    if (mobileFiltersOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileFiltersOpen]);
+
+  // Listen for custom event to open mobile filters
+  useEffect(() => {
+    const handleOpenMobileFilters = () => {
+      setMobileFiltersOpen(true);
+    };
+
+    window.addEventListener('openMobileFilters', handleOpenMobileFilters);
+    return () => {
+      window.removeEventListener('openMobileFilters', handleOpenMobileFilters);
+    };
+  }, []);
+
+  // Count of currently applied filters
+  const activeFiltersCount =
+    (activeCategory !== "all" ? 1 : 0) +
+    (priceRange[0] > 0 || priceRange[1] > 0 ? 1 : 0) +
+    selectedMetals.length +
+    selectedShapes.length +
+    (centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0 ? 1 : 0) +
+    (searchQuery ? 1 : 0);
+
+  // Count of pending filters selected
+  const pendingFiltersCount =
+    (pendingCategory !== "all" ? 1 : 0) +
+    (pendingPriceRange[0] > 0 || pendingPriceRange[1] > 0 ? 1 : 0) +
+    pendingMetals.length +
+    pendingShapes.length +
+    (pendingCenterStoneWeightRange[0] > 0 || pendingCenterStoneWeightRange[1] > 0 ? 1 : 0);
+
+  // Check if pending filters differ from applied filters (unsaved changes)
+  const hasUnsavedChanges =
+    pendingCategory !== activeCategory ||
+    pendingPriceRange[0] !== priceRange[0] ||
+    pendingPriceRange[1] !== priceRange[1] ||
+    pendingMetals.length !== selectedMetals.length ||
+    pendingMetals.some(m => !selectedMetals.includes(m)) ||
+    pendingShapes.length !== selectedShapes.length ||
+    pendingShapes.some(s => !selectedShapes.includes(s)) ||
+    pendingCenterStoneWeightRange[0] !== centerStoneWeightRange[0] ||
+    pendingCenterStoneWeightRange[1] !== centerStoneWeightRange[1];
+
+  // Render helpers
+  const renderFilterBadge = (label, onRemove) => (
+    <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+      {label}
+      <button onClick={onRemove}>
+        <X className="h-3 w-3" />
       </button>
+    </span>
+  );
+
+  const FilterContent = () => (
+    <>
+      {/* Mobile Filter Button - Hidden since moved to top bar */}
+      {/* Original mobile filter button is now in the top filter bar */}
 
       {/* Desktop Sidebar */}
       <aside className="hidden w-64 flex-shrink-0 lg:block">
-        <div className="sticky top-[120px] flex max-h-[calc(100vh-140px)] flex-col rounded-xl border border-[#E2E8F0] bg-white">
-          <div className="flex-1 space-y-6 overflow-y-auto p-5 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+        <div className="sticky top-[20px] flex max-h-[calc(100vh-40px)] flex-col rounded-xl border border-[#E2E8F0] bg-white">
+          <div ref={sidebarScrollRef} className="flex-1 space-y-6 overflow-y-auto px-5 pb-5 pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {/* Categories */}
             <div>
               <button
                 onClick={() => toggleSection("category")}
                 className="flex w-full items-center justify-between text-left"
               >
-                <h3 className="font-semibold text-[#0F172A]">Categories</h3>
+                <h3 className="font-semibold text-[#0F172A]">All Types</h3>
                 <ChevronDown
-                  className={`h-4 w-4 text-[#64748B] transition-transform ${
-                    expandedSections.category ? "" : "-rotate-90"
-                  }`}
+                  className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.category ? "" : "-rotate-90"
+                    }`}
                 />
               </button>
 
@@ -68,12 +339,11 @@ const JewelryFilters = ({
                   {categories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => setTempCategory(category.id)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${
-                        tempCategory === category.id
-                          ? "bg-[#DBEAFE] text-[#1E3A8A]"
-                          : "text-[#475569] hover:bg-[#F1F5F9]"
-                      }`}
+                      onClick={() => handleCategorySelect(category.id)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${pendingCategory === category.id
+                        ? "bg-[#DBEAFE] text-[#1E3A8A]"
+                        : "text-[#475569] hover:bg-[#F1F5F9]"
+                        }`}
                     >
                       <span className="flex items-center gap-2">
                         <category.icon className="h-4 w-4" />
@@ -88,76 +358,49 @@ const JewelryFilters = ({
               )}
             </div>
 
-            {/* Price Range */}
+            {/* Total Price */}
             <div>
               <button
                 onClick={() => toggleSection("price")}
                 className="flex w-full items-center justify-between text-left"
               >
-                <h3 className="font-semibold text-[#0F172A]">Price Range</h3>
+                <h3 className="font-semibold text-[#0F172A]">Total Price</h3>
                 <ChevronDown
-                  className={`h-4 w-4 text-[#64748B] transition-transform ${
-                    expandedSections.price ? "" : "-rotate-90"
-                  }`}
+                  className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.price ? "" : "-rotate-90"
+                    }`}
                 />
               </button>
 
               {expandedSections.price && (
-                <div className="mt-4 space-y-4">
+                <div className="mt-4" key="total-price">
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
-                      <Input
+                      <input
                         type="number"
-                        value={tempPriceRange[0]}
-                        onChange={(e) =>
-                          setTempPriceRange([
-                            Number(e.target.value),
-                            tempPriceRange[1],
-                          ])
-                        }
-                        icon={<span className="text-[#64748B]">$</span>}
-                        className="rounded-lg py-2.5"
-                        placeholder="Min"
+                        value={pendingPriceRange[0] || ''}
+                        onChange={(e) => {
+                          const newMin = Number(e.target.value) || 0;
+                          setPendingPriceRange([newMin, pendingPriceRange[1]]);
+                        }}
+                        className="input-field"
+                        placeholder="Min, $"
                       />
                     </div>
 
-                    <span className="text-[#64748B]">-</span>
+                    <span className="text-[#64748B]">{'>'}</span>
 
                     <div className="flex-1">
-                      <Input
+                      <input
                         type="number"
-                        value={tempPriceRange[1]}
-                        onChange={(e) =>
-                          setTempPriceRange([
-                            tempPriceRange[0],
-                            Number(e.target.value),
-                          ])
-                        }
-                        icon={<span className="text-[#64748B]">$</span>}
-                        className="rounded-lg py-2.5"
-                        placeholder="Max"
+                        value={pendingPriceRange[1] || ''}
+                        onChange={(e) => {
+                          const newMax = Number(e.target.value) || 0;
+                          setPendingPriceRange([pendingPriceRange[0], newMax]);
+                        }}
+                        className="input-field"
+                        placeholder="Max, $"
                       />
                     </div>
-                  </div>
-
-                  <input
-                    type="range"
-                    min="0"
-                    max="50000"
-                    step="1000"
-                    value={tempPriceRange[1]}
-                    onChange={(e) =>
-                      setTempPriceRange([
-                        tempPriceRange[0],
-                        Number(e.target.value),
-                      ])
-                    }
-                    className="w-full accent-[#1E3A8A]"
-                  />
-
-                  <div className="flex justify-between text-xs text-[#64748B]">
-                    <span>${tempPriceRange[0].toLocaleString()}</span>
-                    <span>${tempPriceRange[1].toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -171,56 +414,183 @@ const JewelryFilters = ({
               >
                 <h3 className="font-semibold text-[#0F172A]">Metal Type</h3>
                 <ChevronDown
-                  className={`h-4 w-4 text-[#64748B] transition-transform ${
-                    expandedSections.metal ? "" : "-rotate-90"
-                  }`}
+                  className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.metal ? "" : "-rotate-90"
+                    }`}
                 />
               </button>
 
               {expandedSections.metal && (
-                <div className="mt-4 space-y-2">
-                  {metalTypes.map((metal) => (
-                    <label
-                      key={metal.id}
-                      className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-[#F1F5F9]"
-                    >
+                <div className="mt-4 space-y-2" key="metal-type-list">
+                  {metalTypes.map((metal) => {
+                    const isSelected = pendingMetals.includes(metal.id);
+                    return (
+                      <div
+                        key={`metal-${metal.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMetal(metal.id);
+                        }}
+                        className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-[#F1F5F9]"
+                      >
+                        <div
+                          className={`flex h-4 w-4 items-center justify-center rounded border ${isSelected
+                            ? 'border-[#1E3A8A] bg-[#1E3A8A]'
+                            : 'border-[#E2E8F0] bg-white'
+                            }`}
+                        >
+                          {isSelected && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span
+                          className="h-4 w-4 rounded-full border border-gray-200"
+                          style={{ background: metal.color }}
+                        />
+                        <span className="text-sm text-[#475569]">
+                          {metal.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/*Stone Weight (Carat) */}
+            <div>
+              <button
+                onClick={() => toggleSection("carat")}
+                className="flex w-full items-center justify-between text-left"
+              >
+                <h3 className="font-semibold text-[#0F172A]">Stone Weight</h3>
+                <ChevronDown
+                  className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.carat ? "" : "-rotate-90"
+                    }`}
+                />
+              </button>
+
+              {expandedSections.carat && (
+                <div className="mt-4" key="center-stone-weight">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
                       <input
-                        type="checkbox"
-                        checked={tempMetals.includes(metal.id)}
-                        onChange={() => toggleMetal(metal.id)}
-                        className="h-4 w-4 rounded border-[#E2E8F0] text-[#1E3A8A] focus:ring-[#1E3A8A]"
+                        type="number"
+                        step="0.01"
+                        value={pendingCenterStoneWeightRange[0] || ''}
+                        onChange={(e) => {
+                          setPendingCenterStoneWeightRange([
+                            Number(e.target.value) || 0,
+                            pendingCenterStoneWeightRange[1],
+                          ]);
+                        }}
+                        className="input-field"
+                        placeholder="Min"
                       />
-                      <span
-                        className="h-4 w-4 rounded-full border border-gray-200"
-                        style={{ backgroundColor: metal.color }}
+                    </div>
+
+                    <span className="text-[#64748B]">{'>'}</span>
+
+                    <div className="flex-1">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={pendingCenterStoneWeightRange[1] || ''}
+                        onChange={(e) => {
+                          setPendingCenterStoneWeightRange([
+                            pendingCenterStoneWeightRange[0],
+                            Number(e.target.value) || 0,
+                          ]);
+                        }}
+                        className="input-field"
+                        placeholder="Max"
                       />
-                      <span className="text-sm text-[#475569]">
-                        {metal.label}
-                      </span>
-                    </label>
-                  ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Shape */}
+            <div>
+              <button
+                onClick={() => toggleSection("shape")}
+                className="flex w-full items-center justify-between text-left"
+              >
+                <h3 className="font-semibold text-[#0F172A]">Diamond Shape</h3>
+                <ChevronDown
+                  className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.shape ? "" : "-rotate-90"
+                    }`}
+                />
+              </button>
+
+              {expandedSections.shape && (
+                <div className="mt-4" key="shape-type-grid">
+                  <div className="grid grid-cols-4 gap-2">
+                    {shapeTypes.slice(0, shapeDisplayCount).map((shape) => {
+                      const isSelected = pendingShapes.includes(shape.id);
+                      return (
+                        <button
+                          key={`shape-${shape.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleShape(shape.id);
+                          }}
+                          className={`flex flex-col items-center gap-1 rounded-lg p-2 transition-all ${isSelected
+                            ? 'bg-[#DBEAFE] ring-1 ring-[#1E3A8A]'
+                            : 'hover:bg-[#F1F5F9]'
+                            }`}
+                        >
+                          <img
+                            src={shape.icon}
+                            alt={shape.label}
+                            className="h-8 w-8 object-contain"
+                          />
+                          <span className={`text-[10px] uppercase ${isSelected ? 'text-[#1E3A8A] font-medium' : 'text-[#475569]'}`}>
+                            {shape.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {shapeDisplayCount < shapeTypes.length && (
+                    <button
+                      onClick={() => setShapeDisplayCount(shapeDisplayCount === 8 ? 16 : shapeTypes.length)}
+                      className="mt-3 flex w-full items-center justify-center gap-1 text-sm text-[#1E3A8A] hover:text-[#1E40AF]"
+                    >
+                      <span>More shape</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
           {/* Apply & Clear Buttons */}
-          <div className="border-t border-[#E2E8F0] bg-white p-4 space-y-3">
-            <button
-              onClick={applyFilters}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] py-3 text-sm font-medium text-white transition-all hover:bg-[#1E40AF] active:scale-95"
-            >
-              <Filter className="h-4 w-4" />
-              Apply Filters
-            </button>
-            <button
-              onClick={clearAllFilters}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-3 text-sm font-medium text-[#475569] transition-all hover:border-[#64748B] hover:text-[#0F172A] active:scale-95"
-            >
-              <X className="h-4 w-4" />
-              Clear All Filters
-            </button>
-          </div>
+          {(hasUnsavedChanges || activeFiltersCount > 0) && (
+            <div className="border-t border-[#E2E8F0] bg-white p-4 space-y-3">
+              {hasUnsavedChanges && (
+                <button
+                  onClick={applyFilters}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] py-3 text-sm font-medium text-white transition-all hover:bg-[#1E40AF] active:scale-95"
+                >
+                  <Filter className="h-4 w-4" />
+                  Apply Filters
+                </button>
+              )}
+              {activeFiltersCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-3 text-sm font-medium text-[#475569] transition-all hover:border-[#64748B] hover:text-[#0F172A] active:scale-95"
+                >
+                  <X className="h-4 w-4" />
+                  Clear All Filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </aside>
 
@@ -248,7 +618,7 @@ const JewelryFilters = ({
                     Filters
                   </h2>
                   <p className="text-xs text-[#64748B]">
-                    {filteredItemsCount} items
+                    {filteredItems.length} items
                   </p>
                 </div>
 
@@ -270,12 +640,11 @@ const JewelryFilters = ({
                     {categories.map((category) => (
                       <button
                         key={category.id}
-                        onClick={() => setTempCategory(category.id)}
-                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${
-                          tempCategory === category.id
-                            ? "bg-[#DBEAFE] text-[#1E3A8A]"
-                            : "text-[#475569] hover:bg-[#F1F5F9]"
-                        }`}
+                        onClick={() => handleCategorySelect(category.id)}
+                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-all ${pendingCategory === category.id
+                          ? "bg-[#DBEAFE] text-[#1E3A8A]"
+                          : "text-[#475569] hover:bg-[#F1F5F9]"
+                          }`}
                       >
                         <span className="flex items-center gap-2">
                           <category.icon className="h-4 w-4" />
@@ -289,75 +658,191 @@ const JewelryFilters = ({
                   </div>
                 </div>
 
-                {/* Mobile Price Range */}
+                {/* Mobile Total Price */}
                 <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
-                    Price Range
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1">
-                        <Input
-                          type="number"
-                          value={tempPriceRange[0]}
-                          onChange={(e) =>
-                            setTempPriceRange([
-                              Number(e.target.value),
-                              tempPriceRange[1],
-                            ])
-                          }
-                          icon={<span className="text-[#64748B]">$</span>}
-                          className="rounded-lg py-2.5"
-                          placeholder="Min"
-                        />
-                      </div>
-                      <span className="text-[#64748B]">-</span>
-                      <div className="flex-1">
-                        <Input
-                          type="number"
-                          value={tempPriceRange[1]}
-                          onChange={(e) =>
-                            setTempPriceRange([
-                              tempPriceRange[0],
-                              Number(e.target.value),
-                            ])
-                          }
-                          icon={<span className="text-[#64748B]">$</span>}
-                          className="rounded-lg py-2.5"
-                          placeholder="Max"
-                        />
+                  <button
+                    onClick={() => toggleSection("price")}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <h3 className="font-semibold text-[#0F172A]">Total Price</h3>
+                    <ChevronDown
+                      className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.price ? "" : "-rotate-90"
+                        }`}
+                    />
+                  </button>
+
+                  {expandedSections.price && (
+                    <div className="mt-3" key="mobile-total-price">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            value={pendingPriceRange[0] || ''}
+                            onChange={(e) => {
+                              setPendingPriceRange([
+                                Number(e.target.value) || 0,
+                                pendingPriceRange[1],
+                              ]);
+                            }}
+                            className="input-field"
+                            placeholder="Min, $"
+                          />
+                        </div>
+                        <span className="text-[#64748B]">{'>'}</span>
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            value={pendingPriceRange[1] || ''}
+                            onChange={(e) => {
+                              setPendingPriceRange([
+                                pendingPriceRange[0],
+                                Number(e.target.value) || 0,
+                              ]);
+                            }}
+                            className="input-field"
+                            placeholder="Max, $"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+                </div>
+
+                {/* Mobile  Stone Weight */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => toggleSection("carat")}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <h3 className="font-semibold text-[#0F172A]">Stone Weight</h3>
+                    <ChevronDown
+                      className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections.carat ? "" : "-rotate-90"
+                        }`}
+                    />
+                  </button>
+
+                  {expandedSections.carat && (
+                    <div className="mt-3" key="mobile-center-stone-weight">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={pendingCenterStoneWeightRange[0] || ''}
+                            onChange={(e) => {
+                              setPendingCenterStoneWeightRange([
+                                Number(e.target.value) || 0,
+                                pendingCenterStoneWeightRange[1],
+                              ]);
+                            }}
+                            className="input-field"
+                            placeholder="Min"
+                          />
+                        </div>
+                        <span className="text-[#64748B]">{'>'}</span>
+                        <div className="flex-1">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={pendingCenterStoneWeightRange[1] || ''}
+                            onChange={(e) => {
+                              setPendingCenterStoneWeightRange([
+                                pendingCenterStoneWeightRange[0],
+                                Number(e.target.value) || 0,
+                              ]);
+                            }}
+                            className="input-field"
+                            placeholder="Max"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Mobile Metal Type */}
-                <div className="mb-6">
+                <div className="mb-6" key="mobile-metal-type">
                   <h3 className="mb-3 font-semibold text-[#0F172A]">
                     Metal Type
                   </h3>
                   <div className="space-y-2">
-                    {metalTypes.map((metal) => (
-                      <label
-                        key={metal.id}
-                        className="flex cursor-pointer items-center gap-3"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={tempMetals.includes(metal.id)}
-                          onChange={() => toggleMetal(metal.id)}
-                          className="h-4 w-4 rounded border-[#E2E8F0] text-[#1E3A8A]"
-                        />
-                        <span
-                          className="h-4 w-4 rounded-full border border-gray-200"
-                          style={{ backgroundColor: metal.color }}
-                        />
-                        <span className="text-sm text-[#475569]">
-                          {metal.label}
-                        </span>
-                      </label>
-                    ))}
+                    {metalTypes.map((metal) => {
+                      const isSelected = pendingMetals.includes(metal.id);
+                      return (
+                        <div
+                          key={`mobile-metal-${metal.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMetal(metal.id);
+                          }}
+                          className="flex cursor-pointer items-center gap-3"
+                        >
+                          <div
+                            className={`flex h-4 w-4 items-center justify-center rounded border ${isSelected
+                              ? 'border-[#1E3A8A] bg-[#1E3A8A]'
+                              : 'border-[#E2E8F0] bg-white'
+                              }`}
+                          >
+                            {isSelected && (
+                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <span
+                            className="h-4 w-4 rounded-full border border-gray-200"
+                            style={{ background: metal.color }}
+                          />
+                          <span className="text-sm text-[#475569]">
+                            {metal.label}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Mobile Shape */}
+                <div className="mb-6" key="mobile-shape-type">
+                  <h3 className="mb-3 font-semibold text-[#0F172A]">
+                    Shape
+                  </h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    {shapeTypes.slice(0, shapeDisplayCount).map((shape) => {
+                      const isSelected = pendingShapes.includes(shape.id);
+                      return (
+                        <button
+                          key={`mobile-shape-${shape.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleShape(shape.id);
+                          }}
+                          className={`flex flex-col items-center gap-1 rounded-lg p-2 transition-all ${isSelected
+                            ? 'bg-[#DBEAFE] ring-1 ring-[#1E3A8A]'
+                            : 'hover:bg-[#F1F5F9]'
+                            }`}
+                        >
+                          <img
+                            src={shape.icon}
+                            alt={shape.label}
+                            className="h-8 w-8 object-contain"
+                          />
+                          <span className={`text-[10px] uppercase ${isSelected ? 'text-[#1E3A8A] font-medium' : 'text-[#475569]'}`}>
+                            {shape.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {shapeDisplayCount < shapeTypes.length && (
+                    <button
+                      onClick={() => setShapeDisplayCount(shapeDisplayCount === 8 ? 16 : shapeTypes.length)}
+                      className="mt-3 flex w-full items-center justify-center gap-1 text-sm text-[#1E3A8A] hover:text-[#1E40AF]"
+                    >
+                      <span>More shape</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -369,7 +854,7 @@ const JewelryFilters = ({
                       clearAllFilters();
                       setMobileFiltersOpen(false);
                     }}
-                    className="flex-1 rounded-lg border border-[#E2E8F0] py-3 text-sm font-medium text-[#475569]"
+                    className="flex-1 rounded-lg border border-[#E2E8F0] py-3 text-sm font-medium text-[#475569] hover:bg-[#F1F5F9] transition-colors"
                   >
                     Clear All
                   </button>
@@ -378,7 +863,7 @@ const JewelryFilters = ({
                       applyFilters();
                       setMobileFiltersOpen(false);
                     }}
-                    className="flex-1 rounded-lg bg-[#1E3A8A] py-3 text-sm font-medium text-white"
+                    className="flex-1 rounded-lg bg-[#1E3A8A] py-3 text-sm font-medium text-white hover:bg-[#1E40AF] transition-colors"
                   >
                     Apply Filters
                   </button>
@@ -389,6 +874,52 @@ const JewelryFilters = ({
         )}
       </AnimatePresence>
     </>
+  );
+
+  // Main render - if children is a function, call it with filter data
+  return (
+    <div className="flex flex-col lg:flex-row gap-8">
+      <FilterContent />
+      <div className="flex-1 min-w-0">
+        {typeof children === 'function'
+          ? children({
+            filteredItems,
+            filteredItemsCount: filteredItems.length,
+            activeCategory,
+            priceRange,
+            selectedMetals,
+            selectedShapes,
+            searchQuery,
+            sortBy,
+            setSearchQuery,
+            setSortBy,
+            clearAllFilters,
+            activeFiltersCount,
+            categories,
+            metalTypes,
+            shapeTypes,
+            renderFilterBadge,
+            setActiveCategory,
+            setSelectedShapes,
+            setPriceRange,
+            toggleMetal: (metalId) => {
+              setSelectedMetals((prev) =>
+                prev.includes(metalId)
+                  ? prev.filter((id) => id !== metalId)
+                  : [...prev, metalId]
+              );
+            },
+            toggleShape: (shapeId) => {
+              setSelectedShapes((prev) =>
+                prev.includes(shapeId)
+                  ? prev.filter((id) => id !== shapeId)
+                  : [...prev, shapeId]
+              );
+            },
+          })
+          : children}
+      </div>
+    </div>
   );
 };
 
