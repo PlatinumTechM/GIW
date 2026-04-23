@@ -133,14 +133,16 @@ export const createUserSubscription = async (userId, planId, durationMonths) => 
         SET subscription_id = $1, total_limit = $2, updated_at = NOW()
         WHERE user_id = $3
       `;
-      await client.query(updateUsageQuery, [planId, stockLimit, userId]);
+      await client.query(updateUsageQuery, [subscription.id, stockLimit, userId]);
+
     } else {
       // Insert new usage record
       const insertUsageQuery = `
         INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
         VALUES ($1, $2, $3, 0)
       `;
-      await client.query(insertUsageQuery, [userId, planId, stockLimit]);
+      await client.query(insertUsageQuery, [userId, subscription.id, stockLimit]);
+
     }
 
     await client.query("COMMIT");
