@@ -172,87 +172,7 @@ const Pricing = () => {
   // Group subscriptions by plan name and map to pricing cards
   const getPlans = () => {
     if (subscriptions.length === 0) {
-      // Fallback to default plans if no subscriptions
-      return [
-        {
-          name: "Basic",
-          icon: Zap,
-          description:
-            "Perfect for small diamond businesses and new dealers entering the marketplace.",
-          planTypes: [{ label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" }],
-          options: [
-            { duration: 1, durationLabel: "1 Month", price: 29, id: 1 },
-            { duration: 3, durationLabel: "3 Months", price: 79, id: 2 },
-            { duration: 6, durationLabel: "6 Months", price: 149, id: 3 },
-            { duration: 12, durationLabel: "12 Months", price: 279, id: 4 },
-          ],
-          features: [
-            "Up to 50 stock items",
-            "Email support",
-            "Standard marketplace access",
-          ],
-          notIncluded: ["Priority support", "Advanced analytics"],
-          popular: false,
-          cta: isAuthenticated ? "Buy Plan" : "Get Started",
-          ctaLink: isAuthenticated ? "#" : "/register",
-          badge: "For Small Businesses",
-        },
-        {
-          name: "Silver",
-          icon: Sparkles,
-          description:
-            "Built for growing diamond trading teams that need advanced visibility.",
-          planTypes: [
-            { label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" },
-            { label: "Jewellery", icon: Gem, color: "from-amber-400 to-orange-300" },
-          ],
-          options: [
-            { duration: 1, durationLabel: "1 Month", price: 79, id: 5 },
-            { duration: 3, durationLabel: "3 Months", price: 229, id: 6 },
-            { duration: 6, durationLabel: "6 Months", price: 429, id: 7 },
-            { duration: 12, durationLabel: "12 Months", price: 799, id: 8 },
-          ],
-          features: [
-            "Up to 200 stock items",
-            "Priority support",
-            "Advanced analytics",
-            "Full API access",
-          ],
-          notIncluded: ["Dedicated account manager"],
-          popular: true,
-          cta: isAuthenticated ? "Buy Plan" : "Start Free Trial",
-          ctaLink: isAuthenticated ? "#" : "/register",
-          badge: "Most Popular",
-        },
-        {
-          name: "Gold",
-          icon: Crown,
-          description:
-            "Enterprise-grade infrastructure for large diamond companies.",
-          planTypes: [
-            { label: "Diamonds", icon: Diamond, color: "from-blue-400 to-cyan-300" },
-            { label: "Jewellery", icon: Gem, color: "from-amber-400 to-orange-300" },
-          ],
-          options: [
-            { duration: 1, durationLabel: "1 Month", price: 199, id: 9 },
-            { duration: 3, durationLabel: "3 Months", price: 579, id: 10 },
-            { duration: 6, durationLabel: "6 Months", price: 1099, id: 11 },
-            { duration: 12, durationLabel: "12 Months", price: 2099, id: 12 },
-          ],
-          features: [
-            "Unlimited stock items",
-            "24/7 phone & email support",
-            "Unlimited storage",
-            "Advanced API access",
-            "Dedicated account manager",
-          ],
-          notIncluded: [],
-          popular: false,
-          cta: "Contact Sales",
-          ctaLink: "/contact",
-          badge: "For Enterprises",
-        },
-      ];
+      return [];
     }
 
     // Group active subscriptions by plan name
@@ -497,6 +417,18 @@ const Pricing = () => {
                 </motion.div>
               ))}
             </div>
+          ) : plans.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-20 bg-white rounded-[30px] border border-[#E2E8F0] shadow-sm"
+            >
+              <div className="w-20 h-20 bg-[#F1F5F9] rounded-full flex items-center justify-center mb-6">
+                <Package className="w-10 h-10 text-[#94A3B8]" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#1E3A8A] mb-2">NO Plan Available</h3>
+              <p className="text-[#64748B]">Our team is currently updating subscription plans. Please check back later.</p>
+            </motion.div>
           ) : (
             <motion.div
               variants={staggerContainer}

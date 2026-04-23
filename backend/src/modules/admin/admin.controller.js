@@ -171,7 +171,7 @@ export const deleteSubscription = async (req, res) => {
     });
   } catch (error) {
     console.error("Error at deleteSubscription = ", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Failed to delete subscription",
     });

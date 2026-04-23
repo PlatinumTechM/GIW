@@ -137,12 +137,45 @@ export const updateSubscription = async (id, data) => {
 
 // Delete subscription
 export const deleteSubscription = async (id) => {
-  const query = `DELETE FROM subscription_plans WHERE id = $1 RETURNING id`;
-  const result = await pool.query(query, [id]);
-  if (result.rows.length === 0) {
-    throw new Error("Subscription not found");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Check if any user has an ACTIVE purchase of this plan
+    const checkQuery = `SELECT id FROM user_subscriptions WHERE plan_id = $1 AND status = 'active' LIMIT 1`;
+    const checkResult = await client.query(checkQuery, [id]);
+
+    if (checkResult.rows.length > 0) {
+      throw new Error("This plan cannot be deleted because it is currently being used by active subscribers. Please deactivate it instead.");
+    }
+
+    // 2. Delete from subscription_usage that points to user_subscriptions of this plan
+    const deleteUsageQuery = `
+      DELETE FROM subscription_usage 
+      WHERE subscription_id IN (SELECT id FROM user_subscriptions WHERE plan_id = $1)
+    `;
+    await client.query(deleteUsageQuery, [id]);
+
+    // 3. Delete from user_subscriptions for this plan (now that usage records are gone)
+    const deleteUserSubQuery = `DELETE FROM user_subscriptions WHERE plan_id = $1`;
+    await client.query(deleteUserSubQuery, [id]);
+
+    // 4. Finally delete the plan itself
+    const deletePlanQuery = `DELETE FROM subscription_plans WHERE id = $1 RETURNING id`;
+    const result = await client.query(deletePlanQuery, [id]);
+
+    if (result.rows.length === 0) {
+      throw new Error("Subscription not found");
+    }
+
+    await client.query("COMMIT");
+    return { success: true };
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
-  return { success: true };
 };
 
 // Get all subscription buyers with user and plan details
