@@ -242,7 +242,11 @@ const UserManagement = () => {
       }
     } catch (error) {
       console.error("Plan update error:", error);
-      notify.error("Error", error.message || "Failed to update user plan");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update user plan";
+      notify.error("Error", errorMessage);
     } finally {
       setUpdatingPlan(false);
     }

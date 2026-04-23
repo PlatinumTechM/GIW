@@ -75,7 +75,11 @@ const Pricing = () => {
       }
     } catch (error) {
       console.error("Purchase error:", error);
-      notify.error("Error", "Failed to purchase subscription. Please try again.");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to purchase subscription. Please try again.";
+      notify.error("Error", errorMessage);
     } finally {
       setPurchasingPlan(null);
     }

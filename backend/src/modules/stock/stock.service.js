@@ -1061,7 +1061,7 @@ const updateSubscriptionUsage = async (clientOrPool, userId, addedStockCount) =>
     // Insert new usage record by fetching latest subscription
     const subResult = await clientOrPool.query(
       `
-      SELECT us.plan_id, sp.stock_limit 
+      SELECT us.id as subscription_id, sp.stock_limit 
       FROM user_subscriptions us
       JOIN subscription_plans sp ON us.plan_id = sp.id
       WHERE us.user_id = $1
@@ -1071,13 +1071,13 @@ const updateSubscriptionUsage = async (clientOrPool, userId, addedStockCount) =>
     );
 
     if (subResult.rows.length > 0) {
-      const { plan_id, stock_limit } = subResult.rows[0];
+      const { subscription_id, stock_limit } = subResult.rows[0];
       await clientOrPool.query(
         `
         INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
         VALUES ($1, $2, $3, $4)
         `,
-        [userId, plan_id, stock_limit || 0, addedStockCount]
+        [userId, subscription_id, stock_limit || 0, addedStockCount]
       );
     }
   }
@@ -1137,10 +1137,15 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
 
       // Identify which stocks are NEW vs EXISTING
       let existingStockIds = new Set();
-      if (incomingStockIds.length > 0) {
-        const checkQuery = `SELECT stock_id FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[])`;
-        const checkRes = await client.query(checkQuery, [incomingStockIds.map(id => id.toUpperCase())]);
-        checkRes.rows.forEach(r => existingStockIds.add(r.stock_id.toUpperCase()));
+      if (userId) {
+        const checkQuery = `SELECT stock_id FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[]) AND user_id = $2`;
+        const checkRes = await client.query(checkQuery, [
+          incomingStockIds.map((id) => id.toUpperCase()),
+          userId,
+        ]);
+        checkRes.rows.forEach((r) =>
+          existingStockIds.add(r.stock_id.toUpperCase()),
+        );
       }
 
       let skippedDueToLimitCount = 0;
@@ -1153,15 +1158,19 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
           throw new Error("No active subscription found. Cannot add stock.");
         }
 
-        const newRows = uniqueRows.filter(r => !existingStockIds.has(r.stock_id.toUpperCase()));
-        const existingRows = uniqueRows.filter(r => existingStockIds.has(r.stock_id.toUpperCase()));
+        const newRows = uniqueRows.filter(
+          (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
+        );
+        const existingRows = uniqueRows.filter((r) =>
+          existingStockIds.has(r.stock_id.toUpperCase()),
+        );
 
         if (newRows.length > quota.remaining) {
           const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
           skippedDueToLimitCount = newRows.length - allowedNewRows.length;
           uniqueRows = [...existingRows, ...allowedNewRows];
           limitReached = true;
-          limitMessage = `Subscription limit reached. ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan.`;
+          limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
         }
       }
 
