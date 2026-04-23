@@ -35,4 +35,7 @@ router.get("/subscription-buyers", authenticate, adminController.getSubscription
 // Update user plan (admin only)
 router.put("/users/:userId/plan", authenticate, adminController.updateUserPlan);
 
+// Update user status (admin only)
+router.put("/users/:userId/status", authenticate, adminController.updateUserStatus);
+
 export { router as adminRoutes };

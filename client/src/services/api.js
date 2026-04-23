@@ -151,6 +151,13 @@ export const authAPI = {
     });
     return response.data;
   },
+  // Update user status (admin only)
+  updateUserStatus: async (userId, isActive) => {
+    const response = await api.put(`/admin/users/${userId}/status`, {
+      isActive,
+    });
+    return response.data;
+  },
 };
 
 export const stockAPI = {

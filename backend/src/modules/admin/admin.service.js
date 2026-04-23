@@ -31,6 +31,8 @@ export const getAllUsers = async () => {
     planName: user.plan_name,
     planExpiry: user.plan_expiry,
     subscriptionStatus: user.subscription_status,
+    stockCount: parseInt(user.stock_count || 0),
+    stockLimit: parseInt(user.stock_limit || 0),
   }));
 };
 
@@ -147,4 +149,12 @@ export const updateUserPlan = async (userId, planId, durationMonths) => {
       subscriptionStatus: updatedUser.subscription_status,
     } : null,
   };
+};
+
+// Update user status (active/inactive)
+export const updateUserStatus = async (userId, isActive) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+  return await adminRepo.updateUserStatus(userId, isActive);
 };

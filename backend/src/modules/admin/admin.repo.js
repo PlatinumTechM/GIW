@@ -16,10 +16,13 @@ export const getAllUsers = async () => {
       u.gst, u.document, u.is_active, u.role, u.created_at,
       sp.name as plan_name,
       us.end_date as plan_expiry,
-      us.status as subscription_status
+      us.status as subscription_status,
+      su.uploaded as stock_count,
+      su.total_limit as stock_limit
     FROM users u
     LEFT JOIN user_subscriptions us ON u.id = us.user_id AND us.status = 'active'
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
+    LEFT JOIN subscription_usage su ON u.id = su.user_id
     ORDER BY u.created_at DESC
   `;
   const result = await pool.query(query);
@@ -314,4 +317,14 @@ export const checkDuplicatePlan = async (name, durationMonth, excludeId = null) 
 
   const result = await pool.query(query, params);
   return result.rows.length > 0;
+};
+
+// Update user status (active/inactive)
+export const updateUserStatus = async (userId, isActive) => {
+  const query = `UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id, is_active`;
+  const result = await pool.query(query, [isActive, userId]);
+  if (result.rows.length === 0) {
+    throw new Error("User not found");
+  }
+  return result.rows[0];
 };
