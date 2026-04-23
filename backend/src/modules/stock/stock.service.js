@@ -1061,7 +1061,7 @@ const updateSubscriptionUsage = async (clientOrPool, userId, addedStockCount) =>
     // Insert new usage record by fetching latest subscription
     const subResult = await clientOrPool.query(
       `
-      SELECT us.id as subscription_id, sp.stock_limit 
+      SELECT us.plan_id, sp.stock_limit 
       FROM user_subscriptions us
       JOIN subscription_plans sp ON us.plan_id = sp.id
       WHERE us.user_id = $1
@@ -1071,13 +1071,13 @@ const updateSubscriptionUsage = async (clientOrPool, userId, addedStockCount) =>
     );
 
     if (subResult.rows.length > 0) {
-      const { subscription_id, stock_limit } = subResult.rows[0];
+      const { plan_id, stock_limit } = subResult.rows[0];
       await clientOrPool.query(
         `
         INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
         VALUES ($1, $2, $3, $4)
         `,
-        [userId, subscription_id, stock_limit || 0, addedStockCount]
+        [userId, plan_id, stock_limit || 0, addedStockCount]
       );
     }
   }
@@ -1171,6 +1171,7 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       if (finalStockIds.length > 0) {
         const deletedCount = await stockRepo.deleteByStockIds(
           finalStockIds,
+          userId,
           client,
         );
         results.replacedCount = deletedCount;
@@ -1186,7 +1187,7 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       }
 
       await client.query("COMMIT");
-      
+
       if (limitReached) {
         results.limitReached = true;
         results.limitMessage = limitMessage;
@@ -1265,7 +1266,7 @@ export const createStock = async (stockData, userId = null) => {
     // Handle unique constraint violation for stock_id
     if (
       error.code === "23505" &&
-      error.constraint === "diamond_stock_stock_id_key"
+      error.constraint === "diamond_stock_stock_id_user_id_key"
     ) {
       throw new Error(
         `Stock ID "${dbData.stock_id}" already exists. Please use a different Stock ID.`,
