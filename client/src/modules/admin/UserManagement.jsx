@@ -295,6 +295,8 @@ const UserManagement = () => {
                   year: "numeric",
                 })
               : null,
+            stockCount: user.stockCount || 0,
+            stockLimit: user.stockLimit || 0,
             hasActivePlan: !!user.planName && !!user.planExpiry && new Date(user.planExpiry) > new Date(),
           }));
         setUsers(formattedUsers);
@@ -316,22 +318,40 @@ const UserManagement = () => {
   }, [searchTerm, filterStatus]);
 
   const toggleUserStatus = async (userId) => {
-    // TODO: Add API call to toggle user status
     const user = users.find((u) => u.id === userId);
     if (!user) return;
 
-    const newStatus = user.status === "active" ? "inactive" : "active";
+    const currentIsActive = user.status === "active";
+    const newIsActive = !currentIsActive;
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          return { ...u, status: newStatus };
-        }
-        return u;
-      }),
-    );
-
-    notify.success("Status Updated", `User ${user.name} is now ${newStatus}`);
+    try {
+      const response = await authAPI.updateUserStatus(userId, newIsActive);
+      if (response.success) {
+        setUsers((prev) =>
+          prev.map((u) => {
+            if (u.id === userId) {
+              return { 
+                ...u, 
+                status: newIsActive ? "active" : "inactive" 
+              };
+            }
+            return u;
+          }),
+        );
+        notify.success(
+          "Status Updated",
+          `User ${user.name} is now ${newIsActive ? "active" : "inactive"}`,
+        );
+      } else {
+        notify.error("Error", response.message || "Failed to update status");
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to update user status",
+      );
+    }
   };
 
   const containerVariants = {
@@ -411,6 +431,12 @@ const UserManagement = () => {
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-[#F59E0B]" />
                     <span>Phone</span>
+                  </div>
+                </th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
+                  <div className="flex items-center justify-center gap-2">
+                    <Package className="w-4 h-4 text-[#1E3A8A]" />
+                    <span>Stock</span>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
@@ -502,6 +528,28 @@ const UserManagement = () => {
                           <p className="text-sm text-[#64748B]">
                             {user.phone || "N/A"}
                           </p>
+                        </div>
+                      </td>
+                      {/* Stock Count */}
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] rounded-lg border border-[#E2E8F0]">
+                            <Package className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                            <span className="text-sm font-semibold text-[#1E3A8A]">
+                              {user.stockCount}
+                            </span>
+                            <span className="text-xs text-[#64748B]">
+                              / {user.stockLimit || 0}
+                            </span>
+                          </div>
+                          {user.stockLimit > 0 && (
+                            <div className="w-16 h-1 mt-1 bg-[#E2E8F0] rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${user.stockCount >= user.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
+                                style={{ width: `${Math.min((user.stockCount / user.stockLimit) * 100, 100)}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
                       </td>
                       {/* Password */}
@@ -978,9 +1026,38 @@ const UserManagement = () => {
                         Address
                       </p>
                     </div>
-                    <p className="font-semibold text-[#1E3A8A]">
+                    <p className="font-semibold text-[#1E3A8A] break-words">
                       {selectedUser.address || "N/A"}
                     </p>
+                  </div>
+
+                  {/* Stock Usage - Detail Card */}
+                  <div className="col-span-2 sm:col-span-1 bg-[#F1F5F9]/50 rounded-xl p-4 border border-[#E2E8F0]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#1E3A8A]">
+                        <Package className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-medium text-[#64748B] uppercase">
+                        Stock Usage
+                      </p>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <p className="text-xl font-bold text-[#1E3A8A]">
+                        {selectedUser.stockCount}
+                      </p>
+                      <p className="text-sm text-[#64748B] mb-1">
+                        / {selectedUser.stockLimit || 0} items
+                      </p>
+                    </div>
+                    <div className="mt-2 h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ 
+                          width: `${Math.min((selectedUser.stockCount / (selectedUser.stockLimit || 1)) * 100, 100)}%` 
+                        }}
+                        className={`h-full rounded-full ${selectedUser.stockCount >= selectedUser.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
+                      />
+                    </div>
                   </div>
 
                   {/* Document - Full Width */}

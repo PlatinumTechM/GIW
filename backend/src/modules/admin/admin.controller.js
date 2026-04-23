@@ -224,3 +224,31 @@ export const updateUserPlan = async (req, res) => {
     });
   }
 };
+
+// Update user status (active/inactive)
+export const updateUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isActive } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    await adminService.updateUserStatus(userId, isActive);
+
+    res.status(200).json({
+      success: true,
+      message: `User ${isActive ? "activated" : "deactivated"} successfully`,
+    });
+  } catch (error) {
+    console.error("Error at updateUserStatus = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update user status",
+    });
+  }
+};

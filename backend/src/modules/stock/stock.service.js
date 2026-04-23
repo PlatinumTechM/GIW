@@ -1317,7 +1317,13 @@ export const deleteStock = async (id) => {
     throw new Error("Stock not found");
   }
 
-  return await stockRepo.delete(id);
+  const result = await stockRepo.deleteStock(id);
+  
+  if (existingStock.user_id) {
+    await updateSubscriptionUsage(pool, existingStock.user_id, -1);
+  }
+  
+  return result;
 };
 
 export const getFieldMapping = () => {
