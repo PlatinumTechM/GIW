@@ -723,17 +723,16 @@ export const deleteStock = async (id) => {
 
 // Delete stocks by stock_id array (for bulk replace)
 
-export const deleteByStockIds = async (stockIds, client = null) => {
+export const deleteByStockIds = async (stockIds, userId, client = null) => {
   if (stockIds.length === 0) return 0;
 
   // Normalize stockIds to uppercase for case-insensitive comparison
   const normalizedStockIds = stockIds.map((id) => id.toUpperCase());
-  const placeholders = normalizedStockIds.map((_, i) => `$${i + 1}`).join(", ");
-  const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) IN (${placeholders})`;
+  const query = `DELETE FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[]) AND user_id = $2`;
 
   const result = client
-    ? await client.query(query, [normalizedStockIds])
-    : await pool.query(query, [normalizedStockIds]);
+    ? await client.query(query, [normalizedStockIds, userId])
+    : await pool.query(query, [normalizedStockIds, userId]);
 
   return result.rowCount;
 };
