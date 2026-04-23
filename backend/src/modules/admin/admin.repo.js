@@ -48,7 +48,7 @@ export const getSubscriptions = async () => {
 };
 
 // Get only active subscription plans (for public pricing page)
-const getActiveSubscriptions = async () => {
+export const getActiveSubscriptions = async () => {
   const query = `SELECT id, name, duration_month, price, stock_limit, is_active,
                         has_diamonds, has_jewellery, description, created_at
                  FROM subscription_plans
@@ -164,7 +164,7 @@ export const deleteSubscription = async (id) => {
 };
 
 // Get all subscription buyers with user and plan details
-const getSubscriptionBuyers = async () => {
+export const getSubscriptionBuyers = async () => {
   const query = `
     SELECT 
       us.id as subscription_id,
