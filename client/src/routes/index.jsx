@@ -93,7 +93,23 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/jewelry",
+        element: (
+          <ProtectedRoute>
+            <Jewelry />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "user/lab-grown-jewelry",
+        element: (
+          <ProtectedRoute>
+            <LabGrownJewelry />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/lab-grown-jewelry",
         element: (
           <ProtectedRoute>
             <LabGrownJewelry />

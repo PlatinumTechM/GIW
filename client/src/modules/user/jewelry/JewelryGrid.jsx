@@ -270,13 +270,13 @@ const JewelryGrid = ({
         // List View
         <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
           {/* Table Header */}
-          <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
-            <div className="col-span-3">Product</div>
+          <div className="sticky top-0 z-10 hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
+            <div className="col-span-4">Product</div>
             <div className="col-span-2">Category</div>
             <div className="col-span-2">Metal</div>
             <div className="col-span-2">Description</div>
             <div className="col-span-1">Rating</div>
-            <div className="col-span-2 text-right">Price</div>
+            <div className="col-span-1 text-right">Price</div>
           </div>
 
           {/* List Items */}
@@ -302,37 +302,28 @@ const JewelryGrid = ({
               >
                 {/* Desktop Row */}
                 <div className="hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-4 items-center">
-                  <div className="col-span-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex items-center justify-center overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#0F172A] line-clamp-1">{item.name}</p>
-                        {item.badge && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            item.badge === "Sale"
-                              ? "bg-red-100 text-red-600"
-                              : item.badge === "New"
-                              ? "bg-green-100 text-green-600"
-                              : item.badge === "Popular"
-                              ? "bg-amber-100 text-amber-600"
-                              : item.badge === "Premium"
-                              ? "bg-purple-100 text-purple-600"
-                              : item.badge === "Lab-Created"
-                              ? "bg-emerald-100 text-emerald-600"
-                              : item.badge === "Eco-Friendly"
-                              ? "bg-teal-100 text-teal-600"
-                              : "bg-[#DBEAFE] text-[#1E3A8A]"
-                          }`}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
+                  <div className="col-span-4">
+                    <div>
+                      <p className="font-semibold text-[#0F172A] line-clamp-1">{item.name}</p>
+                      {item.badge && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          item.badge === "Sale"
+                            ? "bg-red-100 text-red-600"
+                            : item.badge === "New"
+                            ? "bg-green-100 text-green-600"
+                            : item.badge === "Popular"
+                            ? "bg-amber-100 text-amber-600"
+                            : item.badge === "Premium"
+                            ? "bg-purple-100 text-purple-600"
+                            : item.badge === "Lab-Created"
+                            ? "bg-emerald-100 text-emerald-600"
+                            : item.badge === "Eco-Friendly"
+                            ? "bg-teal-100 text-teal-600"
+                            : "bg-[#DBEAFE] text-[#1E3A8A]"
+                        }`}>
+                          {item.badge}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-span-2">
@@ -356,7 +347,7 @@ const JewelryGrid = ({
                       </div>
                     )}
                   </div>
-                  <div className="col-span-2 text-right">
+                  <div className="col-span-1 text-right">
                     <p className="text-lg font-bold text-[#1E3A8A]">
                       {item.priceDisplay || `$${item.price?.toLocaleString()}`}
                     </p>
