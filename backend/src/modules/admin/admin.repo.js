@@ -22,14 +22,13 @@ export const getAllUsers = async () => {
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
     ORDER BY u.created_at DESC
   `;
-
   const result = await pool.query(query);
   return result.rows;
 };
 
 // Get all subscription plans
 export const getSubscriptions = async () => {
-  const query = `SELECT id, name, duration_month, price, stock_limit, is_active, 
+  const query = `SELECT id, name, duration_month, price, stock_limit, is_active,
                         has_diamonds, has_jewellery, description, created_at
                  FROM subscription_plans ORDER BY name ASC, duration_month ASC`;
   const result = await pool.query(query);
@@ -71,15 +70,7 @@ export const getActiveSubscriptions = async () => {
 
 // Create subscription plan
 export const createSubscription = async (data) => {
-  const {
-    name,
-    durationMonth,
-    price,
-    stockLimit,
-    hasDiamonds,
-    hasJewellery,
-    description,
-  } = data;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = data;
   const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description)
                  VALUES ($1, $2, $3, $4, $5, $6, $7)
                  RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
@@ -109,16 +100,7 @@ export const createSubscription = async (data) => {
 
 // Update subscription plan
 export const updateSubscription = async (id, data) => {
-  const {
-    name,
-    durationMonth,
-    price,
-    stockLimit,
-    hasDiamonds,
-    hasJewellery,
-    description,
-    isActive,
-  } = data;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = data;
   const query = `UPDATE subscription_plans
                  SET name = $1, duration_month = $2, price = $3, stock_limit = $4, 
                      has_diamonds = $5, has_jewellery = $6, description = $7, is_active = $8
@@ -215,22 +197,13 @@ export const updateUserPlan = async (userId, planId, durationMonths) => {
     VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
     RETURNING id, user_id, plan_id, start_date, end_date, status
   `;
-  const result = await pool.query(insertQuery, [
-    userId,
-    planId,
-    startDate,
-    endDate,
-  ]);
-
+  const result = await pool.query(insertQuery, [userId, planId, startDate, endDate]);
+  
   return result.rows[0];
 };
 
 // Check if plan with same name and duration already exists
-export const checkDuplicatePlan = async (
-  name,
-  durationMonth,
-  excludeId = null,
-) => {
+export const checkDuplicatePlan = async (name, durationMonth, excludeId = null) => {
   let query = `SELECT id FROM subscription_plans WHERE name = $1 AND duration_month = $2`;
   const params = [name, durationMonth];
 
