@@ -86,69 +86,18 @@ export const updateUser = async (id, userData) => {
 
 // Create user subscription purchase
 export const createUserSubscription = async (userId, planId, durationMonths) => {
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
+  const startDate = new Date();
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
 
-    // Deactivate any existing active subscription for the user
-    const deactivateQuery = `
-      UPDATE user_subscriptions 
-      SET status = 'cancelled', updated_at = NOW()
-      WHERE user_id = $1 AND status = 'active'
-    `;
-    await client.query(deactivateQuery, [userId]);
+  const query = `
+    INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date, status, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
+    RETURNING id, user_id, plan_id, start_date, end_date, status, created_at, updated_at
+  `;
 
-    // Get plan details for stock limit
-    const planQuery = `SELECT stock_limit FROM subscription_plans WHERE id = $1`;
-    const planResult = await client.query(planQuery, [planId]);
-    
-    if (planResult.rows.length === 0) {
-      throw new Error("Plan not found");
-    }
-    
-    const stockLimit = planResult.rows[0].stock_limit;
+  const result = await pool.query(query, [userId, planId, startDate, endDate]);
+  return result.rows[0];
 
-    // Create new subscription
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
 
-    const insertQuery = `
-      INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date, status, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
-      RETURNING id, user_id, plan_id, start_date, end_date, status, created_at, updated_at
-    `;
-
-    const result = await client.query(insertQuery, [userId, planId, startDate, endDate]);
-    const subscription = result.rows[0];
-
-    // Update or Insert into subscription_usage
-    const checkUsageQuery = `SELECT id FROM subscription_usage WHERE user_id = $1`;
-    const usageCheck = await client.query(checkUsageQuery, [userId]);
-
-    if (usageCheck.rows.length > 0) {
-      // Update existing usage record with new limit and plan ID
-      const updateUsageQuery = `
-        UPDATE subscription_usage 
-        SET subscription_id = $1, total_limit = $2, updated_at = NOW()
-        WHERE user_id = $3
-      `;
-      await client.query(updateUsageQuery, [planId, stockLimit, userId]);
-    } else {
-      // Insert new usage record
-      const insertUsageQuery = `
-        INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
-        VALUES ($1, $2, $3, 0)
-      `;
-      await client.query(insertUsageQuery, [userId, planId, stockLimit]);
-    }
-
-    await client.query("COMMIT");
-    return subscription;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
 };
