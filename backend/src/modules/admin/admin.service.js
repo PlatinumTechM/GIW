@@ -70,9 +70,7 @@ export const validatePricingData = (price, stockLimit) => {
 // Validate plan type (at least one must be selected)
 export const validatePlanType = (hasDiamonds, hasJewellery) => {
   if (!hasDiamonds && !hasJewellery) {
-    throw new Error(
-      "At least one plan type (Diamonds or Jewellery) must be selected",
-    );
+    throw new Error("At least one plan type (Diamonds or Jewellery) must be selected");
   }
 };
 

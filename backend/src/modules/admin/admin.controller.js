@@ -77,15 +77,7 @@ export const getActiveSubscriptions = async (req, res) => {
 // Create subscription
 export const createSubscription = async (req, res) => {
   try {
-    const {
-      name,
-      durationMonth,
-      price,
-      stockLimit,
-      hasDiamonds,
-      hasJewellery,
-      description,
-    } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
 
     if (
       !name ||
@@ -128,16 +120,7 @@ export const createSubscription = async (req, res) => {
 export const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      durationMonth,
-      price,
-      stockLimit,
-      hasDiamonds,
-      hasJewellery,
-      description,
-      isActive,
-    } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
 
     if (
       !name ||
@@ -225,17 +208,11 @@ export const updateUserPlan = async (req, res) => {
       });
     }
 
-    const result = await adminService.updateUserPlan(
-      userId,
-      planId,
-      durationMonths,
-    );
+    const result = await adminService.updateUserPlan(userId, planId, durationMonths);
 
     res.status(200).json({
       success: true,
-      message: planId
-        ? "User plan updated successfully"
-        : "User plan removed successfully",
+      message: planId ? "User plan updated successfully" : "User plan removed successfully",
       subscription: result.subscription,
       user: result.user,
     });
