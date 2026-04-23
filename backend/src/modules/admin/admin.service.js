@@ -41,7 +41,7 @@ export const getSubscriptions = async () => {
 };
 
 // Get only active subscriptions (for public pricing page)
-const getActiveSubscriptions = async () => {
+export const getActiveSubscriptions = async () => {
   const subscriptions = await adminRepo.getActiveSubscriptions();
   return subscriptions;
 };
@@ -122,7 +122,7 @@ export const getSubscriptionBuyers = async () => {
 };
 
 // Update user plan (admin only)
-const updateUserPlan = async (userId, planId, durationMonths) => {
+export const updateUserPlan = async (userId, planId, durationMonths) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
