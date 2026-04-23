@@ -115,7 +115,7 @@ export const register = async (userData) => {
 };
 
 export const getCurrentUser = async (userId) => {
-  const user = await authRepo.findUserById(userId);
+  const user = await authRepo.findUserWithSubscription(userId);
 
   if (!user) {
     throw new Error("User not found");
@@ -149,9 +149,7 @@ export const updateProfile = async (userId, userData) => {
   // Phone validation
   const phoneRegex = /^[\d\s\-+()]{10,20}$/;
   if (!phoneRegex.test(phone)) {
-    throw new Error(
-      "Please enter a valid mobile number with at least 10 digits",
-    );
+    throw new Error("Please enter a valid mobile number with at least 10 digits");
   }
 
   const updatedUser = await authRepo.updateUser(userId, {
