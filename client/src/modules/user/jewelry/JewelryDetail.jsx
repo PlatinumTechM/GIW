@@ -14,6 +14,17 @@ import {
   Sparkles,
   Gem,
   Tag,
+  CheckCircle2,
+  Box,
+  Weight,
+  Palette,
+  Droplet,
+  Scissors,
+  Layers,
+  Calendar,
+  Hash,
+  Play,
+  Video,
 } from "lucide-react";
 
 const JewelryDetail = () => {
@@ -27,29 +38,35 @@ const JewelryDetail = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isVideoActive, setIsVideoActive] = useState(false);
 
-  const images = [
-    `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&h=800&fit=crop`,
-    `https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=800&fit=crop`,
-  ];
+  const getImages = (jewelryData) => {
+    const images = [];
+    if (jewelryData?.jewellery_image1) images.push(jewelryData.jewellery_image1);
+    if (jewelryData?.jewellery_image2) images.push(jewelryData.jewellery_image2);
+    if (jewelryData?.jewellery_image3) images.push(jewelryData.jewellery_image3);
+    if (jewelryData?.jewellery_image4) images.push(jewelryData.jewellery_image4);
+    if (jewelryData?.jewellery_image5) images.push(jewelryData.jewellery_image5);
+    return images.length > 0 ? images : [
+      `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
+    ];
+  };
 
-  // Mock data generator
+  // Mock data generator - matches jewellery_stock table structure
   const getMockJewelry = (type, id) => {
     const categories = ["rings", "necklaces", "earrings", "bracelets"];
-    const metals = ["yellow-gold", "white-gold", "rose-gold", "platinum"];
-    const metalLabels = {
-      "yellow-gold": "Yellow Gold",
-      "white-gold": "White Gold",
-      "rose-gold": "Rose Gold",
-      "platinum": "Platinum",
-    };
-    const metalPurities = ["14K", "18K", "22K", "PT950"];
+    const materials = ["Yellow Gold", "White Gold", "Rose Gold", "Platinum", "Silver"];
+    const diamondTypes = ["Natural", "Lab Grown"];
+    const diamondShapes = ["Round", "Princess", "Cushion", "Oval", "Emerald", "Pear", "Marquise"];
+    const diamondColors = ["D", "E", "F", "G", "H", "I", "J"];
+    const diamondClarity = ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"];
+    const diamondCuts = ["Excellent", "Very Good", "Good", "Fair"];
+    const diamondGrowth = ["CVD", "HPHT"];
+    const statuses = ["available", "sold", "reserved"];
 
     const index = parseInt(id?.split("-").pop()) || 0;
     const category = categories[index % categories.length];
-    const metal = metals[index % metals.length];
+    const material = materials[index % materials.length];
     const price = Math.floor(1000 + Math.random() * 15000);
 
     const jewelryNames = [
@@ -65,15 +82,30 @@ const JewelryDetail = () => {
 
     return {
       id: id || `${type}-1`,
+      stock_id: `STK-${1000 + index}`,
       name: jewelryNames[index % jewelryNames.length],
       category,
+      type: type || "jewelry",
+      material,
+      weight: (2.5 + Math.random() * 8).toFixed(3),
+      diamond_type: diamondTypes[index % diamondTypes.length],
+      diamond_shape: diamondShapes[index % diamondShapes.length],
+      diamond_weight: (0.3 + Math.random() * 2).toFixed(3),
+      diamond_color: diamondColors[index % diamondColors.length],
+      diamond_clarity: diamondClarity[index % diamondClarity.length],
+      diamond_cut: diamondCuts[index % diamondCuts.length],
+      diamond_growth: diamondGrowth[index % diamondGrowth.length],
       price,
-      metal,
-      metalLabel: metalLabels[metal],
-      metalPurity: metalPurities[index % metalPurities.length],
-      description: `Beautiful ${metalLabels[metal]} ${category.slice(0, -1)} crafted with precision and elegance. Perfect for any occasion.`,
-      imageDescription: `Premium ${metalLabels[metal]} ${category.slice(0, -1)} - shown from multiple angles`,
-      image: images[index % images.length],
+      status: statuses[index % statuses.length],
+      description: `Beautiful ${material} ${category.slice(0, -1)} crafted with precision and elegance. Perfect for any occasion.`,
+      jewellery_image1: `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
+      jewellery_image2: `https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=800&fit=crop`,
+      jewellery_image3: null,
+      jewellery_image4: null,
+      jewellery_image5: null,
+      jewellery_video: `https://www.w3schools.com/html/mov_bbb.mp4`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
   };
 
@@ -111,6 +143,8 @@ const JewelryDetail = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const images = getImages(jewelry);
 
   const nextImage = () => {
     setActiveImageIndex((prev) => (prev + 1) % images.length);
@@ -347,10 +381,18 @@ const JewelryDetail = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="flex items-center gap-2 mt-0.5"
+                    className="flex items-center gap-3 mt-0.5"
                   >
                     <span className="text-sm font-mono" style={{ color: theme.textMuted }}>
-                      SKU: {jewelry.id}
+                      Stock ID: {jewelry.stock_id}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={{
+                        background: jewelry.status === 'available' ? `${theme.success}20` : jewelry.status === 'sold' ? `${theme.danger}20` : `${theme.accent}20`,
+                        color: jewelry.status === 'available' ? theme.success : jewelry.status === 'sold' ? theme.danger : theme.accent,
+                      }}
+                    >
+                      {jewelry.status}
                     </span>
                   </motion.div>
                 </div>
@@ -404,44 +446,59 @@ const JewelryDetail = () => {
               className="space-y-4 p-6 lg:border-r"
               style={{ borderColor: theme.border }}
             >
-              {/* Main Image */}
+              {/* Main Image or Video */}
               <motion.div
                 variants={itemVariants}
-                className="relative aspect-square overflow-hidden rounded-2xl group cursor-zoom-in"
+                className="relative aspect-square overflow-hidden rounded-2xl group"
                 style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #E2E8F0 100%)` }}
-                onMouseEnter={() => setIsImageZoomed(true)}
+                onMouseEnter={() => !isVideoActive && setIsImageZoomed(true)}
                 onMouseLeave={() => setIsImageZoomed(false)}
                 onMouseMove={handleMouseMove}
               >
-                <motion.div
-                  className="relative h-full w-full"
-                  animate={isImageZoomed ? { scale: 1.5 } : { scale: 1 }}
-                  transition={{ duration: 0.4 }}
-                  style={{
-                    transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
-                  }}
-                >
-                  <motion.img
-                    key={activeImageIndex}
-                    src={images[activeImageIndex]}
-                    alt={jewelry.name}
-                    className="h-full w-full object-cover"
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </motion.div>
+                {isVideoActive && jewelry.jewellery_video ? (
+                  <div className="relative w-full h-full bg-black">
+                    <video
+                      src={jewelry.jewellery_video}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-contain"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                ) : (
+                  <motion.div
+                    className="relative h-full w-full"
+                    animate={isImageZoomed ? { scale: 1.5 } : { scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    style={{
+                      transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
+                    }}
+                  >
+                    <motion.img
+                      key={activeImageIndex}
+                      src={images[activeImageIndex]}
+                      alt={jewelry.name}
+                      className="h-full w-full object-cover"
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </motion.div>
+                )}
 
-                {/* Zoom Indicator */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isImageZoomed ? 0 : 1 }}
-                  className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium backdrop-blur-sm"
-                  style={{ background: "rgba(255,255,255,0.9)", color: theme.text }}
-                >
-                  <ZoomIn className="h-4 w-4" />
-                  Hover to zoom
-                </motion.div>
+                {/* Zoom Indicator - only for images */}
+                {!isVideoActive && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isImageZoomed ? 0 : 1 }}
+                    className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium backdrop-blur-sm"
+                    style={{ background: "rgba(255,255,255,0.9)", color: theme.text }}
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                    Hover to zoom
+                  </motion.div>
+                )}
 
                 {/* Navigation Arrows */}
                 <motion.button
@@ -478,18 +535,21 @@ const JewelryDetail = () => {
               {/* Thumbnails */}
               <motion.div
                 variants={itemVariants}
-                className="flex justify-center gap-3"
+                className="flex justify-center gap-3 flex-wrap"
               >
                 {images.map((img, idx) => (
                   <motion.button
                     key={idx}
                     whileHover={{ scale: 1.1, y: -3 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveImageIndex(idx)}
+                    onClick={() => {
+                      setActiveImageIndex(idx);
+                      setIsVideoActive(false);
+                    }}
                     className="relative h-16 w-16 overflow-hidden rounded-xl transition-all"
                     style={{
-                      opacity: activeImageIndex === idx ? 1 : 0.6,
-                      boxShadow: activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
+                      opacity: !isVideoActive && activeImageIndex === idx ? 1 : 0.6,
+                      boxShadow: !isVideoActive && activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
                     }}
                   >
                     <img
@@ -497,7 +557,7 @@ const JewelryDetail = () => {
                       alt={`Thumbnail ${idx + 1}`}
                       className="h-full w-full object-cover"
                     />
-                    {activeImageIndex === idx && (
+                    {!isVideoActive && activeImageIndex === idx && (
                       <motion.div
                         layoutId="activeIndicator"
                         className="absolute inset-0"
@@ -506,7 +566,35 @@ const JewelryDetail = () => {
                     )}
                   </motion.button>
                 ))}
+
+                {/* Video Thumbnail */}
+                {jewelry.jewellery_video && (
+                  <motion.button
+                    whileHover={{ scale: 1.1, y: -3 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsVideoActive(true)}
+                    className="relative h-16 w-16 overflow-hidden rounded-xl transition-all flex items-center justify-center"
+                    style={{
+                      opacity: isVideoActive ? 1 : 0.6,
+                      boxShadow: isVideoActive ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none",
+                      background: `${theme.primary}15`
+                    }}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <Play className="h-6 w-6" style={{ color: theme.primary }} />
+                      <span className="text-[8px] mt-0.5" style={{ color: theme.primary }}>Video</span>
+                    </div>
+                    {isVideoActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="absolute inset-0"
+                        style={{ background: `${theme.primary}15` }}
+                      />
+                    )}
+                  </motion.button>
+                )}
               </motion.div>
+
             </motion.div>
 
             {/* Right - Details */}
@@ -578,7 +666,7 @@ const JewelryDetail = () => {
                 </div>
               </motion.div>
 
-              {/* Category */}
+              {/* Category & Type */}
               <motion.div
                 initial="rest"
                 whileHover="hover"
@@ -592,9 +680,10 @@ const JewelryDetail = () => {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Tag className="h-4 w-4" style={{ color: theme.primary }} />
-                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Category</p>
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Category & Type</p>
                 </div>
                 <p className="text-lg font-bold capitalize" style={{ color: theme.secondary }}>{jewelry.category}</p>
+                <p className="text-sm" style={{ color: theme.textMuted }}>{jewelry.type}</p>
               </motion.div>
 
               {/* Description */}
@@ -616,7 +705,7 @@ const JewelryDetail = () => {
                 <p className="text-sm leading-relaxed" style={{ color: theme.secondary }}>{jewelry.description || jewelry.imageDescription}</p>
               </motion.div>
 
-              {/* Metal Type */}
+              {/* Material & Weight */}
               <motion.div
                 initial="rest"
                 whileHover="hover"
@@ -630,11 +719,78 @@ const JewelryDetail = () => {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Gem className="h-4 w-4" style={{ color: theme.primary }} />
-                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Metal Type</p>
+                  <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Material</p>
                 </div>
-                <p className="text-lg font-bold" style={{ color: theme.secondary }}>{jewelry.metalLabel}</p>
-                <p className="text-sm" style={{ color: theme.textMuted }}>{jewelry.metalPurity}</p>
+                <p className="text-lg font-bold" style={{ color: theme.secondary }}>{jewelry.material}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Weight className="h-4 w-4" style={{ color: theme.textMuted }} />
+                  <p className="text-sm" style={{ color: theme.textMuted }}>{jewelry.weight} grams</p>
+                </div>
               </motion.div>
+
+              {/* Diamond Details */}
+              {(jewelry.diamond_type || jewelry.diamond_shape || jewelry.diamond_weight) && (
+                <motion.div
+                  initial="rest"
+                  whileHover="hover"
+                  animate="rest"
+                  variants={cardHoverVariants}
+                  className="rounded-xl p-4 transition-colors"
+                  style={{
+                    background: "transparent",
+                    border: `1px solid ${theme.border}`
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="h-4 w-4" style={{ color: theme.primary }} />
+                    <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Diamond Details</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {jewelry.diamond_type && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Type</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_type}</p>
+                      </div>
+                    )}
+                    {jewelry.diamond_shape && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Shape</p>
+                        <p className="text-sm font-semibold capitalize" style={{ color: theme.secondary }}>{jewelry.diamond_shape}</p>
+                      </div>
+                    )}
+                    {jewelry.diamond_weight && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Weight</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_weight} ct</p>
+                      </div>
+                    )}
+                    {jewelry.diamond_color && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Color</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_color}</p>
+                      </div>
+                    )}
+                    {jewelry.diamond_clarity && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Clarity</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_clarity}</p>
+                      </div>
+                    )}
+                    {jewelry.diamond_cut && (
+                      <div>
+                        <p className="text-xs" style={{ color: theme.textMuted }}>Cut</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_cut}</p>
+                      </div>
+                    )}
+                  </div>
+                  {jewelry.diamond_growth && (
+                    <div className="mt-3 pt-3 border-t" style={{ borderColor: theme.border }}>
+                      <p className="text-xs" style={{ color: theme.textMuted }}>Growth Method</p>
+                      <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_growth}</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </motion.div>
           </div>
         </motion.div>

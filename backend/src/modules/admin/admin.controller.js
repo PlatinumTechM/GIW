@@ -77,15 +77,7 @@ export const getActiveSubscriptions = async (req, res) => {
 // Create subscription
 export const createSubscription = async (req, res) => {
   try {
-    const {
-      name,
-      durationMonth,
-      price,
-      stockLimit,
-      hasDiamonds,
-      hasJewellery,
-      description,
-    } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
 
     if (
       !name ||
@@ -128,16 +120,7 @@ export const createSubscription = async (req, res) => {
 export const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      durationMonth,
-      price,
-      stockLimit,
-      hasDiamonds,
-      hasJewellery,
-      description,
-      isActive,
-    } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
 
     if (
       !name ||
@@ -188,7 +171,7 @@ export const deleteSubscription = async (req, res) => {
     });
   } catch (error) {
     console.error("Error at deleteSubscription = ", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Failed to delete subscription",
     });
@@ -225,25 +208,47 @@ export const updateUserPlan = async (req, res) => {
       });
     }
 
-    const result = await adminService.updateUserPlan(
-      userId,
-      planId,
-      durationMonths,
-    );
+    const result = await adminService.updateUserPlan(userId, planId, durationMonths);
 
     res.status(200).json({
       success: true,
-      message: planId
-        ? "User plan updated successfully"
-        : "User plan removed successfully",
+      message: planId ? "User plan updated successfully" : "User plan removed successfully",
       subscription: result.subscription,
       user: result.user,
     });
   } catch (error) {
     console.error("Error at updateUserPlan = ", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Failed to update user plan",
+    });
+  }
+};
+
+// Update user status (active/inactive)
+export const updateUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isActive } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    await adminService.updateUserStatus(userId, isActive);
+
+    res.status(200).json({
+      success: true,
+      message: `User ${isActive ? "activated" : "deactivated"} successfully`,
+    });
+  } catch (error) {
+    console.error("Error at updateUserStatus = ", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update user status",
     });
   }
 };

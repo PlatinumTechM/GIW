@@ -31,6 +31,8 @@ export const getAllUsers = async () => {
     planName: user.plan_name,
     planExpiry: user.plan_expiry,
     subscriptionStatus: user.subscription_status,
+    stockCount: parseInt(user.stock_count || 0),
+    stockLimit: parseInt(user.stock_limit || 0),
   }));
 };
 
@@ -70,9 +72,7 @@ export const validatePricingData = (price, stockLimit) => {
 // Validate plan type (at least one must be selected)
 export const validatePlanType = (hasDiamonds, hasJewellery) => {
   if (!hasDiamonds && !hasJewellery) {
-    throw new Error(
-      "At least one plan type (Diamonds or Jewellery) must be selected",
-    );
+    throw new Error("At least one plan type (Diamonds or Jewellery) must be selected");
   }
 };
 
@@ -149,4 +149,12 @@ export const updateUserPlan = async (userId, planId, durationMonths) => {
       subscriptionStatus: updatedUser.subscription_status,
     } : null,
   };
+};
+
+// Update user status (active/inactive)
+export const updateUserStatus = async (userId, isActive) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+  return await adminRepo.updateUserStatus(userId, isActive);
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Input from "../../components/ui/Input";
 import { authAPI } from "../../services/api";
 import notify from "../../utils/notifications.jsx";
 import {
@@ -241,7 +242,11 @@ const UserManagement = () => {
       }
     } catch (error) {
       console.error("Plan update error:", error);
-      notify.error("Error", error.message || "Failed to update user plan");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update user plan";
+      notify.error("Error", errorMessage);
     } finally {
       setUpdatingPlan(false);
     }
@@ -290,6 +295,8 @@ const UserManagement = () => {
                   year: "numeric",
                 })
               : null,
+            stockCount: user.stockCount || 0,
+            stockLimit: user.stockLimit || 0,
             hasActivePlan: !!user.planName && !!user.planExpiry && new Date(user.planExpiry) > new Date(),
           }));
         setUsers(formattedUsers);
@@ -311,22 +318,40 @@ const UserManagement = () => {
   }, [searchTerm, filterStatus]);
 
   const toggleUserStatus = async (userId) => {
-    // TODO: Add API call to toggle user status
     const user = users.find((u) => u.id === userId);
     if (!user) return;
 
-    const newStatus = user.status === "active" ? "inactive" : "active";
+    const currentIsActive = user.status === "active";
+    const newIsActive = !currentIsActive;
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === userId) {
-          return { ...u, status: newStatus };
-        }
-        return u;
-      }),
-    );
-
-    notify.success("Status Updated", `User ${user.name} is now ${newStatus}`);
+    try {
+      const response = await authAPI.updateUserStatus(userId, newIsActive);
+      if (response.success) {
+        setUsers((prev) =>
+          prev.map((u) => {
+            if (u.id === userId) {
+              return { 
+                ...u, 
+                status: newIsActive ? "active" : "inactive" 
+              };
+            }
+            return u;
+          }),
+        );
+        notify.success(
+          "Status Updated",
+          `User ${user.name} is now ${newIsActive ? "active" : "inactive"}`,
+        );
+      } else {
+        notify.error("Error", response.message || "Failed to update status");
+      }
+    } catch (error) {
+      console.error("Status update error:", error);
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to update user status",
+      );
+    }
   };
 
   const containerVariants = {
@@ -357,22 +382,8 @@ const UserManagement = () => {
       >
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1 input-with-icon">
-            <svg
-              className="w-5 h-5 icon"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              className="input-field"
+          <div className="flex-1">
+            <Input
               type="text"
               placeholder="Search users..."
               value={searchTerm}
@@ -420,6 +431,12 @@ const UserManagement = () => {
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-[#F59E0B]" />
                     <span>Phone</span>
+                  </div>
+                </th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
+                  <div className="flex items-center justify-center gap-2">
+                    <Package className="w-4 h-4 text-[#1E3A8A]" />
+                    <span>Stock</span>
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
@@ -513,39 +530,27 @@ const UserManagement = () => {
                           </p>
                         </div>
                       </td>
-                      {/* Document */}
-                      <td className="px-4 py-4 text-center">
-                        {user.document ? (
-                          <a
-                            href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}${user.document}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 transition-all shadow-sm"
-                            title="View Document"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      {/* Stock Count */}
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] rounded-lg border border-[#E2E8F0]">
+                            <Package className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                            <span className="text-sm font-semibold text-[#1E3A8A]">
+                              {user.stockCount}
+                            </span>
+                            <span className="text-xs text-[#64748B]">
+                              / {user.stockLimit || 0}
+                            </span>
+                          </div>
+                          {user.stockLimit > 0 && (
+                            <div className="w-16 h-1 mt-1 bg-[#E2E8F0] rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${user.stockCount >= user.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
+                                style={{ width: `${Math.min((user.stockCount / user.stockLimit) * 100, 100)}%` }}
                               />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                          </a>
-                        ) : (
-                          <span className="text-sm text-slate-400">N/A</span>
-                        )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       {/* Password */}
                       <td className="px-4 py-4 text-center">
@@ -1021,9 +1026,38 @@ const UserManagement = () => {
                         Address
                       </p>
                     </div>
-                    <p className="font-semibold text-[#1E3A8A]">
+                    <p className="font-semibold text-[#1E3A8A] break-words">
                       {selectedUser.address || "N/A"}
                     </p>
+                  </div>
+
+                  {/* Stock Usage - Detail Card */}
+                  <div className="col-span-2 sm:col-span-1 bg-[#F1F5F9]/50 rounded-xl p-4 border border-[#E2E8F0]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#DBEAFE] flex items-center justify-center text-[#1E3A8A]">
+                        <Package className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-medium text-[#64748B] uppercase">
+                        Stock Usage
+                      </p>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <p className="text-xl font-bold text-[#1E3A8A]">
+                        {selectedUser.stockCount}
+                      </p>
+                      <p className="text-sm text-[#64748B] mb-1">
+                        / {selectedUser.stockLimit || 0} items
+                      </p>
+                    </div>
+                    <div className="mt-2 h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ 
+                          width: `${Math.min((selectedUser.stockCount / (selectedUser.stockLimit || 1)) * 100, 100)}%` 
+                        }}
+                        className={`h-full rounded-full ${selectedUser.stockCount >= selectedUser.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
+                      />
+                    </div>
                   </div>
 
                   {/* Document - Full Width */}
@@ -1038,7 +1072,7 @@ const UserManagement = () => {
                     </div>
                     {selectedUser.document ? (
                       <a
-                        href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "")}${selectedUser.document}`}
+                        href={`${import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')}${selectedUser.document}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white text-sm font-medium rounded-lg hover:from-[#F59E0B] hover:to-[#D97706] transition-all shadow-md shadow-[#FBBF24]/30"

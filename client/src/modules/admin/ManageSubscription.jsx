@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Sparkles,
   Clock,
-  Users
+  Users,
 } from "lucide-react";
 
 const DURATION_OPTIONS = [

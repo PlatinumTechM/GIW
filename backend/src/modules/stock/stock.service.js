@@ -1137,10 +1137,15 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
 
       // Identify which stocks are NEW vs EXISTING
       let existingStockIds = new Set();
-      if (incomingStockIds.length > 0) {
-        const checkQuery = `SELECT stock_id FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[])`;
-        const checkRes = await client.query(checkQuery, [incomingStockIds.map(id => id.toUpperCase())]);
-        checkRes.rows.forEach(r => existingStockIds.add(r.stock_id.toUpperCase()));
+      if (userId) {
+        const checkQuery = `SELECT stock_id FROM diamond_stock WHERE UPPER(stock_id) = ANY($1::text[]) AND user_id = $2`;
+        const checkRes = await client.query(checkQuery, [
+          incomingStockIds.map((id) => id.toUpperCase()),
+          userId,
+        ]);
+        checkRes.rows.forEach((r) =>
+          existingStockIds.add(r.stock_id.toUpperCase()),
+        );
       }
 
       let skippedDueToLimitCount = 0;
@@ -1153,15 +1158,19 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
           throw new Error("No active subscription found. Cannot add stock.");
         }
 
-        const newRows = uniqueRows.filter(r => !existingStockIds.has(r.stock_id.toUpperCase()));
-        const existingRows = uniqueRows.filter(r => existingStockIds.has(r.stock_id.toUpperCase()));
+        const newRows = uniqueRows.filter(
+          (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
+        );
+        const existingRows = uniqueRows.filter((r) =>
+          existingStockIds.has(r.stock_id.toUpperCase()),
+        );
 
         if (newRows.length > quota.remaining) {
           const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
           skippedDueToLimitCount = newRows.length - allowedNewRows.length;
           uniqueRows = [...existingRows, ...allowedNewRows];
           limitReached = true;
-          limitMessage = `Subscription limit reached. ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan.`;
+          limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
         }
       }
 
@@ -1171,6 +1180,7 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       if (finalStockIds.length > 0) {
         const deletedCount = await stockRepo.deleteByStockIds(
           finalStockIds,
+          userId,
           client,
         );
         results.replacedCount = deletedCount;
@@ -1186,7 +1196,7 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       }
 
       await client.query("COMMIT");
-      
+
       if (limitReached) {
         results.limitReached = true;
         results.limitMessage = limitMessage;
@@ -1265,7 +1275,7 @@ export const createStock = async (stockData, userId = null) => {
     // Handle unique constraint violation for stock_id
     if (
       error.code === "23505" &&
-      error.constraint === "diamond_stock_stock_id_key"
+      error.constraint === "diamond_stock_stock_id_user_id_key"
     ) {
       throw new Error(
         `Stock ID "${dbData.stock_id}" already exists. Please use a different Stock ID.`,
@@ -1307,7 +1317,13 @@ export const deleteStock = async (id) => {
     throw new Error("Stock not found");
   }
 
-  return await stockRepo.delete(id);
+  const result = await stockRepo.deleteStock(id);
+  
+  if (existingStock.user_id) {
+    await updateSubscriptionUsage(pool, existingStock.user_id, -1);
+  }
+  
+  return result;
 };
 
 export const getFieldMapping = () => {

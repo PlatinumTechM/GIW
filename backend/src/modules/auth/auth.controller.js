@@ -35,13 +35,11 @@ export const register = async (req, res) => {
       address,
       gst,
       password,
-      confirmPassword,
+      confirmPassword
     } = req.body;
-
+    
     // Get document full path if file was uploaded
-    const document = req.file
-      ? `/uploads/documents/${req.file.filename}`
-      : null;
+    const document = req.file ? `/uploads/documents/${req.file.filename}` : null;
 
     const result = await authService.register({
       name,
@@ -52,19 +50,19 @@ export const register = async (req, res) => {
       gst,
       password,
       confirmPassword,
-      document,
+      document
     });
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: result,
+      data: result
     });
   } catch (error) {
     console.error("Error at register = ", error);
-    res.status(400).json({
+    res.status(400).json({ 
       success: false,
-      error: error.message,
+      error: error.message 
     });
   }
 };
@@ -73,15 +71,15 @@ export const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await authService.getCurrentUser(userId);
-
+    
     res.status(200).json(user);
   } catch (error) {
     console.error("Error at getCurrentUser = ", error);
-
+    
     if (error.message === "User not found") {
       return res.status(404).json({ error: "User not found" });
     }
-
+    
     res.status(500).json({ error: error.message });
   }
 };
@@ -157,10 +155,9 @@ export const purchaseSubscription = async (req, res) => {
     });
   } catch (error) {
     console.error("Error at purchaseSubscription = ", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Failed to purchase subscription",
     });
   }
 };
-
