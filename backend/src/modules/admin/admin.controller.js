@@ -218,7 +218,7 @@ export const updateUserPlan = async (req, res) => {
     });
   } catch (error) {
     console.error("Error at updateUserPlan = ", error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
       message: error.message || "Failed to update user plan",
     });

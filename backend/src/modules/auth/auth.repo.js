@@ -90,14 +90,6 @@ export const createUserSubscription = async (userId, planId, durationMonths) => 
   try {
     await client.query("BEGIN");
 
-    // Deactivate any existing active subscription for the user
-    const deactivateQuery = `
-      UPDATE user_subscriptions 
-      SET status = 'cancelled', updated_at = NOW()
-      WHERE user_id = $1 AND status = 'active'
-    `;
-    await client.query(deactivateQuery, [userId]);
-
     // Get plan details for stock limit
     const planQuery = `SELECT stock_limit FROM subscription_plans WHERE id = $1`;
     const planResult = await client.query(planQuery, [planId]);
@@ -107,6 +99,23 @@ export const createUserSubscription = async (userId, planId, durationMonths) => 
     }
     
     const stockLimit = planResult.rows[0].stock_limit;
+
+    // Check if user has more stocks than the new plan's limit
+    const currentUsageQuery = `SELECT uploaded FROM subscription_usage WHERE user_id = $1`;
+    const usageResult = await client.query(currentUsageQuery, [userId]);
+    const uploadedCount = usageResult.rows.length > 0 ? parseInt(usageResult.rows[0].uploaded || 0) : 0;
+
+    if (uploadedCount > stockLimit) {
+      throw new Error(`Cannot purchase this plan. You have ${uploadedCount} stocks uploaded, which exceeds the new plan's limit of ${stockLimit}. Please delete some stocks before downgrading.`);
+    }
+
+    // Deactivate any existing active subscription for the user
+    const deactivateQuery = `
+      UPDATE user_subscriptions 
+      SET status = 'cancelled', updated_at = NOW()
+      WHERE user_id = $1 AND status = 'active'
+    `;
+    await client.query(deactivateQuery, [userId]);
 
     // Create new subscription
     const startDate = new Date();
@@ -127,7 +136,7 @@ export const createUserSubscription = async (userId, planId, durationMonths) => 
     const usageCheck = await client.query(checkUsageQuery, [userId]);
 
     if (usageCheck.rows.length > 0) {
-      // Update existing usage record with new limit and plan ID
+      // Update existing usage record with new limit and subscription ID
       const updateUsageQuery = `
         UPDATE subscription_usage 
         SET subscription_id = $1, total_limit = $2, updated_at = NOW()

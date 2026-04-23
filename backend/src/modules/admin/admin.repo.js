@@ -174,32 +174,99 @@ export const getSubscriptionBuyers = async () => {
 
 // Update user plan (admin only)
 export const updateUserPlan = async (userId, planId, durationMonths) => {
-  // First, cancel any existing active subscription for the user
-  const deactivateQuery = `
-    UPDATE user_subscriptions 
-    SET status = 'cancelled', updated_at = NOW()
-    WHERE user_id = $1 AND status = 'active'
-  `;
-  await pool.query(deactivateQuery, [userId]);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  // If planId is null, just cancel (remove plan)
-  if (!planId) {
-    return { success: true, message: "User plan removed successfully" };
+    // If planId is null, just cancel (remove plan)
+    if (!planId) {
+      // First, cancel any existing active subscription for the user
+      const deactivateQuery = `
+        UPDATE user_subscriptions 
+        SET status = 'cancelled', updated_at = NOW()
+        WHERE user_id = $1 AND status = 'active'
+      `;
+      await client.query(deactivateQuery, [userId]);
+
+      // Also update subscription_usage to 0 limit
+      await client.query(
+        "UPDATE subscription_usage SET total_limit = 0, subscription_id = NULL, updated_at = NOW() WHERE user_id = $1",
+        [userId]
+      );
+      await client.query("COMMIT");
+      return { success: true, message: "User plan removed successfully" };
+    }
+
+    // Get new plan details for stock limit
+    const planQuery = `SELECT stock_limit FROM subscription_plans WHERE id = $1`;
+    const planResult = await client.query(planQuery, [planId]);
+
+    if (planResult.rows.length === 0) {
+      throw new Error("Plan not found");
+    }
+
+    const stockLimit = planResult.rows[0].stock_limit;
+
+    // Check if user has more stocks than the new plan's limit
+    const currentUsageQuery = `SELECT uploaded FROM subscription_usage WHERE user_id = $1`;
+    const usageResult = await client.query(currentUsageQuery, [userId]);
+    const uploadedCount = usageResult.rows.length > 0 ? parseInt(usageResult.rows[0].uploaded || 0) : 0;
+
+    if (uploadedCount > stockLimit) {
+      throw new Error(`Cannot change to this plan. User has ${uploadedCount} stocks uploaded, which exceeds the new plan's limit of ${stockLimit}. Please delete some stocks first.`);
+    }
+
+    // Now, cancel any existing active subscription for the user
+    const deactivateQuery = `
+      UPDATE user_subscriptions 
+      SET status = 'cancelled', updated_at = NOW()
+      WHERE user_id = $1 AND status = 'active'
+    `;
+    await client.query(deactivateQuery, [userId]);
+
+    // Create new subscription
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
+
+    const insertQuery = `
+      INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date, status, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
+      RETURNING id, user_id, plan_id, start_date, end_date, status
+    `;
+    const result = await client.query(insertQuery, [userId, planId, startDate, endDate]);
+
+    const subscription = result.rows[0];
+
+    // Update or Insert into subscription_usage
+    const checkUsageQuery = `SELECT id FROM subscription_usage WHERE user_id = $1`;
+    const usageCheck = await client.query(checkUsageQuery, [userId]);
+
+    if (usageCheck.rows.length > 0) {
+      // Update existing usage record with new limit and subscription ID
+      const updateUsageQuery = `
+        UPDATE subscription_usage 
+        SET subscription_id = $1, total_limit = $2, updated_at = NOW()
+        WHERE user_id = $3
+      `;
+      await client.query(updateUsageQuery, [subscription.id, stockLimit, userId]);
+    } else {
+      // Insert new usage record
+      const insertUsageQuery = `
+        INSERT INTO subscription_usage (user_id, subscription_id, total_limit, uploaded)
+        VALUES ($1, $2, $3, 0)
+      `;
+      await client.query(insertUsageQuery, [userId, subscription.id, stockLimit]);
+    }
+
+    await client.query("COMMIT");
+    return subscription;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
   }
-
-  // Create new subscription
-  const startDate = new Date();
-  const endDate = new Date();
-  endDate.setMonth(endDate.getMonth() + parseInt(durationMonths));
-
-  const insertQuery = `
-    INSERT INTO user_subscriptions (user_id, plan_id, start_date, end_date, status, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, 'active', NOW(), NOW())
-    RETURNING id, user_id, plan_id, start_date, end_date, status
-  `;
-  const result = await pool.query(insertQuery, [userId, planId, startDate, endDate]);
-  
-  return result.rows[0];
 };
 
 // Check if plan with same name and duration already exists
