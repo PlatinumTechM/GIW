@@ -24,12 +24,24 @@ const Login = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-    // Check if redirected from protected route due to session expiration
+    
+    // Check for query parameters if redirected via window.location.href
+    const params = new URLSearchParams(location.search);
+    const reason = params.get("reason");
+    
+    if (reason === "deactivated") {
+      setSessionExpiredMessage("Your account has been deactivated by an administrator.");
+      setError("Account Deactivated");
+    } else if (reason === "expired") {
+      setSessionExpiredMessage("Your session has expired. Please login again.");
+    }
+    
+    // Check if redirected from protected route via navigate()
     if (location.state?.sessionExpired) {
       setSessionExpiredMessage("Your session has expired. Please login again.");
       clearSessionExpired?.();
     }
-  }, [location.state, clearSessionExpired]);
+  }, [location, clearSessionExpired]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -296,8 +308,18 @@ const Login = () => {
             )}
 
             {sessionExpiredMessage && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-700">{sessionExpiredMessage}</p>
+              <div className={`p-3 border rounded-lg ${
+                sessionExpiredMessage.includes("deactivated") 
+                  ? "bg-red-50 border-red-200" 
+                  : "bg-yellow-50 border-yellow-200"
+              }`}>
+                <p className={`text-sm ${
+                  sessionExpiredMessage.includes("deactivated") 
+                    ? "text-red-700" 
+                    : "text-yellow-700"
+                }`}>
+                  {sessionExpiredMessage}
+                </p>
               </div>
             )}
 
