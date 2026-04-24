@@ -93,11 +93,11 @@ export const createUserSubscription = async (userId, planId, durationMonths) => 
     // Get plan details for stock limit
     const planQuery = `SELECT stock_limit FROM subscription_plans WHERE id = $1`;
     const planResult = await client.query(planQuery, [planId]);
-    
+
     if (planResult.rows.length === 0) {
       throw new Error("Plan not found");
     }
-    
+
     const stockLimit = planResult.rows[0].stock_limit;
 
     // Check if user has more stocks than the new plan's limit
