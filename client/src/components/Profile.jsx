@@ -39,6 +39,7 @@ const Profile = () => {
     phone: "",
     address: "",
     gst: "",
+    type: [], // Multi-select array
   });
 
   // Refresh user data when profile loads to get latest subscription info
@@ -58,6 +59,7 @@ const Profile = () => {
         phone: user.phone || "",
         address: user.address || "",
         gst: user.gst || "",
+        type: user.type || [],
       });
     }
     setLoading(authLoading);
@@ -67,6 +69,17 @@ const Profile = () => {
     const { name, value } = e.target;
     const formattedValue = formatFieldValue(name, value);
     setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+  };
+  
+  const handleTypeChange = (typeName) => {
+    setFormData(prev => {
+      const currentTypes = [...(prev.type || [])];
+      if (currentTypes.includes(typeName)) {
+        return { ...prev, type: currentTypes.filter(t => t !== typeName) };
+      } else {
+        return { ...prev, type: [...currentTypes, typeName] };
+      }
+    });
   };
 
   const handleEdit = () => {
@@ -85,6 +98,7 @@ const Profile = () => {
         phone: user.phone || "",
         address: user.address || "",
         gst: user.gst || "",
+        type: user.type || [],
       });
     }
     setMessage({ type: "", text: "" });
@@ -101,6 +115,7 @@ const Profile = () => {
         phone: formData.phone,
         address: formData.address.trim(),
         gst: formData.gst,
+        type: formData.type,
       });
 
       if (response.success) {
@@ -252,6 +267,17 @@ const Profile = () => {
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${new Date(user.planExpiry) > new Date() ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                         {new Date(user.planExpiry) > new Date() ? "Active" : "Expired"}
                       </span>
+                    </div>
+                  )}
+
+                  {/* Business Types Badges */}
+                  {user?.type && user.type.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {user.type.map((t) => (
+                        <span key={t} className="px-2 py-0.5 bg-[#1E3A8A]/10 text-[#1E3A8A] text-[10px] font-bold rounded-md uppercase tracking-wider">
+                          {t.replace(/_/g, ' ')}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -545,6 +571,56 @@ const Profile = () => {
                             : "border-[#F1F5F9] bg-[#F8FAFC]"
                         } text-[#475569] font-mono tracking-wide outline-none transition-all`}
                       />
+                    </div>
+                  </div>
+
+                  {/* Business Specialization */}
+                  <div className="col-span-1 md:col-span-2">
+                    <label className="block text-xs sm:text-sm font-semibold text-[#475569] mb-3">
+                      Business Specialization
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { id: 'natural_diamond', label: 'Natural Diamond' },
+                        { id: 'lab_grown_diamond', label: 'Lab-grown Diamond' },
+                        { id: 'natural_jewellery', label: 'Natural Jewellery' },
+                        { id: 'lab_grown_jewellery', label: 'Lab-grown Jewellery' }
+                      ].map((type) => (
+                        <label 
+                          key={type.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                            isEditing ? "cursor-pointer" : "cursor-default"
+                          } ${
+                            formData.type?.includes(type.id)
+                              ? "border-[#1E3A8A] bg-[#1E3A8A]/5 shadow-sm"
+                              : "border-slate-100 bg-white"
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-all ${
+                            formData.type?.includes(type.id)
+                              ? "bg-[#1E3A8A] border-[#1E3A8A]"
+                              : "bg-white border-slate-300"
+                          }`}>
+                            {formData.type?.includes(type.id) && (
+                              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className={`text-sm font-bold ${
+                            formData.type?.includes(type.id) ? "text-[#1E3A8A]" : "text-slate-600"
+                          }`}>
+                            {type.label}
+                          </span>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            disabled={!isEditing}
+                            checked={formData.type?.includes(type.id)}
+                            onChange={() => handleTypeChange(type.id)}
+                          />
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </div>

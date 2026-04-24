@@ -13,7 +13,7 @@ export const getAllUsers = async () => {
   const query = `
     SELECT 
       u.id, u.name, u.email, u.password, u.company, u.phone, u.address,
-      u.gst, u.document, u.is_active, u.role, u.created_at,
+      u.gst, u.document, u.is_active, u.role, u.type, u.created_at,
       sp.name as plan_name,
       us.end_date as plan_expiry,
       us.status as subscription_status,
@@ -196,6 +196,7 @@ export const getSubscriptionBuyers = async () => {
       u.email as user_email,
       u.company as user_company,
       u.phone as user_phone,
+      u.type as user_type,
       sp.name as plan_name,
       sp.duration_month,
       sp.price
