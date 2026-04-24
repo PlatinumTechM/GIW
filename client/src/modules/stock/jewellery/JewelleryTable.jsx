@@ -23,7 +23,7 @@ const JewelleryTable = ({
 }) => {
   const fields = [
     "stock_id", "category", "name", "material", "weight", 
-    "diamond_type", "diamond_shape", "diamond_weight", "diamond_color", 
+    "diamond_type", "diamond_shape", "diamond_weight", "total_diamond_weight", "diamond_color", 
     "diamond_clarity", "diamond_cut", "diamond_growth", "description",
     "status", "price"
   ];
@@ -78,7 +78,7 @@ const JewelleryTable = ({
                 <span className="font-semibold text-green-700">₹{Number(value).toLocaleString()}</span>
               ) : field === "weight" && !isEmpty ? (
                 <span className="font-medium">{value} G</span>
-              ) : field === "diamond_weight" && !isEmpty ? (
+              ) : (field === "diamond_weight" || field === "total_diamond_weight") && !isEmpty ? (
                 <span className="font-medium">{value} CT</span>
               ) : field === "name" && !isEmpty ? (
                 <span className="font-medium text-[#0F172A]">{value}</span>
