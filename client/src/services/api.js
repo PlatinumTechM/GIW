@@ -36,10 +36,21 @@ api.interceptors.response.use(
     }
 
     // Only handle 401 as session expiration for authenticated users
-    // Check if user was logged in (has role in localStorage) before showing session expired
     const isAuthenticated = !!localStorage.getItem("role");
     if (status === 401 && isAuthenticated && !isLoginRequest && !isVerifyAdminRequest) {
-      notify.warning("Session Expired", "Your session has expired. Please login again.");
+      const errorData = error.response?.data;
+      
+      if (errorData?.code === "USER_DEACTIVATED") {
+        notify.error("Account Deactivated", errorData.message || "Your account has been deactivated.");
+        // Force logout
+        localStorage.removeItem("role");
+        window.location.href = "/login?reason=deactivated";
+      } else {
+        notify.warning("Session Expired", "Your session has expired. Please login again.");
+        // Optionally clear session and redirect
+        localStorage.removeItem("role");
+        window.location.href = "/login?reason=expired";
+      }
     }
     return Promise.reject(error);
   },
