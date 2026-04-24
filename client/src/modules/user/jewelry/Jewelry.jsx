@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FlaskConical, Filter, X, Search, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FlaskConical, Filter, X, Search, RefreshCw, SlidersHorizontal, Gem } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
 import JewelryFilters from "./JewelryFilters";
 
@@ -211,14 +211,14 @@ const Jewelry = () => {
                   Home
                 </Link>
                 <span>/</span>
-                <span className="text-[#1E3A8A]">Natural Jewelry</span>
+                <span className="text-[#1E3A8A]">NaturalJewelry</span>
               </motion.div>
 
               <motion.h1
                 variants={fadeInUp}
                 className="text-2xl font-bold text-[#0F172A]"
               >
-                Natural Jewelry Collection
+                NaturalJewelry Collection
               </motion.h1>
 
               <motion.p variants={fadeInUp} className="text-sm text-[#64748B]">
@@ -236,115 +236,108 @@ const Jewelry = () => {
         </div>
       </section>
 
-      {/* Top Filter Bar - Above Filters */}
-      <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-              {/* Mobile Filter Button - Above text on mobile, hidden on desktop */}
-              <button
-                onClick={() => {
-                  // This will be handled by JewelryFilters component
-                  const event = new CustomEvent('openMobileFilters');
-                  window.dispatchEvent(event);
-                }}
-                className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] sm:hidden"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                <span>Filters</span>
-              </button>
-              <span className="text-sm font-medium text-[#1E3A8A]">Natural Jewelry</span>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              {/* Search Bar */}
-              <div className="w-full sm:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search jewelry..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <JewelryFilters items={items} searchQuery={searchQuery} setSearchQuery={setSearchQuery}>
-            {({
-              filteredItems,
-              filteredItemsCount,
-              clearAllFilters,
-              activeCategory,
-              selectedMetals,
-              selectedShapes,
-              priceRange,
-              activeFiltersCount,
-              toggleMetal,
-              toggleShape,
-              setActiveCategory,
-              setPriceRange,
-            }) => (
-              <>
-                {/* Active Filters Bar - Inside JewelryFilters to access state */}
-                {activeFiltersCount > 0 && (
-                  <section className="mb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                    <div className="mx-auto max-w-7xl">
-                      <div className="flex flex-wrap items-center gap-3">
+      <JewelryFilters items={items} searchQuery={searchQuery} setSearchQuery={setSearchQuery}>
+        {({
+          filteredItems,
+          filteredItemsCount,
+          clearAllFilters,
+          activeCategory,
+          selectedMetals,
+          selectedShapes,
+          priceRange,
+          activeFiltersCount,
+          toggleMetal,
+          toggleShape,
+          setActiveCategory,
+          setPriceRange,
+        }) => (
+          <>
+            <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl shadow-sm">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('openMobileFilters'))}
+                      className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span className="text-xs sm:text-sm">Filters</span>
+                      {activeFiltersCount > 0 && (
+                        <span className="bg-[#1E3A8A] text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {activeFiltersCount}
+                        </span>
+                      )}
+                    </button>
+                    <span className="text-xs sm:text-sm text-[#64748B]">NaturalJewelry</span>
+                    {activeFiltersCount > 0 && (
+                      <>
+                        <span className="text-sm text-[#64748B]">•</span>
                         <span className="text-sm text-[#64748B]">Active:</span>
                         {activeCategory !== "all" && (
-                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
-                            {activeCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                            <span className="truncate max-w-[80px] sm:max-w-none">{activeCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
                             <button onClick={() => setActiveCategory("all")}>
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 flex-shrink-0" />
                             </button>
                           </span>
                         )}
                         {selectedShapes.map((shape) => (
                           <span
                             key={shape}
-                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
                           >
                             {shape}
                             <button onClick={() => toggleShape(shape)}>
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 flex-shrink-0" />
                             </button>
                           </span>
                         ))}
                         {selectedMetals.map((metal) => (
                           <span
                             key={metal}
-                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
                           >
-                            {metal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            <span className="truncate max-w-[80px] sm:max-w-none">{metal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
                             <button onClick={() => toggleMetal(metal)}>
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 flex-shrink-0" />
                             </button>
                           </span>
                         ))}
                         {(priceRange[0] > 0 || priceRange[1] > 0) && (
-                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                             ${priceRange[0]} - ${priceRange[1]}
                             <button onClick={() => setPriceRange([0, 0])}>
-                              <X className="h-3 w-3" />
+                              <X className="h-3 w-3 flex-shrink-0" />
                             </button>
                           </span>
                         )}
                         <button
                           onClick={clearAllFilters}
-                          className="ml-1 flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
+                          className="flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
                         >
                           <RefreshCw className="h-3 w-3" />
                           Clear all
                         </button>
-                      </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                    <div className="w-full sm:w-auto">
+                      <input
+                        type="text"
+                        placeholder="Search jewelry..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="input-field text-sm"
+                      />
                     </div>
-                  </section>
-                )}
+                  </div>
+                </div>
+              </div>
+            </section>
 
+            <section className="py-4 sm:py-8">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <JewelryGrid
                   items={filteredItems}
                   itemsPerPage={itemsPerPage}
@@ -379,11 +372,11 @@ const Jewelry = () => {
                     </button>
                   </div>
                 )}
-              </>
-            )}
-          </JewelryFilters>
-        </div>
-      </section>
+              </div>
+            </section>
+          </>
+        )}
+      </JewelryFilters>
     </motion.div>
   );
 };
