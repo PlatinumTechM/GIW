@@ -12,6 +12,7 @@ const ALL_COLUMNS = [
   "diamond_type",
   "diamond_shape",
   "diamond_weight",
+  "total_diamond_weight",
   "diamond_color",
   "diamond_clarity",
   "diamond_cut",
@@ -89,6 +90,18 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   if (filters.diamond_weight && filters.diamond_weight !== "") {
     whereConditions.push(`diamond_weight >= $${paramIndex}`);
     values.push(parseFloat(filters.diamond_weight));
+    paramIndex++;
+  }
+
+  if (filters.totalWeightFrom && filters.totalWeightFrom !== "") {
+    whereConditions.push(`total_diamond_weight >= $${paramIndex}`);
+    values.push(parseFloat(filters.totalWeightFrom));
+    paramIndex++;
+  }
+
+  if (filters.totalWeightTo && filters.totalWeightTo !== "") {
+    whereConditions.push(`total_diamond_weight <= $${paramIndex}`);
+    values.push(parseFloat(filters.totalWeightTo));
     paramIndex++;
   }
 
@@ -200,11 +213,11 @@ export const getFilterOptions = async (userId) => {
   ]);
 
   return {
-    categories: categories.rows.map(r => r.category),
-    materials: materials.rows.map(r => r.material),
-    statuses: statuses.rows.map(r => r.status),
-    shapes: shapes.rows.map(r => r.diamond_shape),
-    colors: colors.rows.map(r => r.diamond_color),
-    clarities: clarities.rows.map(r => r.diamond_clarity)
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE"],
+    materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
+    statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
+    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
+    colors: colors.rows.length > 0 ? colors.rows.map(r => r.diamond_color) : ["D", "E", "F", "G", "H", "I", "J"],
+    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.diamond_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
   };
 };

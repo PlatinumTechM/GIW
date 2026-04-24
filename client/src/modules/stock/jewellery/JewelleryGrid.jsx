@@ -9,7 +9,8 @@ import {
   Gem,
   ExternalLink,
   Package,
-  Layers
+  Layers,
+  Sparkles
 } from "lucide-react";
 
 const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
@@ -118,16 +119,27 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
               </div>
               
               {item.diamond_weight && (
-                <>
-                  <div className="flex items-center gap-2.5">
-                    <Gem className="w-3.5 h-3.5 text-[#1E3A8A]" />
-                    <span className="text-xs font-bold text-[#1E3A8A]">{item.diamond_weight} CT</span>
+                <div className="flex items-center gap-2.5">
+                  <Gem className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                  <span className="text-xs font-bold text-[#1E3A8A]">{Number(item.diamond_weight)} CT</span>
+                </div>
+              )}
+              
+              {item.diamond_shape && (
+                <div className="flex items-center gap-2.5">
+                  <Layers className="w-3.5 h-3.5 text-[#64748B]" />
+                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-wider truncate">{item.diamond_shape}</span>
+                </div>
+              )}
+
+              {item.total_diamond_weight && (
+                <div className="flex items-center justify-between col-span-2 pt-2 border-t border-slate-50/50 mt-1">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Weight</span>
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <Layers className="w-3.5 h-3.5 text-[#64748B]" />
-                    <span className="text-[10px] font-black text-[#64748B] uppercase tracking-wider truncate">{item.diamond_shape}</span>
-                  </div>
-                </>
+                  <span className="text-xs font-black text-[#1E3A8A]">{Number(item.total_diamond_weight)} CT</span>
+                </div>
               )}
             </div>
 

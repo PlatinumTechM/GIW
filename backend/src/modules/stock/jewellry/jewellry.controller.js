@@ -22,6 +22,8 @@ export const getAll = async (req, res) => {
       diamond_type: req.query.diamond_type,
       weight: req.query.weight,
       diamond_weight: req.query.diamond_weight,
+      totalWeightFrom: req.query.totalWeightFrom,
+      totalWeightTo: req.query.totalWeightTo,
       priceFrom: req.query.priceFrom,
       priceTo: req.query.priceTo,
       stock_id: req.query.stock_id,

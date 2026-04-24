@@ -31,6 +31,7 @@ const INITIAL_FORM_DATA = {
   diamond_type: "NATURAL",
   diamond_shape: "",
   diamond_weight: "",
+  total_diamond_weight: "",
   diamond_color: "",
   diamond_clarity: "",
   diamond_cut: "",
@@ -154,7 +155,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
     try {
       // Prepare data for submission
       const submissionData = { ...formData };
-      const numericFields = ["weight", "diamond_weight", "price"];
+      const numericFields = ["weight", "diamond_weight", "total_diamond_weight", "price"];
 
       Object.keys(submissionData).forEach(key => {
         // Handle numeric fields: convert empty strings to null
@@ -372,6 +373,14 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
                     name="diamond_weight"
                     type="number"
                     value={formData.diamond_weight}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <InputField
+                    label="Total Diamond Wt (CT)"
+                    name="total_diamond_weight"
+                    type="number"
+                    value={formData.total_diamond_weight}
                     onChange={handleInputChange}
                     placeholder="0.00"
                   />

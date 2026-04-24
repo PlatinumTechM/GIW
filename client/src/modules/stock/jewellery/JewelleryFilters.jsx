@@ -211,6 +211,26 @@ const JewelleryFilters = ({
                     className="input-field h-10 text-xs px-4"
                   />
                 </div>
+                <div className="space-y-1.5 col-span-2">
+                  <label className="text-[10px] font-bold text-[#94A3B8] uppercase">Total Weight Range (ct)</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={currentFilters.totalWeightFrom || ""}
+                      onChange={(e) => handleInputChange("totalWeightFrom", e.target.value)}
+                      className="input-field h-10 text-xs px-3"
+                    />
+                    <span className="text-slate-300">—</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={currentFilters.totalWeightTo || ""}
+                      onChange={(e) => handleInputChange("totalWeightTo", e.target.value)}
+                      className="input-field h-10 text-xs px-3"
+                    />
+                  </div>
+                </div>
               </div>
             </FilterSection>
 

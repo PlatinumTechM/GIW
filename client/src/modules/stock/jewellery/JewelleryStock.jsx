@@ -32,7 +32,14 @@ const JewelleryStock = () => {
   const [editData, setEditData] = useState(null);
   const [viewMode, setViewMode] = useState("grid"); // "table" or "grid"
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({ categories: [], materials: [], statuses: [] });
+  const [filterOptions, setFilterOptions] = useState({ 
+    categories: [], 
+    materials: [], 
+    statuses: [],
+    shapes: [],
+    colors: [],
+    clarities: []
+  });
   const [selectedFilters, setSelectedFilters] = useState({
     categories: [],
     materials: [],
@@ -43,6 +50,8 @@ const JewelleryStock = () => {
     diamond_type: "",
     weight: "",
     diamond_weight: "",
+    totalWeightFrom: "",
+    totalWeightTo: "",
     priceFrom: "",
     priceTo: "",
     stock_id: ""
@@ -53,9 +62,12 @@ const JewelleryStock = () => {
       const response = await api.get("/jewellry-stock/filters");
       if (response.data.success) {
         setFilterOptions(response.data.data);
+      } else {
+        console.warn("Filter options API returned success:false", response.data);
       }
     } catch (error) {
       console.error("Failed to fetch filter options", error);
+      notify.error("Filter Error", "Could not load dynamic filter options.");
     }
   };
 
@@ -115,6 +127,8 @@ const JewelleryStock = () => {
         diamond_type: "",
         weight: "",
         diamond_weight: "",
+        totalWeightFrom: "",
+        totalWeightTo: "",
         priceFrom: "",
         priceTo: "",
         stock_id: ""
@@ -145,7 +159,7 @@ const JewelleryStock = () => {
   const getActiveFilterCount = () => {
     let count = 0;
     const arrayKeys = ['categories', 'materials', 'shapes', 'colors', 'clarities'];
-    const stringKeys = ['status', 'weight', 'diamond_weight', 'priceFrom', 'priceTo', 'stock_id'];
+    const stringKeys = ['status', 'weight', 'diamond_weight', 'totalWeightFrom', 'totalWeightTo', 'priceFrom', 'priceTo', 'stock_id'];
 
     arrayKeys.forEach(key => {
       if (selectedFilters[key] && selectedFilters[key].length > 0) count++;
