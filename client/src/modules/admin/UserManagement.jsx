@@ -275,6 +275,7 @@ const UserManagement = () => {
             address: user.address,
             gst: user.gst,
             document: user.document,
+            type: user.type || [],
             status: user.isActive ? "active" : "inactive",
             joined: new Date(user.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -1014,6 +1015,29 @@ const UserManagement = () => {
                     <p className={`font-semibold ${selectedUser.status === "active" ? "text-[#F59E0B]" : "text-[#1E3A8A]"}`}>
                       {selectedUser.status === "active" ? "Active" : "Inactive"}
                     </p>
+                  </div>
+
+                  {/* Business Specialization - Full Width */}
+                  <div className="col-span-2 bg-[#F1F5F9]/50 rounded-xl p-4 border border-[#E2E8F0]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center text-[#1E3A8A]">
+                        <Shield className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-medium text-[#64748B] uppercase">
+                        Business Specialization
+                      </p>
+                    </div>
+                    {selectedUser.type && selectedUser.type.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedUser.type.map((t) => (
+                          <span key={t} className="px-3 py-1 bg-white border border-[#E2E8F0] text-[#1E3A8A] text-xs font-bold rounded-lg shadow-sm">
+                            {t.replace(/_/g, ' ').toUpperCase()}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-[#94A3B8] italic">No specialization specified</p>
+                    )}
                   </div>
 
                   {/* Address - Full Width */}
