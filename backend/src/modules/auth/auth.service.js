@@ -54,6 +54,7 @@ export const login = async (identifier, password) => {
       planName: userWithSubscription.plan_name,
       planExpiry: userWithSubscription.plan_expiry,
       subscriptionStatus: userWithSubscription.subscription_status,
+      type: userWithSubscription.type,
     },
   };
 };
@@ -69,6 +70,7 @@ export const register = async (userData) => {
     password,
     confirmPassword,
     document,
+    type,
   } = userData;
 
   // Validation
@@ -98,6 +100,7 @@ export const register = async (userData) => {
     gst: gst.toUpperCase(),
     password,
     document,
+    type,
   });
 
   return {
@@ -110,6 +113,7 @@ export const register = async (userData) => {
     gst: newUser.gst,
     document: newUser.document,
     role: newUser.role || "user",
+    type: newUser.type,
     createdAt: newUser.created_at,
   };
 };
@@ -135,11 +139,12 @@ export const getCurrentUser = async (userId) => {
     planName: user.plan_name,
     planExpiry: user.plan_expiry,
     subscriptionStatus: user.subscription_status,
+    type: user.type,
   };
 };
 
 export const updateProfile = async (userId, userData) => {
-  const { name, company, phone, address, gst } = userData;
+  const { name, company, phone, address, gst, type } = userData;
 
   // Validation
   if (!name || !company || !phone || !address || !gst) {
@@ -158,6 +163,7 @@ export const updateProfile = async (userId, userData) => {
     phone: phone.toUpperCase(),
     address: address.toUpperCase(),
     gst: gst.toUpperCase(),
+    type,
   });
 
   if (!updatedUser) {
@@ -175,6 +181,7 @@ export const updateProfile = async (userId, userData) => {
     document: updatedUser.document,
     role: updatedUser.role || "user",
     isActive: updatedUser.is_active,
+    type: updatedUser.type,
   };
 };
 

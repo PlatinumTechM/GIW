@@ -21,6 +21,7 @@ import JewelryDetail from "@/modules/user/jewelry/JewelryDetail";
 import ManageSubscription from "@/modules/admin/ManageSubscription";
 import AddStock from "@/modules/stock/AddStock";
 import AddStockManual from "@/modules/stock/AddStockManual";
+import JewelleryStock from "@/modules/stock/jewellery/JewelleryStock";
 import SharePage from "@/modules/share/SharePage";
 import NotificationPage from "@/modules/notifications/NotificationPage";
 
@@ -146,6 +147,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <AddStockManual />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "user/jewellery-stock",
+        element: (
+          <ProtectedRoute>
+            <JewelleryStock />
           </ProtectedRoute>
         ),
       },

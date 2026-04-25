@@ -35,8 +35,19 @@ export const register = async (req, res) => {
       address,
       gst,
       password,
-      confirmPassword
+      confirmPassword,
+      type
     } = req.body;
+    
+    // Parse type if it's a string (from multipart form)
+    let parsedType = type;
+    if (typeof type === 'string') {
+      try {
+        parsedType = JSON.parse(type);
+      } catch (e) {
+        parsedType = [];
+      }
+    }
     
     // Get document full path if file was uploaded
     const document = req.file ? `/uploads/documents/${req.file.filename}` : null;
@@ -50,7 +61,8 @@ export const register = async (req, res) => {
       gst,
       password,
       confirmPassword,
-      document
+      document,
+      type: parsedType
     });
 
     res.status(201).json({
@@ -87,7 +99,7 @@ export const getCurrentUser = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, company, phone, address, gst } = req.body;
+    const { name, company, phone, address, gst, type } = req.body;
 
     const updatedUser = await authService.updateProfile(userId, {
       name,
@@ -95,6 +107,7 @@ export const updateProfile = async (req, res) => {
       phone,
       address,
       gst,
+      type
     });
 
     res.status(200).json({

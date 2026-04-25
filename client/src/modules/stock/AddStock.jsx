@@ -318,7 +318,17 @@ const AddStock = () => {
   const [userStockPage, setUserStockPage] = useState(1);
   const [userStockTotalPages, setUserStockTotalPages] = useState(1);
   const [userStockSearch, setUserStockSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [userStockTotal, setUserStockTotal] = useState(0);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(userStockSearch);
+    }, 500); // 500ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [userStockSearch]);
 
   // Filter states - pending (not yet applied)
   const [pendingFilters, setPendingFilters] = useState({
@@ -377,7 +387,7 @@ const AddStock = () => {
   // Fetch user stock on mount and when page, filters, or sorting changes
   useEffect(() => {
     fetchUserStock();
-  }, [userStockPage, appliedFilters, sortConfig, userStockSearch]);
+  }, [userStockPage, appliedFilters, sortConfig, debouncedSearch]);
 
   const fetchUserStock = async () => {
     setUserStockLoading(true);
@@ -388,8 +398,8 @@ const AddStock = () => {
       params.append("limit", 50);
 
       // Add search
-      if (userStockSearch) {
-        params.append("search", userStockSearch);
+      if (debouncedSearch) {
+        params.append("search", debouncedSearch);
       }
 
       // Add applied filters
@@ -923,9 +933,8 @@ const AddStock = () => {
       const result = response.data;
 
       if (result.limitReached) {
-        // Show subscription limit modal
-        setSubscriptionError(result.message);
-        setShowSubscriptionModal(true);
+        // Show notification instead of modal
+        notify.warning("Import Partial", result.message);
 
         // Still show success for partially imported items
         if (result.data?.insertedCount > 0) {
@@ -957,10 +966,16 @@ const AddStock = () => {
       }
     } catch (error) {
       console.error("Import error:", error);
-      notify.error(
-        "Import Failed",
-        error.message || "Failed to connect to server",
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to connect to server";
+
+      if (errorMessage.includes("Subscription limit") || errorMessage.includes("No active subscription")) {
+        notify.error(errorMessage);
+      } else {
+        notify.error("Import Failed", errorMessage);
+      }
     } finally {
       setIsImporting(false);
       setImportProgress({ stage: "", message: "" });
@@ -1042,19 +1057,19 @@ const AddStock = () => {
   // Filter user stock based on search and filters
   const filteredUserStock = userStock.filter((item) => {
     const matchesSearch =
-      !userStockSearch ||
+      !debouncedSearch ||
       (item.stock_id &&
-        item.stock_id.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+        item.stock_id.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
       (item.shape &&
-        item.shape.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+        item.shape.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
       (item.certificate_number &&
         item.certificate_number
           .toLowerCase()
-          .includes(userStockSearch.toLowerCase())) ||
+          .includes(debouncedSearch.toLowerCase())) ||
       (item.color &&
-        item.color.toLowerCase().includes(userStockSearch.toLowerCase())) ||
+        item.color.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
       (item.clarity &&
-        item.clarity.toLowerCase().includes(userStockSearch.toLowerCase()));
+        item.clarity.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
     const matchesShape = !filterShape || item.shape === filterShape;
     const matchesColor = !filterColor || item.color === filterColor;
@@ -1248,7 +1263,7 @@ const AddStock = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Main Action Bar - Left: Filter, Right: Add/Show Stock + Import Features */}
-      <div className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30">
+      <div className="bg-white border-b border-[#E2E8F0]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Right: View Mode Toggle - 3 Options */}
@@ -2194,7 +2209,7 @@ const AddStock = () => {
               </div>
 
               {/* API Import */}
-              <div
+              {/* <div
                 onClick={() =>
                   notify.info(
                     "Coming Soon",
@@ -2214,7 +2229,7 @@ const AddStock = () => {
                     Connect external data source
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Download Template */}
               <div
@@ -2388,7 +2403,9 @@ const AddStock = () => {
         )}
 
         {/* VIEW 3: Manual Entry */}
-        {viewMode === "manual" && <AddStockManual onStockAdded={fetchUserStock} />}
+        {viewMode === "manual" && (
+          <AddStockManual onStockAdded={fetchUserStock} />
+        )}
 
         {/* VIEW 4: Share API */}
         {viewMode === "share-api" && <ShareAPI />}
