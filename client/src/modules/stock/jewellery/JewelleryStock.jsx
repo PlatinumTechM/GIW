@@ -203,7 +203,7 @@ const JewelleryStock = () => {
   return (
     <div className="bg-[#F8FAFC]">
       {/* Sticky Header Section - Contains both View Toggle and Search/Actions */}
-      <div className="sticky top-0 z-[50] bg-[#F8FAFC]">
+      <div className="bg-[#F8FAFC]">
         {/* Row 1: View Mode Toggles */}
         <div className="bg-white border-b border-[#E2E8F0]">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">

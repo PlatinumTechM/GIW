@@ -246,7 +246,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
       </div>
 
       {/* Tabs Sticky - Sticky for quick navigation during scroll */}
-      <div className="max-w-7xl mx-auto px-4 mb-8 sticky top-[64px] z-20 bg-[#F8FAFC]/80 backdrop-blur-md py-2">
+      <div className="max-w-7xl mx-auto px-4 mb-8 py-2">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;

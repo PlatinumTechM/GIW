@@ -658,9 +658,8 @@ const AddStockManual = () => {
       const errorMessage = error.response?.data?.message || "Failed to add stock";
       
       // Handle subscription limit error
-      if (errorMessage.includes("Subscription limit")) {
-        setSubscriptionError(errorMessage);
-        setShowSubscriptionModal(true);
+      if (errorMessage.includes("Subscription limit") || errorMessage.includes("No active subscription")) {
+        notify.error(errorMessage);
       } 
       // Handle duplicate stock_id error
       else if (errorMessage.includes("already exists")) {

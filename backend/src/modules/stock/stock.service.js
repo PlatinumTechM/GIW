@@ -1155,22 +1155,22 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       if (userId) {
         const quota = await getSubscriptionRemaining(client, userId);
         if (quota.noSubscription) {
-          throw new Error("No active subscription found. Cannot add stock.");
-        }
+          throw new Error("No active subscription found. Please subscribe to a plan to add stock.");
+        } else {
+          const newRows = uniqueRows.filter(
+            (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
+          );
+          const existingRows = uniqueRows.filter((r) =>
+            existingStockIds.has(r.stock_id.toUpperCase()),
+          );
 
-        const newRows = uniqueRows.filter(
-          (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
-        );
-        const existingRows = uniqueRows.filter((r) =>
-          existingStockIds.has(r.stock_id.toUpperCase()),
-        );
-
-        if (newRows.length > quota.remaining) {
-          const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
-          skippedDueToLimitCount = newRows.length - allowedNewRows.length;
-          uniqueRows = [...existingRows, ...allowedNewRows];
-          limitReached = true;
-          limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
+          if (newRows.length > quota.remaining) {
+            const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
+            skippedDueToLimitCount = newRows.length - allowedNewRows.length;
+            uniqueRows = [...existingRows, ...allowedNewRows];
+            limitReached = true;
+            limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
+          }
         }
       }
 
@@ -1257,7 +1257,7 @@ export const createStock = async (stockData, userId = null) => {
     if (userId) {
       const quota = await getSubscriptionRemaining(pool, userId);
       if (quota.noSubscription) {
-        throw new Error("No active subscription found. Cannot add stock.");
+        throw new Error("No active subscription found. Please subscribe to a plan to add stock.");
       }
       if (quota.remaining <= 0) {
         throw new Error(`Subscription limit reached. Your stock limit of ${quota.totalLimit} is fully used. Please upgrade your subscription plan.`);

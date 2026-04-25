@@ -27,8 +27,10 @@ export const bulkUpload = async (req, res) => {
     });
   } catch (error) {
     console.error("Error at bulkUpload = ", error);
+    
+    const status = (error.message?.includes("Subscription limit") || error.message?.includes("No active subscription")) ? 403 : 500;
 
-    res.status(500).json({
+    res.status(status).json({
       success: false,
 
       message: error.message || "Failed to upload stock data",
