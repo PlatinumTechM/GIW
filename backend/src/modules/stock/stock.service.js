@@ -1318,11 +1318,11 @@ export const deleteStock = async (id) => {
   }
 
   const result = await stockRepo.deleteStock(id);
-  
+
   if (existingStock.user_id) {
     await updateSubscriptionUsage(pool, existingStock.user_id, -1);
   }
-  
+
   return result;
 };
 
@@ -1338,6 +1338,6 @@ export const getFieldMapping = () => {
   };
 };
 
-export const getFilterOptions = async () => {
-  return await stockRepo.getFilterOptions();
+export const getFilterOptions = async (userId = null) => {
+  return await stockRepo.getFilterOptions(userId);
 };

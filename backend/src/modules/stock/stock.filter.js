@@ -114,6 +114,29 @@ const addLabFilter = (conditions, values, filterValue, paramIndex) => {
   return { added: true, paramIndex: paramIndex + labs.length };
 };
 
+const addColorFilter = (conditions, values, filterValue, paramIndex) => {
+  let itemsArray;
+  if (typeof filterValue === "string") {
+    itemsArray = filterValue.split(",");
+  } else if (Array.isArray(filterValue)) {
+    itemsArray = filterValue;
+  } else {
+    return { added: false, paramIndex };
+  }
+
+  const items = itemsArray
+    .filter((item) => item && item.trim())
+    .map((item) => item.trim().toUpperCase());
+  if (items.length === 0) return { added: false, paramIndex };
+
+  const placeholders = items.map((_, i) => `$${paramIndex + i}`).join(",");
+  conditions.push(
+    `(color IN (${placeholders}) OR fancy_color IN (${placeholders}))`,
+  );
+  values.push(...items);
+  return { added: true, paramIndex: paramIndex + items.length };
+};
+
 // Main function: Build SQL WHERE conditions from filter object
 export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) => {
   const whereConditions = [...baseConditions];
@@ -135,7 +158,7 @@ export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) 
   result = addArrayFilter(whereConditions, values, "shape", filters.shape, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
-  result = addArrayFilter(whereConditions, values, "color", filters.color, paramIndex);
+  result = addColorFilter(whereConditions, values, filters.color, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
   result = addArrayFilter(whereConditions, values, "cut", filters.cut, paramIndex);
