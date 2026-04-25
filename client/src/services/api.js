@@ -270,4 +270,26 @@ export const stockAPI = {
   },
 };
 
+export const jewelryAPI = {
+  getNaturalJewelry: async (params = {}) => {
+    const response = await api.get("/jewellry-stock/natural", { params });
+    return response.data;
+  },
+
+  getLabGrownJewelry: async (params = {}) => {
+    const response = await api.get("/jewellry-stock/lab-grown", { params });
+    return response.data;
+  },
+
+  getJewelryById: async (id) => {
+    const response = await api.get(`/jewellry-stock/public/${id}`);
+    return response.data;
+  },
+
+  getJewelryFilters: async () => {
+    const response = await api.get("/jewellry-stock/public/filters");
+    return response.data;
+  },
+};
+
 export default api;

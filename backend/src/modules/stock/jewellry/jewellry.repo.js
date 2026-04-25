@@ -70,13 +70,19 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.status) {
-    whereConditions.push(`status = $${paramIndex}`);
+    whereConditions.push(`LOWER(status) = LOWER($${paramIndex})`);
     values.push(filters.status);
     paramIndex++;
   }
 
+  if (filters.typeFilter === "natural") {
+    whereConditions.push(`(diamond_type IS NULL OR LOWER(diamond_type) NOT LIKE '%lab%')`);
+  } else if (filters.typeFilter === "lab-grown") {
+    whereConditions.push(`(LOWER(diamond_type) LIKE '%lab%' OR LOWER(diamond_type) LIKE '%cvd%' OR LOWER(diamond_type) LIKE '%hpht%')`);
+  }
+
   if (filters.diamond_type) {
-    whereConditions.push(`diamond_type = $${paramIndex}`);
+    whereConditions.push(`LOWER(diamond_type) = LOWER($${paramIndex})`);
     values.push(filters.diamond_type);
     paramIndex++;
   }
@@ -210,6 +216,33 @@ export const getFilterOptions = async (userId) => {
     pool.query(shapeQuery, [userId]),
     pool.query(colorQuery, [userId]),
     pool.query(clarityQuery, [userId])
+  ]);
+
+  return {
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE"],
+    materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
+    statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
+    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
+    colors: colors.rows.length > 0 ? colors.rows.map(r => r.diamond_color) : ["D", "E", "F", "G", "H", "I", "J"],
+    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.diamond_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
+  };
+};
+
+export const getPublicFilterOptions = async () => {
+  const categoryQuery = `SELECT DISTINCT category FROM jewellery_stock WHERE category IS NOT NULL ORDER BY category`;
+  const materialQuery = `SELECT DISTINCT material FROM jewellery_stock WHERE material IS NOT NULL ORDER BY material`;
+  const statusQuery = `SELECT DISTINCT status FROM jewellery_stock WHERE status IS NOT NULL ORDER BY status`;
+  const shapeQuery = `SELECT DISTINCT diamond_shape FROM jewellery_stock WHERE diamond_shape IS NOT NULL ORDER BY diamond_shape`;
+  const colorQuery = `SELECT DISTINCT diamond_color FROM jewellery_stock WHERE diamond_color IS NOT NULL ORDER BY diamond_color`;
+  const clarityQuery = `SELECT DISTINCT diamond_clarity FROM jewellery_stock WHERE diamond_clarity IS NOT NULL ORDER BY diamond_clarity`;
+
+  const [categories, materials, statuses, shapes, colors, clarities] = await Promise.all([
+    pool.query(categoryQuery),
+    pool.query(materialQuery),
+    pool.query(statusQuery),
+    pool.query(shapeQuery),
+    pool.query(colorQuery),
+    pool.query(clarityQuery)
   ]);
 
   return {

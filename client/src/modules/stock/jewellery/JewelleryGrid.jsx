@@ -111,7 +111,7 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
             <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 py-3 border-y border-slate-50">
               <div className="flex items-center gap-2.5">
                 <Scale className="w-3.5 h-3.5 text-[#64748B]" />
-                <span className="text-xs font-bold text-[#334155]">{item.weight}g</span>
+                <span className="text-xs font-bold text-[#334155]">{item.weight && item.weight.toString().toLowerCase() !== "noneg" ? `${item.weight}g` : "N/A"}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Tag className="w-3.5 h-3.5 text-[#64748B]" />

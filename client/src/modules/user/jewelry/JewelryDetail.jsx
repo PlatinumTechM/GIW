@@ -4,9 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Heart,
-  Share2,
   ZoomIn,
-  Copy,
   X,
   ChevronLeft,
   ChevronRight,
@@ -27,6 +25,7 @@ import {
   Video,
   Menu,
 } from "lucide-react";
+import { jewelryAPI } from "../../../services/api.js";
 
 const JewelryDetail = () => {
   const { type, id } = useParams();
@@ -34,13 +33,19 @@ const JewelryDetail = () => {
   const [jewelry, setJewelry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVideoActive, setIsVideoActive] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    const match = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    );
+    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : null;
+  };
 
   const getImages = (jewelryData) => {
     const images = [];
@@ -50,7 +55,7 @@ const JewelryDetail = () => {
     if (jewelryData?.jewellery_image4) images.push(jewelryData.jewellery_image4);
     if (jewelryData?.jewellery_image5) images.push(jewelryData.jewellery_image5);
     return images.length > 0 ? images : [
-      `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
+      // `https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop`,
     ];
   };
 
@@ -115,10 +120,9 @@ const JewelryDetail = () => {
     setLoading(true);
     const fetchJewelry = async () => {
       try {
-        const response = await fetch(`/api/jewelry/${type}/${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setJewelry(data);
+        const response = await jewelryAPI.getJewelryById(id);
+        if (response.success && response.data) {
+          setJewelry(response.data);
         } else {
           setJewelry(getMockJewelry(type, id));
         }
@@ -140,12 +144,6 @@ const JewelryDetail = () => {
     });
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const images = getImages(jewelry);
 
   const nextImage = () => {
@@ -163,8 +161,12 @@ const JewelryDetail = () => {
     if (isVideoActive) {
       setIsVideoActive(false);
       setActiveImageIndex(images.length - 1);
+    } else if (activeImageIndex === 0 && jewelry.jewellery_video) {
+      setIsVideoActive(true);
+    } else if (activeImageIndex === 0) {
+      setActiveImageIndex(images.length - 1);
     } else {
-      setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+      setActiveImageIndex((prev) => prev - 1);
     }
   };
 
@@ -294,70 +296,43 @@ const JewelryDetail = () => {
   return (
     <div className="min-h-screen pt-4 pb-16" style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #FFFFFF 50%, #F1F5F9 100%)` }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Mobile Menu Toggle */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          className="mb-4 sm:hidden flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
-          style={{ background: theme.surface, color: theme.textMuted, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
-        >
-          <Menu className="h-4 w-4" />
-          <span>Menu</span>
-        </motion.button>
-
-        {/* Mobile Menu Dropdown */}
-        <AnimatePresence>
-          {showMobileMenu && (
+        {/* Mobile Back Button with Favorite */}
+        <div className="mb-4 sm:hidden flex items-center justify-between">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(-2)}
+            className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+            style={{ background: theme.surface, color: theme.textMuted, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsLiked(!isLiked)}
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
+            style={{ 
+              background: isLiked ? theme.danger : theme.surface,
+              color: isLiked ? "#fff" : theme.textMuted,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4 sm:hidden overflow-hidden rounded-2xl"
-              style={{ background: theme.surface, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+              animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
+              transition={{ duration: 0.3 }}
             >
-              <div className="p-4 space-y-3">
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  onClick={() => navigate(-1)}
-                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
-                  style={{ color: theme.textMuted }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; e.currentTarget.style.color = theme.primary; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.textMuted; }}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Back</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  onClick={() => setIsLiked(!isLiked)}
-                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
-                  style={{ color: isLiked ? theme.danger : theme.textMuted }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                >
-                  <Heart className={`h-4 w-4 ${isLiked && "fill-current"}`} />
-                  <span>{isLiked ? 'Remove from Wishlist' : 'Add to Wishlist'}</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ x: 5 }}
-                  onClick={() => setShowShareModal(true)}
-                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
-                  style={{ color: theme.textMuted }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; e.currentTarget.style.color = theme.primary; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.textMuted; }}
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span>Share</span>
-                </motion.button>
-              </div>
+              <Heart className={`h-5 w-5 ${isLiked && "fill-current"}`} />
             </motion.div>
-          )}
-        </AnimatePresence>
+          </motion.button>
+        </div>
 
         {/* Breadcrumb & Back */}
         <motion.div
@@ -365,19 +340,17 @@ const JewelryDetail = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="mb-6 hidden sm:flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
+          onClick={() => navigate(-2)}
         >
-          <motion.button
-            onClick={() => navigate(-1)}
-            whileHover={{ scale: 1.05, x: -3 }}
-            whileTap={{ scale: 0.95 }}
-            className="group flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+          <button
+            className="group flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all cursor-pointer hover:scale-105 active:scale-95 hover:-translate-x-0.5"
             style={{ background: theme.surface, color: theme.textMuted, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
             onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             <span>Back</span>
-          </motion.button>
+          </button>
 
           <motion.nav
             initial={{ opacity: 0 }}
@@ -385,7 +358,7 @@ const JewelryDetail = () => {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2 text-sm flex-wrap"
           >
-            {["Jewelry", type?.replace(/-/g, " "), jewelry.name].map((item, i, arr) => (
+            {[].map((item, i, arr) => (
               <span key={i} className="flex items-center gap-2">
                 <motion.span
                   initial={{ opacity: 0, y: 5 }}
@@ -412,10 +385,10 @@ const JewelryDetail = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="overflow-hidden rounded-3xl"
-          style={{ 
+          className="overflow-visible sm:overflow-hidden rounded-3xl"
+          style={{
             background: "transparent",
-            boxShadow: "0 25px 50px -12px rgba(30, 58, 138, 0.15), 0 0 0 1px rgba(30, 58, 138, 0.05)" 
+            boxShadow: "0 25px 50px -12px rgba(30, 58, 138, 0.15), 0 0 0 1px rgba(30, 58, 138, 0.05)"
           }}
         >
           {/* Header */}
@@ -482,7 +455,7 @@ const JewelryDetail = () => {
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsLiked(!isLiked)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
+                  className="hidden sm:flex h-11 w-11 items-center justify-center rounded-full transition-all"
                   style={{ 
                     background: isLiked ? theme.danger : theme.surface,
                     color: isLiked ? "#fff" : theme.textMuted,
@@ -496,21 +469,6 @@ const JewelryDetail = () => {
                     <Heart className={`h-5 w-5 ${isLiked && "fill-current"}`} />
                   </motion.div>
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowShareModal(true)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
-                  style={{ 
-                    background: theme.surface,
-                    color: theme.textMuted,
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
-                >
-                  <Share2 className="h-5 w-5" />
-                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -522,13 +480,13 @@ const JewelryDetail = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-4 p-6 lg:border-r"
+              className="space-y-4 p-4 sm:p-6 lg:border-r w-full"
               style={{ borderColor: theme.border }}
             >
               {/* Main Image or Video */}
               <motion.div
                 variants={itemVariants}
-                className="relative aspect-square overflow-hidden rounded-2xl group"
+                className="relative aspect-square sm:aspect-square md:aspect-square lg:aspect-square overflow-hidden rounded-2xl group w-full"
                 style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #E2E8F0 100%)` }}
                 onMouseEnter={() => !isVideoActive && setIsImageZoomed(true)}
                 onMouseLeave={() => setIsImageZoomed(false)}
@@ -536,14 +494,24 @@ const JewelryDetail = () => {
               >
                 {isVideoActive && jewelry.jewellery_video ? (
                   <div className="relative w-full h-full bg-black">
-                    <video
-                      src={jewelry.jewellery_video}
-                      controls
-                      autoPlay
-                      className="w-full h-full object-contain"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
+                    {getYouTubeEmbedUrl(jewelry.jewellery_video) ? (
+                      <iframe
+                        src={getYouTubeEmbedUrl(jewelry.jewellery_video)}
+                        title="Jewelry Video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full border-0"
+                      />
+                    ) : (
+                      <video
+                        src={jewelry.jewellery_video}
+                        controls
+                        autoPlay
+                        className="w-full h-full object-contain"
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
                   </div>
                 ) : (
                   <motion.div
@@ -580,24 +548,20 @@ const JewelryDetail = () => {
                 )}
 
                 {/* Navigation Arrows */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all cursor-pointer hover:scale-110 active:scale-90"
                   style={{ background: "rgba(255,255,255,0.9)", color: theme.text, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                 >
                   <ChevronLeft className="h-5 w-5" />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                </button>
+                <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all cursor-pointer hover:scale-110 active:scale-90"
                   style={{ background: "rgba(255,255,255,0.9)", color: theme.text, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                 >
                   <ChevronRight className="h-5 w-5" />
-                </motion.button>
+                </button>
 
               </motion.div>
 
@@ -617,15 +581,13 @@ const JewelryDetail = () => {
                 className="flex justify-center gap-3 overflow-x-auto pb-2"
               >
                 {images.map((img, idx) => (
-                  <motion.button
+                  <button
                     key={idx}
-                    whileHover={{ scale: 1.1, y: -3 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                       setActiveImageIndex(idx);
                       setIsVideoActive(false);
                     }}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all"
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
                     style={{
                       opacity: !isVideoActive && activeImageIndex === idx ? 1 : 0.6,
                       boxShadow: !isVideoActive && activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
@@ -643,16 +605,17 @@ const JewelryDetail = () => {
                         style={{ background: `${theme.primary}15` }}
                       />
                     )}
-                  </motion.button>
+                  </button>
                 ))}
 
                 {/* Video Thumbnail */}
                 {jewelry.jewellery_video && (
-                  <motion.button
-                    whileHover={{ scale: 1.1, y: -3 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsVideoActive(!isVideoActive)}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all flex items-center justify-center"
+                  <button
+                    onClick={() => {
+                      setActiveImageIndex(0);
+                      setIsVideoActive(true);
+                    }}
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
                     style={{
                       opacity: isVideoActive ? 1 : 0.6,
                       boxShadow: isVideoActive ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none",
@@ -670,7 +633,7 @@ const JewelryDetail = () => {
                         style={{ background: `${theme.primary}15` }}
                       />
                     )}
-                  </motion.button>
+                  </button>
                 )}
               </motion.div>
 
@@ -731,7 +694,7 @@ const JewelryDetail = () => {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                     className="mt-1 text-3xl sm:text-4xl font-bold"
                   >
-                    ${jewelry.price.toLocaleString()}
+                    ${Number(jewelry.price).toLocaleString('en-IN')}
                   </motion.p>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -800,10 +763,10 @@ const JewelryDetail = () => {
                   <Gem className="h-4 w-4" style={{ color: theme.primary }} />
                   <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Material</p>
                 </div>
-                <p className="text-lg font-bold" style={{ color: theme.secondary }}>{jewelry.material}</p>
+                <p className="text-lg font-bold" style={{ color: theme.secondary }}>{jewelry.material || "None"}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Weight className="h-4 w-4" style={{ color: theme.textMuted }} />
-                  <p className="text-sm" style={{ color: theme.textMuted }}>{jewelry.weight} grams</p>
+                  <p className="text-sm" style={{ color: theme.textMuted }}>{jewelry.weight && jewelry.weight.toLowerCase() !== "noneg" ? `${jewelry.weight} grams` : "N/A"}</p>
                 </div>
               </motion.div>
 
@@ -828,37 +791,37 @@ const JewelryDetail = () => {
                     {jewelry.diamond_type && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Type</p>
-                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_type}</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_type || "None"}</p>
                       </div>
                     )}
                     {jewelry.diamond_shape && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Shape</p>
-                        <p className="text-sm font-semibold capitalize" style={{ color: theme.secondary }}>{jewelry.diamond_shape}</p>
+                        <p className="text-sm font-semibold capitalize" style={{ color: theme.secondary }}>{jewelry.diamond_shape || "None"}</p>
                       </div>
                     )}
                     {jewelry.diamond_weight && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Weight</p>
-                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_weight} ct</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_weight.toString().toLowerCase() !== "noneg" ? `${jewelry.diamond_weight} ct` : "N/A"}</p>
                       </div>
                     )}
                     {jewelry.diamond_color && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Color</p>
-                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_color}</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_color || "None"}</p>
                       </div>
                     )}
                     {jewelry.diamond_clarity && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Clarity</p>
-                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_clarity}</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_clarity || "None"}</p>
                       </div>
                     )}
                     {jewelry.diamond_cut && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Cut</p>
-                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_cut}</p>
+                        <p className="text-sm font-semibold" style={{ color: theme.secondary }}>{jewelry.diamond_cut || "None"}</p>
                       </div>
                     )}
                   </div>
@@ -874,86 +837,6 @@ const JewelryDetail = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Share Modal */}
-      <AnimatePresence>
-        {showShareModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-            style={{ background: "rgba(0,0,0,0.5)" }}
-            onClick={() => setShowShareModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl"
-              style={{ background: theme.surface }}
-            >
-              <div 
-                className="flex items-center justify-between px-6 py-4"
-                style={{ borderBottom: `1px solid ${theme.border}` }}
-              >
-                <h3 className="text-lg font-semibold" style={{ color: theme.secondary }}>Share Jewelry</h3>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowShareModal(false)}
-                  className="rounded-full p-1 transition-colors"
-                  style={{ color: theme.textMuted }}
-                  onMouseEnter={(e) => { 
-                    e.currentTarget.style.background = theme.background; 
-                    e.currentTarget.style.color = theme.text; 
-                  }}
-                  onMouseLeave={(e) => { 
-                    e.currentTarget.style.background = "transparent"; 
-                    e.currentTarget.style.color = theme.textMuted; 
-                  }}
-                >
-                  <X className="h-5 w-5" />
-                </motion.button>
-              </div>
-              <div className="p-6">
-                <p className="mb-4 text-sm" style={{ color: theme.textMuted }}>Copy link to share this jewelry piece</p>
-                <div className="flex gap-2">
-                  <div 
-                    className="flex-1 rounded-xl px-4 py-3 text-sm font-mono"
-                    style={{ background: theme.background, color: theme.text }}
-                  >
-                    {window.location.href}
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleCopy}
-                    className="flex items-center gap-2 rounded-xl px-4 py-3 font-medium transition-colors"
-                    style={{ 
-                      background: copied ? theme.success : theme.primary,
-                      color: "#fff"
-                    }}
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        Copy
-                      </>
-                    )}
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

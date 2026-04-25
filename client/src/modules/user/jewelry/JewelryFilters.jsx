@@ -25,10 +25,10 @@ const JewelryFilters = ({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     category: true,
-    price: false,
+    price: true,
     metal: true,
     shape: true,
-    carat: false,
+    carat: true,
   });
   const [shapeDisplayCount, setShapeDisplayCount] = useState(8);
 
@@ -111,12 +111,15 @@ const JewelryFilters = ({
         selectedMetals.length === 0 || selectedMetals.includes(item.metal);
       const shapeMatch =
         selectedShapes.length === 0 || selectedShapes.includes(item.shape);
+      const weightMatch =
+        (centerStoneWeightRange[0] === 0 && centerStoneWeightRange[1] === 0) ||
+        (item.diamond_weight >= centerStoneWeightRange[0] && item.diamond_weight <= centerStoneWeightRange[1]);
       const searchMatch =
         searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      return categoryMatch && priceMatch && metalMatch && shapeMatch && searchMatch;
+      return categoryMatch && priceMatch && metalMatch && shapeMatch && weightMatch && searchMatch;
     }) || [];
 
     // Sort
@@ -126,8 +129,6 @@ const JewelryFilters = ({
           return a.price - b.price;
         case "price-high":
           return b.price - a.price;
-        case "rating":
-          return b.rating - a.rating;
         case "newest":
           return b.id - a.id;
         default:
@@ -253,6 +254,7 @@ const JewelryFilters = ({
       priceRange,
       selectedMetals,
       selectedShapes,
+      centerStoneWeightRange,
       searchQuery,
       sortBy,
       clearAllFilters: callbacksRef.current.clearAllFilters,
@@ -261,7 +263,7 @@ const JewelryFilters = ({
       setSortBy: callbacksRef.current.setSortBy,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredItems, activeCategory, priceRange, selectedMetals, selectedShapes, searchQuery, sortBy]);
+  }, [filteredItems, activeCategory, priceRange, selectedMetals, selectedShapes, centerStoneWeightRange, searchQuery, sortBy]);
 
   // Body scroll lock for mobile
   useEffect(() => {
