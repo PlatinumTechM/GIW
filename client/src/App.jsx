@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AISearchChat from "@/components/AISearchChat";
 
 const App = () => {
   const location = useLocation();
@@ -19,6 +20,9 @@ const App = () => {
         <Outlet />
       </main>
       {!isAuthPage && !isAdminPage && <Footer />}
+      
+      {/* Global AI Search Sticky Component */}
+      {!isAdminPage && <AISearchChat />}
     </>
   );
 };
