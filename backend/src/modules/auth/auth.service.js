@@ -55,6 +55,8 @@ export const login = async (identifier, password) => {
       planExpiry: userWithSubscription.plan_expiry,
       subscriptionStatus: userWithSubscription.subscription_status,
       type: userWithSubscription.type,
+      usedStock: parseInt(userWithSubscription.used_stock || 0),
+      stockLimit: parseInt(userWithSubscription.stock_limit || 0),
     },
   };
 };
@@ -140,6 +142,8 @@ export const getCurrentUser = async (userId) => {
     planExpiry: user.plan_expiry,
     subscriptionStatus: user.subscription_status,
     type: user.type,
+    usedStock: parseInt(user.used_stock || 0),
+    stockLimit: parseInt(user.stock_limit || 0),
   };
 };
 
@@ -183,6 +187,26 @@ export const updateProfile = async (userId, userData) => {
     isActive: updatedUser.is_active,
     type: updatedUser.type,
   };
+};
+
+export const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await authRepo.findUserByIdWithPassword(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const cleanInput = String(currentPassword).trim();
+  const cleanDB = String(user.password).trim();
+  if (cleanInput !== cleanDB) {
+    throw new Error("Invalid current password");
+  }
+
+  if (newPassword.length < 6) {
+    throw new Error("New password must be at least 6 characters");
+  }
+
+  await authRepo.updatePassword(userId, newPassword);
+  return true;
 };
 
 export const purchaseSubscription = async (userId, planId, durationMonths) => {
