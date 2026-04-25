@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../contexts/AuthContext";
+import { notificationAPI } from "../services/api.js";
 import {
   Diamond,
   Crown,
@@ -11,6 +12,7 @@ import {
   LogOut,
   ChevronDown,
   LayoutDashboard,
+  Bell,
   Package,
 } from "lucide-react";
 
@@ -18,6 +20,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
@@ -35,6 +38,22 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const fetchUnreadCount = async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await notificationAPI.getUnreadCount();
+      setUnreadCount(response.data?.count || 0);
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -202,6 +221,20 @@ const Navbar = () => {
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-[#E2E8F0]">
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
+                  {/* Notification Bell */}
+                  <Link
+                    to="/notifications"
+                    className="relative p-2 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#3B82F6] transition-colors"
+                    onClick={() => setUnreadCount(0)}
+                  >
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+
                   {/* Admin Dashboard Link - Only for admin */}
                   {user?.role === "admin" && (
                     <Link
@@ -451,6 +484,29 @@ const Navbar = () => {
                 >
                   {isAuthenticated ? (
                     <div className="space-y-2">
+                      {/* Notification Link - Mobile */}
+                      <NavLink
+                        to="/notifications"
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                            isActive
+                              ? "bg-[#1E3A8A] text-white shadow-md"
+                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                          }`
+                        }
+                        onClick={() => setUnreadCount(0)}
+                      >
+                        <div className="relative">
+                          <Bell className="w-5 h-5" />
+                          {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        Notifications
+                      </NavLink>
+
                       {/* Admin Dashboard Link - Only for admin */}
                       {user?.role === "admin" && (
                         <NavLink
