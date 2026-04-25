@@ -145,7 +145,14 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+        const updatedData = { ...prev, [name]: value };
+        // Sync type with diamond_type
+        if (name === 'diamond_type') {
+            updatedData.type = value;
+        }
+        return updatedData;
+    });
   }, []);
 
   const handleSubmit = async (e) => {
@@ -359,7 +366,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
                     name="diamond_type"
                     value={formData.diamond_type}
                     onChange={handleInputChange}
-                    options={["NATURAL", "LAB GROWN"]}
+                    options={["NATURAL", "LABGROWN"]}
                   />
                   <InputField
                     label="Stone Shape"

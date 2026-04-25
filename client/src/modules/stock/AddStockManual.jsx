@@ -510,7 +510,7 @@ const InputField = ({
           <textarea
             name={name}
             value={value}
-            onChange={readonly ? () => {} : handleChange}
+            onChange={readonly ? () => { } : handleChange}
             placeholder={placeholder}
             rows={3}
             readOnly={readonly}
@@ -521,7 +521,7 @@ const InputField = ({
             type={type}
             name={name}
             value={value}
-            onChange={readonly ? () => {} : handleChange}
+            onChange={readonly ? () => { } : handleChange}
             placeholder={placeholder}
             min={min}
             max={max}
@@ -597,20 +597,20 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
         return;
       }
     }
-    
+
     setFormData((prev) => {
       const updatedData = {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       };
-      
+
       // Auto-calculate final price when price_per_carat or rap_per_carat changesz
       if (name === 'price_per_carat' || name === 'weight') {
         const pricePerCarat = parseFloat(updatedData.price_per_carat) || 0;
         const weight = parseFloat(updatedData.weight) || 0;
         updatedData.final_price = Math.max(pricePerCarat * weight, 0).toFixed(2);
       }
-      
+
       // Auto-calculate RS amount when final_price or dollar_rate changes
       if (name === 'final_price' || name === 'dollar_rate') {
         const finalPrice = parseFloat(updatedData.final_price) || 0;
@@ -618,8 +618,8 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
         updatedData.rs_amount = Math.max(finalPrice * dollarRate, 0).toFixed(2);
       }
 
-     
-      
+
+
       return updatedData;
     });
   };
@@ -648,7 +648,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     const { missingFields, negativeFields } = validateForm();
     if (missingFields.length > 0) {
@@ -697,11 +697,11 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to add stock";
-      
+
       // Handle subscription limit error
       if (errorMessage.includes("Subscription limit") || errorMessage.includes("No active subscription")) {
         notify.error(errorMessage);
-      } 
+      }
       // Handle duplicate stock_id error
       else if (errorMessage.includes("already exists")) {
         notify.error(
@@ -751,7 +751,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             {/* Left: Title */}
             <div className="flex items-center gap-3 sm:gap-4">
-             
+
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">
                   {editData ? "Update Stock" : "Add Stock"}
@@ -813,11 +813,10 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                  activeTab === tab.id
-                    ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
-                    : "bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0]"
-                }`}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.id
+                  ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
+                  : "bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0]"
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -856,7 +855,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
                       options={TYPE_OPTIONS}
                       required
                     />
-                 
+
                     <InputField
                       label="Status"
                       name="status"
@@ -1299,7 +1298,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
                     value={formData.rap_per_carat}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Price/Carat"
@@ -1310,7 +1309,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
                     value={formData.price_per_carat}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Discount %"
@@ -1321,7 +1320,7 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
                     value={formData.discount}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Final Price"
