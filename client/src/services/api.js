@@ -101,6 +101,11 @@ export const authAPI = {
     const response = await api.put("/auth/profile", userData);
     return response.data;
   },
+  
+  changePassword: async (passwords) => {
+    const response = await api.put("/auth/change-password", passwords);
+    return response.data;
+  },
 
   getAllUsers: async () => {
     const response = await api.get("/admin/users");

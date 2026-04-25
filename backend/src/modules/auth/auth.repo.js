@@ -17,6 +17,12 @@ export const findUserById = async (id) => {
   return result.rows[0];
 };
 
+export const findUserByIdWithPassword = async (id) => {
+  const query = `SELECT id, password FROM users WHERE id = $1`;
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
 export const findUserWithSubscription = async (id) => {
   const query = `
     SELECT 
@@ -24,11 +30,15 @@ export const findUserWithSubscription = async (id) => {
       u.gst, u.document, u.is_active, u.role, u.type, u.created_at,
       sp.name as plan_name,
       us.end_date as plan_expiry,
-      us.status as subscription_status
+      us.status as subscription_status,
+      usage.uploaded as used_stock,
+      usage.total_limit as stock_limit
     FROM users u
     LEFT JOIN user_subscriptions us ON u.id = us.user_id AND us.status = 'active'
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
+    LEFT JOIN subscription_usage usage ON u.id = usage.user_id
     WHERE u.id = $1
+    ORDER BY us.created_at DESC LIMIT 1;
   `;
   const result = await pool.query(query, [id]);
   return result.rows[0];
@@ -84,6 +94,12 @@ export const updateUser = async (id, userData) => {
     id,
   ]);
   return result.rows[0];
+};
+
+export const updatePassword = async (id, newPassword) => {
+  const query = `UPDATE users SET password = $1 WHERE id = $2`;
+  await pool.query(query, [newPassword, id]);
+  return true;
 };
 
 // Create user subscription purchase
