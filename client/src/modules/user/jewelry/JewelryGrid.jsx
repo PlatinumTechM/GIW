@@ -356,14 +356,7 @@ const JewelryGrid = ({
 
                 {/* Mobile Card */}
                 <div className="lg:hidden p-4">
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex-shrink-0 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                  <div className="flex flex-col gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div>

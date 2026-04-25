@@ -25,6 +25,7 @@ import {
   Hash,
   Play,
   Video,
+  Menu,
 } from "lucide-react";
 
 const JewelryDetail = () => {
@@ -39,6 +40,7 @@ const JewelryDetail = () => {
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVideoActive, setIsVideoActive] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const getImages = (jewelryData) => {
     const images = [];
@@ -147,11 +149,23 @@ const JewelryDetail = () => {
   const images = getImages(jewelry);
 
   const nextImage = () => {
-    setActiveImageIndex((prev) => (prev + 1) % images.length);
+    if (isVideoActive) {
+      setIsVideoActive(false);
+      setActiveImageIndex(0);
+    } else if (activeImageIndex === images.length - 1 && jewelry.jewellery_video) {
+      setIsVideoActive(true);
+    } else {
+      setActiveImageIndex((prev) => (prev + 1) % images.length);
+    }
   };
 
   const prevImage = () => {
-    setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    if (isVideoActive) {
+      setIsVideoActive(false);
+      setActiveImageIndex(images.length - 1);
+    } else {
+      setActiveImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    }
   };
 
   if (loading) {
@@ -280,12 +294,77 @@ const JewelryDetail = () => {
   return (
     <div className="min-h-screen pt-4 pb-16" style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #FFFFFF 50%, #F1F5F9 100%)` }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Mobile Menu Toggle */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          className="mb-4 sm:hidden flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all"
+          style={{ background: theme.surface, color: theme.textMuted, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
+        >
+          <Menu className="h-4 w-4" />
+          <span>Menu</span>
+        </motion.button>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {showMobileMenu && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 sm:hidden overflow-hidden rounded-2xl"
+              style={{ background: theme.surface, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+            >
+              <div className="p-4 space-y-3">
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => navigate(-1)}
+                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
+                  style={{ color: theme.textMuted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; e.currentTarget.style.color = theme.primary; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.textMuted; }}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => setIsLiked(!isLiked)}
+                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
+                  style={{ color: isLiked ? theme.danger : theme.textMuted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                >
+                  <Heart className={`h-4 w-4 ${isLiked && "fill-current"}`} />
+                  <span>{isLiked ? 'Remove from Wishlist' : 'Add to Wishlist'}</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ x: 5 }}
+                  onClick={() => setShowShareModal(true)}
+                  className="flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg transition-colors"
+                  style={{ color: theme.textMuted }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.background; e.currentTarget.style.color = theme.primary; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = theme.textMuted; }}
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span>Share</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Breadcrumb & Back */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6 flex items-center gap-4"
+          className="mb-6 hidden sm:flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4"
         >
           <motion.button
             onClick={() => navigate(-1)}
@@ -304,7 +383,7 @@ const JewelryDetail = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 text-sm"
+            className="flex items-center gap-2 text-sm flex-wrap"
           >
             {["Jewelry", type?.replace(/-/g, " "), jewelry.name].map((item, i, arr) => (
               <span key={i} className="flex items-center gap-2">
@@ -312,7 +391,7 @@ const JewelryDetail = () => {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * i }}
-                  className="capitalize"
+                  className="capitalize truncate max-w-[120px] sm:max-w-none"
                   style={{ 
                     color: i === arr.length - 1 ? theme.primary : theme.textMuted,
                     fontWeight: i === arr.length - 1 ? 600 : 400 
@@ -356,23 +435,23 @@ const JewelryDetail = () => {
               animate={{ x: ["-100%", "200%"] }}
               transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
             />
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-5">
+            <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 10 }}
                   animate={floatingAnimation}
                   transition={{ type: "spring", stiffness: 400 }}
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg"
+                  className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)` }}
                 >
-                  <Crown className="h-7 w-7 text-white" />
+                  <Crown className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </motion.div>
                 <div>
                   <motion.h1
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-2xl font-bold"
+                    className="text-xl sm:text-2xl font-bold"
                     style={{ color: theme.secondary }}
                   >
                     {jewelry.name}
@@ -381,9 +460,9 @@ const JewelryDetail = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="flex items-center gap-3 mt-0.5"
+                    className="flex items-center gap-2 sm:gap-3 mt-0.5 flex-wrap"
                   >
-                    <span className="text-sm font-mono" style={{ color: theme.textMuted }}>
+                    <span className="text-xs sm:text-sm font-mono" style={{ color: theme.textMuted }}>
                       Stock ID: {jewelry.stock_id}
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium"
@@ -398,7 +477,7 @@ const JewelryDetail = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -437,7 +516,7 @@ const JewelryDetail = () => {
           </motion.div>
 
           {/* Content */}
-          <div className="grid gap-0 lg:grid-cols-2">
+          <div className="grid gap-0 lg:grid-cols-2 grid-cols-1">
             {/* Left - Image Gallery */}
             <motion.div
               variants={containerVariants}
@@ -469,7 +548,7 @@ const JewelryDetail = () => {
                 ) : (
                   <motion.div
                     className="relative h-full w-full"
-                    animate={isImageZoomed ? { scale: 1.5 } : { scale: 1 }}
+                    animate={isImageZoomed ? { scale: 1.2 } : { scale: 1 }}
                     transition={{ duration: 0.4 }}
                     style={{
                       transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
@@ -535,7 +614,7 @@ const JewelryDetail = () => {
               {/* Thumbnails */}
               <motion.div
                 variants={itemVariants}
-                className="flex justify-center gap-3 flex-wrap"
+                className="flex justify-center gap-3 overflow-x-auto pb-2"
               >
                 {images.map((img, idx) => (
                   <motion.button
@@ -546,7 +625,7 @@ const JewelryDetail = () => {
                       setActiveImageIndex(idx);
                       setIsVideoActive(false);
                     }}
-                    className="relative h-16 w-16 overflow-hidden rounded-xl transition-all"
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all"
                     style={{
                       opacity: !isVideoActive && activeImageIndex === idx ? 1 : 0.6,
                       boxShadow: !isVideoActive && activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
@@ -572,8 +651,8 @@ const JewelryDetail = () => {
                   <motion.button
                     whileHover={{ scale: 1.1, y: -3 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsVideoActive(true)}
-                    className="relative h-16 w-16 overflow-hidden rounded-xl transition-all flex items-center justify-center"
+                    onClick={() => setIsVideoActive(!isVideoActive)}
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all flex items-center justify-center"
                     style={{
                       opacity: isVideoActive ? 1 : 0.6,
                       boxShadow: isVideoActive ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none",
@@ -650,7 +729,7 @@ const JewelryDetail = () => {
                     initial={{ opacity: 0, y: 10, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                    className="mt-1 text-4xl font-bold"
+                    className="mt-1 text-3xl sm:text-4xl font-bold"
                   >
                     ${jewelry.price.toLocaleString()}
                   </motion.p>
@@ -745,7 +824,7 @@ const JewelryDetail = () => {
                     <Sparkles className="h-4 w-4" style={{ color: theme.primary }} />
                     <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.textMuted }}>Diamond Details</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {jewelry.diamond_type && (
                       <div>
                         <p className="text-xs" style={{ color: theme.textMuted }}>Type</p>

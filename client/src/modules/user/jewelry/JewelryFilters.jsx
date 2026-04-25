@@ -18,6 +18,8 @@ const JewelryFilters = ({
   onFilterChange,
   children,
   isLabGrown = false,
+  searchQuery: propSearchQuery,
+  setSearchQuery: propSetSearchQuery,
 }) => {
   // UI state
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -40,7 +42,10 @@ const JewelryFilters = ({
   const [selectedMetals, setSelectedMetals] = useState([]);
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [centerStoneWeightRange, setCenterStoneWeightRange] = useState([0, 0]);
-  const [searchQuery, setSearchQuery] = useState("");
+  // Use prop searchQuery if provided, otherwise use internal state
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+  const searchQuery = propSearchQuery !== undefined ? propSearchQuery : internalSearchQuery;
+  const setSearchQuery = propSetSearchQuery || setInternalSearchQuery;
   const [sortBy, setSortBy] = useState("featured");
 
   // ========== PENDING FILTER STATES (what user is selecting in UI) ==========
@@ -210,6 +215,15 @@ const JewelryFilters = ({
     setShapeDisplayCount(8);
   }, []);
 
+  // Sync applied filters to pending (used on initial load or when clearing) - like DiamondFilters
+  const syncPendingToApplied = useCallback(() => {
+    setPendingCategory(activeCategory);
+    setPendingPriceRange(priceRange);
+    setPendingMetals(selectedMetals);
+    setPendingShapes(selectedShapes);
+    setPendingCenterStoneWeightRange(centerStoneWeightRange);
+  }, [activeCategory, priceRange, selectedMetals, selectedShapes, centerStoneWeightRange]);
+
   // Store callback refs to avoid recreating functions
   const callbacksRef = useRef({
     onFilterChange,
@@ -273,22 +287,67 @@ const JewelryFilters = ({
     };
   }, []);
 
+  // Applied filters object (like DiamondFilters)
+  const appliedFilters = useMemo(
+    () => ({
+      category: activeCategory,
+      priceMin: priceRange[0],
+      priceMax: priceRange[1],
+      metals: selectedMetals,
+      shapes: selectedShapes,
+      centerStoneWeightMin: centerStoneWeightRange[0],
+      centerStoneWeightMax: centerStoneWeightRange[1],
+      searchQuery,
+      sortBy,
+    }),
+    [
+      activeCategory,
+      priceRange,
+      selectedMetals,
+      selectedShapes,
+      centerStoneWeightRange,
+      searchQuery,
+      sortBy,
+    ],
+  );
+
   // Count of currently applied filters
-  const activeFiltersCount =
-    (activeCategory !== "all" ? 1 : 0) +
-    (priceRange[0] > 0 || priceRange[1] > 0 ? 1 : 0) +
-    selectedMetals.length +
-    selectedShapes.length +
-    (centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0 ? 1 : 0) +
-    (searchQuery ? 1 : 0);
+  const activeFiltersCount = useMemo(
+    () =>
+      (activeCategory !== "all" ? 1 : 0) +
+      (priceRange[0] > 0 || priceRange[1] > 0 ? 1 : 0) +
+      selectedMetals.length +
+      selectedShapes.length +
+      (centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0 ? 1 : 0) +
+      (searchQuery ? 1 : 0) +
+      (sortBy !== "featured" ? 1 : 0),
+    [
+      activeCategory,
+      priceRange,
+      selectedMetals,
+      selectedShapes,
+      centerStoneWeightRange,
+      searchQuery,
+      sortBy,
+    ],
+  );
 
   // Count of pending filters selected
-  const pendingFiltersCount =
-    (pendingCategory !== "all" ? 1 : 0) +
-    (pendingPriceRange[0] > 0 || pendingPriceRange[1] > 0 ? 1 : 0) +
-    pendingMetals.length +
-    pendingShapes.length +
-    (pendingCenterStoneWeightRange[0] > 0 || pendingCenterStoneWeightRange[1] > 0 ? 1 : 0);
+  const pendingFiltersCount = useMemo(
+    () =>
+      (pendingCategory !== "all" ? 1 : 0) +
+      (pendingPriceRange[0] > 0 || pendingPriceRange[1] > 0 ? 1 : 0) +
+      pendingMetals.length +
+      pendingShapes.length +
+      (pendingCenterStoneWeightRange[0] > 0 || pendingCenterStoneWeightRange[1] > 0 ? 1 : 0),
+    [
+      pendingCategory,
+      pendingPriceRange,
+      pendingMetals,
+      pendingShapes,
+      pendingCenterStoneWeightRange,
+    ],
+  );
 
   // Check if pending filters differ from applied filters (unsaved changes)
   const hasUnsavedChanges =
@@ -312,14 +371,14 @@ const JewelryFilters = ({
     </span>
   );
 
-  const FilterContent = () => (
+  const filterContent = useMemo(() => (
     <>
       {/* Mobile Filter Button - Hidden since moved to top bar */}
       {/* Original mobile filter button is now in the top filter bar */}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 lg:block">
-        <div className="sticky top-[20px] flex max-h-[calc(100vh-40px)] flex-col rounded-xl border border-[#E2E8F0] bg-white">
+      <aside className="hidden w-56 md:w-60 lg:w-64 flex-shrink-0 md:block lg:ml-4">
+        <div className="sticky top-[80px] md:top-[100px] flex max-h-[calc(100vh-100px)] md:max-h-[calc(100vh-120px)] flex-col rounded-xl border border-[#E2E8F0] bg-white mt-4">
           <div ref={sidebarScrollRef} className="flex-1 space-y-6 overflow-y-auto px-5 pb-5 pr-2 pt-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {/* Categories */}
             <div>
@@ -610,9 +669,9 @@ const JewelryFilters = ({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 z-50 flex h-full w-80 flex-col bg-white lg:hidden"
+              className="fixed left-0 top-0 z-50 flex h-full w-[85vw] max-w-sm flex-col bg-white md:hidden"
             >
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] p-4">
+              <div className="flex items-center justify-between border-b border-[#E2E8F0] p-3 sm:p-4">
                 <div>
                   <h2 className="text-sm font-semibold text-[#0F172A]">
                     Filters
@@ -630,10 +689,10 @@ const JewelryFilters = ({
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4">
                 {/* Mobile Categories */}
-                <div className="mb-6">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="mb-2 sm:mb-3 font-semibold text-[#0F172A] text-sm">
                     Categories
                   </h3>
                   <div className="space-y-2">
@@ -659,7 +718,7 @@ const JewelryFilters = ({
                 </div>
 
                 {/* Mobile Total Price */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <button
                     onClick={() => toggleSection("price")}
                     className="flex w-full items-center justify-between text-left"
@@ -709,7 +768,7 @@ const JewelryFilters = ({
                 </div>
 
                 {/* Mobile  Stone Weight */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <button
                     onClick={() => toggleSection("carat")}
                     className="flex w-full items-center justify-between text-left"
@@ -761,8 +820,8 @@ const JewelryFilters = ({
                 </div>
 
                 {/* Mobile Metal Type */}
-                <div className="mb-6" key="mobile-metal-type">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
+                <div className="mb-4 sm:mb-6" key="mobile-metal-type">
+                  <h3 className="mb-2 sm:mb-3 font-semibold text-[#0F172A] text-sm">
                     Metal Type
                   </h3>
                   <div className="space-y-2">
@@ -803,11 +862,11 @@ const JewelryFilters = ({
                 </div>
 
                 {/* Mobile Shape */}
-                <div className="mb-6" key="mobile-shape-type">
-                  <h3 className="mb-3 font-semibold text-[#0F172A]">
+                <div className="mb-4 sm:mb-6" key="mobile-shape-type">
+                  <h3 className="mb-2 sm:mb-3 font-semibold text-[#0F172A] text-sm">
                     Shape
                   </h3>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                     {shapeTypes.slice(0, shapeDisplayCount).map((shape) => {
                       const isSelected = pendingShapes.includes(shape.id);
                       return (
@@ -847,7 +906,7 @@ const JewelryFilters = ({
               </div>
 
               {/* Mobile Footer Buttons */}
-              <div className="border-t border-[#E2E8F0] p-4">
+              <div className="border-t border-[#E2E8F0] p-3 sm:p-4">
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
@@ -874,12 +933,18 @@ const JewelryFilters = ({
         )}
       </AnimatePresence>
     </>
-  );
+  ), [
+    expandedSections, toggleSection, categories, pendingCategory, handleCategorySelect,
+    pendingPriceRange, pendingCenterStoneWeightRange, pendingMetals, metalTypes, toggleMetal,
+    pendingShapes, shapeTypes, shapeDisplayCount, toggleShape, hasUnsavedChanges,
+    activeFiltersCount, applyFilters, clearAllFilters, mobileFiltersOpen, setMobileFiltersOpen,
+    filteredItems.length
+  ]);
 
   // Main render - if children is a function, call it with filter data
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      <FilterContent />
+    <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+      {filterContent}
       <div className="flex-1 min-w-0">
         {typeof children === 'function'
           ? children({
@@ -887,6 +952,7 @@ const JewelryFilters = ({
             filteredItemsCount: filteredItems.length,
             activeCategory,
             priceRange,
+            centerStoneWeightRange,
             selectedMetals,
             selectedShapes,
             searchQuery,
@@ -895,6 +961,7 @@ const JewelryFilters = ({
             setSortBy,
             clearAllFilters,
             activeFiltersCount,
+            appliedFilters,
             categories,
             metalTypes,
             shapeTypes,
@@ -902,6 +969,7 @@ const JewelryFilters = ({
             setActiveCategory,
             setSelectedShapes,
             setPriceRange,
+            setCenterStoneWeightRange,
             toggleMetal: (metalId) => {
               setSelectedMetals((prev) =>
                 prev.includes(metalId)

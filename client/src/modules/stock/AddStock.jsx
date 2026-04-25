@@ -34,6 +34,7 @@ import { parse as parseCSV } from "papaparse";
 import notify from "@/utils/notifications";
 import api from "@/services/api";
 import AddStockManual from "./AddStockManual";
+import ShareAPI from "../share-api/ShareAPI";
 
 const FIELD_MAPPINGS = {
   // Basic fields
@@ -1268,7 +1269,7 @@ const AddStock = () => {
                 onClick={() => setViewMode("import")}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "import"
-                    ? "bg-emerald-600 text-white shadow-md"
+                    ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
@@ -1280,13 +1281,25 @@ const AddStock = () => {
                 onClick={() => setViewMode("manual")}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                   viewMode === "manual"
-                    ? "bg-[#24bef1] text-white shadow-md"
+                    ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
                 }`}
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Manual Entry</span>
                 <span className="sm:hidden">Manual</span>
+              </button>
+              <button
+                onClick={() => setViewMode("share-api")}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                  viewMode === "share-api"
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Share API</span>
+                <span className="sm:hidden">API</span>
               </button>
             </div>
           </div>
@@ -2181,7 +2194,7 @@ const AddStock = () => {
               </div>
 
               {/* API Import */}
-              <div
+              {/* <div
                 onClick={() =>
                   notify.info(
                     "Coming Soon",
@@ -2201,7 +2214,7 @@ const AddStock = () => {
                     Connect external data source
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Download Template */}
               <div
@@ -2375,7 +2388,12 @@ const AddStock = () => {
         )}
 
         {/* VIEW 3: Manual Entry */}
-        {viewMode === "manual" && <AddStockManual />}
+        {viewMode === "manual" && (
+          <AddStockManual onStockAdded={fetchUserStock} />
+        )}
+
+        {/* VIEW 4: Share API */}
+        {viewMode === "share-api" && <ShareAPI />}
       </div>
 
       {/* Import Loading Overlay */}

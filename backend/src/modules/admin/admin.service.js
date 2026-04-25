@@ -33,6 +33,7 @@ export const getAllUsers = async () => {
     subscriptionStatus: user.subscription_status,
     stockCount: parseInt(user.stock_count || 0),
     stockLimit: parseInt(user.stock_limit || 0),
+    type: user.type,
   }));
 };
 
@@ -118,6 +119,7 @@ export const getSubscriptionBuyers = async () => {
     planName: buyer.plan_name,
     durationMonth: buyer.duration_month,
     price: parseFloat(buyer.price),
+    userType: buyer.user_type,
   }));
 };
 

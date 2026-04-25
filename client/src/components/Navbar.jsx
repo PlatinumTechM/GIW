@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronDown,
   LayoutDashboard,
+  Package,
 } from "lucide-react";
 
 const Navbar = () => {
@@ -64,18 +65,25 @@ const Navbar = () => {
       },
       isAuthenticated
         ? {
-            path: "user/add-stock",
-            label: "Stock",
-            icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-          }
+          path: "user/add-stock",
+          label: "Diamond",
+          icon: "M12 3L2 12l10 9 10-9-10-9z",
+        }
+        : null,
+      isAuthenticated
+        ? {
+          path: "user/jewellery-stock",
+          label: "Jewellery",
+          icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+        }
         : null,
       // Hide Pricing if user has active subscription
       !hasActiveSubscription
         ? {
-            path: "/pricing",
-            label: "Pricing",
-            icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
-          }
+          path: "/pricing",
+          label: "Pricing",
+          icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
+        }
         : null,
       {
         path: "/contact",
@@ -92,7 +100,8 @@ const Navbar = () => {
       return links.filter(
         (link) =>
           link.label !== "Home" &&
-          link.label !== "Stock" &&
+          link.label !== "Diamond" &&
+          link.label !== "Jewellery" &&
           link.label !== "Pricing" &&
           link.label !== "Contact",
       );
@@ -113,11 +122,10 @@ const Navbar = () => {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className={`left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-white/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(15,23,42,0.08)] py-3"
-          : "bg-transparent py-5"
-      }`}
+      className={`left-0 right-0 z-[1000] transition-all duration-500 ${isScrolled
+        ? "bg-white/90 backdrop-blur-xl shadow-[0_4px_20px_rgba(15,23,42,0.08)] py-3"
+        : "bg-transparent py-5"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -159,10 +167,9 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                    isActive
-                      ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
-                      : "text-[#475569] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
+                  `relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2 ${isActive
+                    ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
+                    : "text-[#475569] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
                   }`
                 }
               >
@@ -226,11 +233,10 @@ const Navbar = () => {
                     }
                   >
                     <button
-                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 ${
-                        isUserDropdownOpen
-                          ? "bg-gradient-to-r from-[#1E3A8A]/10 to-[#3B82F6]/10 text-[#1E3A8A]"
-                          : "text-[#475569] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-300 ${isUserDropdownOpen
+                        ? "bg-gradient-to-r from-[#1E3A8A]/10 to-[#3B82F6]/10 text-[#1E3A8A]"
+                        : "text-[#475569] hover:text-[#1E3A8A] hover:bg-[#F1F5F9]"
+                        }`}
                     >
                       {/* Gold Ring Avatar */}
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px] shadow-md shadow-[#FFD700]/20">
@@ -257,7 +263,7 @@ const Navbar = () => {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-50 overflow-hidden"
+                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-[1001] overflow-hidden"
                           onMouseEnter={() => setIsUserDropdownOpen(true)}
                           onMouseLeave={() =>
                             setTimeout(() => setIsUserDropdownOpen(false), 1000)
@@ -306,7 +312,6 @@ const Navbar = () => {
                                 <Crown className="w-4 h-4 text-[#FFD700] ml-auto" />
                               </Link>
                             )}
-
                             <Link
                               to="/profile"
                               className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
@@ -409,10 +414,9 @@ const Navbar = () => {
                     <NavLink
                       to={link.path}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
-                          isActive
-                            ? "bg-[#1E3A8A] text-white shadow-md"
-                            : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                        `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${isActive
+                          ? "bg-[#1E3A8A] text-white shadow-md"
+                          : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
                         }`
                       }
                     >
@@ -452,10 +456,9 @@ const Navbar = () => {
                         <NavLink
                           to="/admin"
                           className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                              isActive
-                                ? "bg-[#1E3A8A] text-white shadow-md"
-                                : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
+                              ? "bg-[#1E3A8A] text-white shadow-md"
+                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
                             }`
                           }
                         >
@@ -479,10 +482,9 @@ const Navbar = () => {
                       <NavLink
                         to="/profile"
                         className={({ isActive }) =>
-                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                            isActive
-                              ? "bg-[#1E3A8A] text-white shadow-md"
-                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
+                            ? "bg-[#1E3A8A] text-white shadow-md"
+                            : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
                           }`
                         }
                       >

@@ -1,0 +1,14 @@
+import express from "express";
+import * as jewellryController from "./jewellry.controller.js";
+import { authenticate } from "../../../middleware/auth.middleware.js";
+
+const router = express.Router();
+
+router.get("/", authenticate, jewellryController.getAll);
+router.get("/filters", authenticate, jewellryController.getFilters);
+router.get("/:id", authenticate, jewellryController.getById);
+router.post("/", authenticate, jewellryController.create);
+router.put("/:id", authenticate, jewellryController.update);
+router.delete("/:id", authenticate, jewellryController.remove);
+
+export { router as jewellryRoutes };
