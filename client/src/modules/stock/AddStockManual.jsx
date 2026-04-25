@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Diamond,
@@ -536,8 +536,44 @@ const InputField = ({
   );
 };
 
-const AddStockManual = ({ onStockAdded }) => {
+const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+
+  useEffect(() => {
+    if (editData) {
+      // Map editData to INITIAL_FORM_DATA structure if necessary
+      // For now assume they match mostly
+      const sanitizedData = { ...INITIAL_FORM_DATA };
+      Object.keys(INITIAL_FORM_DATA).forEach(key => {
+        if (editData[key] !== undefined && editData[key] !== null) {
+          sanitizedData[key] = editData[key];
+        }
+      });
+      setFormData(sanitizedData);
+
+      // Handle image previews if they are URLs
+      setImagePreview({
+        diamond_image1: editData.diamond_image1 || null,
+        diamond_image2: editData.diamond_image2 || null,
+        diamond_image3: editData.diamond_image3 || null,
+        diamond_image4: editData.diamond_image4 || null,
+        diamond_image5: editData.diamond_image5 || null,
+        diamond_video: editData.diamond_video || null,
+        certificate_image: editData.certificate_image || null,
+      });
+    } else {
+      setFormData(INITIAL_FORM_DATA);
+      setImagePreview({
+        diamond_image1: null,
+        diamond_image2: null,
+        diamond_image3: null,
+        diamond_image4: null,
+        diamond_image5: null,
+        diamond_video: null,
+        certificate_image: null,
+      });
+    }
+  }, [editData]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -640,9 +676,13 @@ const AddStockManual = ({ onStockAdded }) => {
     setIsLoading(true);
 
     try {
-      await api.post("/stock", formData);
-
-      notify.success("Success", "Stock item added successfully!");
+      if (editData) {
+        await api.put(`/stock/${editData.id}`, formData);
+        notify.success("Success", "Stock item updated successfully!");
+      } else {
+        await api.post("/stock", formData);
+        notify.success("Success", "Stock item added successfully!");
+      }
       setFormData(INITIAL_FORM_DATA);
       setImagePreview({
         diamond_image1: null,
@@ -713,9 +753,11 @@ const AddStockManual = ({ onStockAdded }) => {
             <div className="flex items-center gap-3 sm:gap-4">
              
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">Add Stock</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">
+                  {editData ? "Update Stock" : "Add Stock"}
+                </h1>
                 <p className="text-xs sm:text-sm text-[#64748B] hidden sm:block">
-                  Manual stock entry form
+                  {editData ? "Edit existing stock record" : "Manual stock entry form"}
                 </p>
               </div>
             </div>
@@ -723,6 +765,15 @@ const AddStockManual = ({ onStockAdded }) => {
             {/* Right: Actions */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 sm:gap-3">
+                {editData && (
+                  <button
+                    onClick={onCancel}
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all border border-red-200 flex-1 sm:flex-none"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                )}
                 <button
                   onClick={handleReset}
                   className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-lg transition-all border border-[#E2E8F0] flex-1 sm:flex-none"
@@ -739,12 +790,12 @@ const AddStockManual = ({ onStockAdded }) => {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span className="hidden sm:inline">Saving...</span>
+                    <span className="hidden sm:inline">{editData ? "Updating..." : "Saving..."}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span className="hidden sm:inline">Save Stock</span>
+                    <span className="hidden sm:inline">{editData ? "Update Stock" : "Save Stock"}</span>
                   </>
                 )}
               </button>

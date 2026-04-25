@@ -26,8 +26,8 @@ import {
   Link,
   Copy,
   Check,
-  MessageCircle,
   Percent,
+  Edit,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
@@ -302,6 +302,7 @@ const FIELD_MAPPINGS = {
 const AddStock = () => {
   // View mode: 'show' | 'import' | 'manual'
   const [viewMode, setViewMode] = useState("show");
+  const [editingStock, setEditingStock] = useState(null);
 
   // UI States
   const [showFilters, setShowFilters] = useState(false);
@@ -388,6 +389,11 @@ const AddStock = () => {
   useEffect(() => {
     fetchUserStock();
   }, [userStockPage, appliedFilters, sortConfig, debouncedSearch]);
+
+  const handleEditStock = (item) => {
+    setEditingStock(item);
+    setViewMode("manual");
+  };
 
   const fetchUserStock = async () => {
     setUserStockLoading(true);
@@ -1257,6 +1263,17 @@ const AddStock = () => {
             </td>
           );
         })}
+
+        {/* Actions Column */}
+        <td className="px-2 py-2 border-r border-[#E2E8F0] text-center sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
+          <button
+            onClick={() => handleEditStock(item)}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Update Data"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+        </td>
       </tr>
     );
   };
@@ -1292,7 +1309,10 @@ const AddStock = () => {
                 <span className="sm:hidden">Import</span>
               </button>
               <button
-                onClick={() => setViewMode("manual")}
+                onClick={() => {
+                  setViewMode("manual");
+                  setEditingStock(null);
+                }}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "manual"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
@@ -1732,7 +1752,7 @@ const AddStock = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                 <input
                   type="text"
-                  placeholder="Search stock..."
+                  placeholder="Search Stock By Stock ID"
                   value={userStockSearch}
                   onChange={(e) => setUserStockSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-sm"
@@ -2103,6 +2123,9 @@ const AddStock = () => {
                             </th>
                           );
                         })}
+                        <th className="px-2 sm:px-3 py-2 sm:py-3 text-center font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm sticky right-0 z-10 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
+                          ACTIONS
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="overflow-y-auto">
@@ -2389,7 +2412,19 @@ const AddStock = () => {
 
         {/* VIEW 3: Manual Entry */}
         {viewMode === "manual" && (
-          <AddStockManual onStockAdded={() => { fetchUserStock(); fetchFilterOptions(); }} />
+          <AddStockManual
+            onStockAdded={() => {
+              fetchUserStock();
+              fetchFilterOptions();
+              setEditingStock(null);
+              setViewMode("show");
+            }}
+            editData={editingStock}
+            onCancel={() => {
+              setEditingStock(null);
+              setViewMode("show");
+            }}
+          />
         )}
 
         {/* VIEW 4: Share API */}
