@@ -13,7 +13,6 @@ import {
   Hash,
   Tag,
   Search,
-  AlertTriangle,
   DollarSign,
   Diamond,
   Gem,
@@ -99,7 +98,6 @@ const ManageSubscription = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   // Subscription buyers state
   const [buyers, setBuyers] = useState([]);
@@ -320,7 +318,6 @@ const ManageSubscription = () => {
       if (response.success) {
         notify.success("Deleted", "Plan deleted successfully");
         fetchSubscriptions();
-        setDeleteConfirm(null);
       } else {
         notify.error("Error", response.message || "Delete failed");
       }
@@ -683,9 +680,23 @@ const ManageSubscription = () => {
                             backgroundColor: "rgba(239, 68, 68, 0.15)",
                           }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            setDeleteConfirm(sub);
+                            const confirmed = await notify.confirm({
+                              title: "Delete Plan",
+                              message: (
+                                <p>
+                                  Are you sure you want to delete{" "}
+                                  <span className="font-medium text-[#0F172A]">
+                                    {sub.name} ({getDurationLabel(sub.durationMonth)})
+                                  </span>
+                                  ? This action cannot be undone.
+                                </p>
+                              ),
+                            });
+                            if (confirmed) {
+                              handleDelete(sub.id);
+                            }
                           }}
                           className="p-2 text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors"
                           title="Delete"
@@ -1090,60 +1101,7 @@ const ManageSubscription = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setDeleteConfirm(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#EF4444]/10 flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-[#EF4444]" />
-                </div>
-                <h3 className="text-lg font-bold text-[#0F172A]">
-                  Delete Plan
-                </h3>
-              </div>
-              <p className="text-[#64748B] mb-6">
-                Are you sure you want to delete{" "}
-                <span className="font-medium text-[#0F172A]">
-                  {deleteConfirm.name} (
-                  {getDurationLabel(deleteConfirm.durationMonth)})
-                </span>
-                ? This action cannot be undone.
-              </p>
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  className="px-4 py-2.5 text-[#475569] font-medium hover:bg-[#F1F5F9] rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleDelete(deleteConfirm.id)}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#EF4444] text-white font-medium rounded-xl hover:bg-[#DC2626] transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </div>
   );
 };

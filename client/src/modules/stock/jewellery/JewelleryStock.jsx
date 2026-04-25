@@ -146,7 +146,11 @@ const JewelleryStock = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    const confirmed = await notify.confirm({
+      title: "Delete Item",
+      message: "Are you sure you want to delete this item? This action cannot be undone.",
+    });
+    if (!confirmed) return;
     try {
       await api.delete(`/jewellry-stock/${id}`);
       notify.success("Success", "Item deleted successfully");
