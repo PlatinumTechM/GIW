@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Plus, 
-  Table as TableIcon, 
+import {
+  Plus,
+  Table as TableIcon,
   Search,
   Filter,
   RefreshCw,
@@ -11,7 +11,7 @@ import {
   LayoutGrid,
   ChevronLeft,
   ChevronRight,
-  Share2
+  Share2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import JewelleryTable from "./JewelleryTable";
@@ -32,13 +32,13 @@ const JewelleryStock = () => {
   const [editData, setEditData] = useState(null);
   const [viewMode, setViewMode] = useState("grid"); // "table" or "grid"
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({ 
-    categories: [], 
-    materials: [], 
+  const [filterOptions, setFilterOptions] = useState({
+    categories: [],
+    materials: [],
     statuses: [],
     shapes: [],
     colors: [],
-    clarities: []
+    clarities: [],
   });
   const [selectedFilters, setSelectedFilters] = useState({
     categories: [],
@@ -54,7 +54,7 @@ const JewelleryStock = () => {
     totalWeightTo: "",
     priceFrom: "",
     priceTo: "",
-    stock_id: ""
+    stock_id: "",
   });
 
   const fetchFilterOptions = async () => {
@@ -63,7 +63,10 @@ const JewelleryStock = () => {
       if (response.data.success) {
         setFilterOptions(response.data.data);
       } else {
-        console.warn("Filter options API returned success:false", response.data);
+        console.warn(
+          "Filter options API returned success:false",
+          response.data,
+        );
       }
     } catch (error) {
       console.error("Failed to fetch filter options", error);
@@ -71,16 +74,20 @@ const JewelleryStock = () => {
     }
   };
 
-  const fetchStock = async (page = 1, query = "", filters = selectedFilters) => {
+  const fetchStock = async (
+    page = 1,
+    query = "",
+    filters = selectedFilters,
+  ) => {
     setLoading(true);
     try {
       const response = await api.get(`/jewellry-stock`, {
-        params: { 
-          page, 
-          search: query, 
+        params: {
+          page,
+          search: query,
           limit: 10, // Set limit to 10 as per user request
-          ...filters
-        }
+          ...filters,
+        },
       });
       setStockData(response.data.data);
       setPagination(response.data.pagination);
@@ -118,20 +125,20 @@ const JewelleryStock = () => {
 
   const clearFilters = () => {
     const defaultFilters = {
-        categories: [],
-        materials: [],
-        shapes: [],
-        colors: [],
-        clarities: [],
-        status: "",
-        diamond_type: "",
-        weight: "",
-        diamond_weight: "",
-        totalWeightFrom: "",
-        totalWeightTo: "",
-        priceFrom: "",
-        priceTo: "",
-        stock_id: ""
+      categories: [],
+      materials: [],
+      shapes: [],
+      colors: [],
+      clarities: [],
+      status: "",
+      diamond_type: "",
+      weight: "",
+      diamond_weight: "",
+      totalWeightFrom: "",
+      totalWeightTo: "",
+      priceFrom: "",
+      priceTo: "",
+      stock_id: "",
     };
     setSelectedFilters(defaultFilters);
     setSearchQuery("");
@@ -158,14 +165,29 @@ const JewelleryStock = () => {
 
   const getActiveFilterCount = () => {
     let count = 0;
-    const arrayKeys = ['categories', 'materials', 'shapes', 'colors', 'clarities'];
-    const stringKeys = ['status', 'weight', 'diamond_weight', 'totalWeightFrom', 'totalWeightTo', 'priceFrom', 'priceTo', 'stock_id'];
+    const arrayKeys = [
+      "categories",
+      "materials",
+      "shapes",
+      "colors",
+      "clarities",
+    ];
+    const stringKeys = [
+      "status",
+      "weight",
+      "diamond_weight",
+      "totalWeightFrom",
+      "totalWeightTo",
+      "priceFrom",
+      "priceTo",
+      "stock_id",
+    ];
 
-    arrayKeys.forEach(key => {
+    arrayKeys.forEach((key) => {
       if (selectedFilters[key] && selectedFilters[key].length > 0) count++;
     });
 
-    stringKeys.forEach(key => {
+    stringKeys.forEach((key) => {
       if (selectedFilters[key] && selectedFilters[key] !== "") count++;
     });
 
@@ -210,14 +232,14 @@ const JewelleryStock = () => {
                   <span className="hidden xs:inline">Manual Entry</span>
                   <span className="xs:hidden">Add</span>
                 </button>
-                <button
+                {/* <button
                   onClick={() => notify.info("Coming Soon", "Import feature is under development.")}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold text-[#64748B] hover:text-[#0F172A] hover:bg-white/50 transition-all whitespace-nowrap"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span className="hidden xs:inline">Imports</span>
                   <span className="xs:hidden">Import</span>
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -238,13 +260,13 @@ const JewelleryStock = () => {
                     className="w-full input-field"
                   />
                 </div>
-                
+
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className={`flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2.5 rounded-xl transition-all text-xs font-bold relative ${
-                      isFilterOpen 
-                        ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20" 
+                      isFilterOpen
+                        ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
                         : activeFilterCount > 0
                           ? "bg-[#1E3A8A]/10 text-[#1E3A8A] border border-[#1E3A8A]/20"
                           : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
@@ -260,7 +282,9 @@ const JewelleryStock = () => {
                   </button>
 
                   <button
-                    onClick={() => notify.info("Share", "Sharing feature coming soon!")}
+                    onClick={() =>
+                      notify.info("Share", "Sharing feature coming soon!")
+                    }
                     className="flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-[#6366F1] text-white hover:bg-[#4F46E5] rounded-xl transition-all shadow-md shadow-indigo-100 text-xs font-bold"
                   >
                     <Share2 className="w-4 h-4" />
@@ -272,7 +296,9 @@ const JewelleryStock = () => {
                     disabled={loading}
                     className="flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] rounded-xl transition-colors disabled:opacity-50 text-xs font-bold"
                   >
-                    <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                    />
                     <span className="hidden md:inline">Refresh</span>
                   </button>
 
@@ -283,8 +309,8 @@ const JewelleryStock = () => {
                     <button
                       onClick={() => setViewMode("table")}
                       className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                        viewMode === "table" 
-                          ? "bg-white text-[#1E3A8A] shadow-md" 
+                        viewMode === "table"
+                          ? "bg-white text-[#1E3A8A] shadow-md"
                           : "text-[#94A3B8] hover:text-[#64748B]"
                       }`}
                     >
@@ -293,8 +319,8 @@ const JewelleryStock = () => {
                     <button
                       onClick={() => setViewMode("grid")}
                       className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                        viewMode === "grid" 
-                          ? "bg-white text-[#1E3A8A] shadow-md" 
+                        viewMode === "grid"
+                          ? "bg-white text-[#1E3A8A] shadow-md"
                           : "text-[#94A3B8] hover:text-[#64748B]"
                       }`}
                     >
@@ -320,9 +346,9 @@ const JewelleryStock = () => {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-               {viewMode === "table" ? (
-                <JewelleryTable 
-                  data={stockData} 
+              {viewMode === "table" ? (
+                <JewelleryTable
+                  data={stockData}
                   loading={loading}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
@@ -332,8 +358,8 @@ const JewelleryStock = () => {
                   searchQuery={searchQuery}
                 />
               ) : (
-                <JewelleryGrid 
-                  data={stockData} 
+                <JewelleryGrid
+                  data={stockData}
                   loading={loading}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
@@ -348,7 +374,7 @@ const JewelleryStock = () => {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <AddJewelleryManual 
+              <AddJewelleryManual
                 onRefresh={() => {
                   fetchStock(1, searchQuery);
                   setActiveTab("view");
@@ -366,16 +392,20 @@ const JewelleryStock = () => {
             <div className="flex items-center gap-3">
               <div className="flex -space-x-2">
                 {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                  <div
+                    key={i}
+                    className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400"
+                  >
                     {i + 1}
                   </div>
                 ))}
               </div>
               <p className="text-xs sm:text-sm text-[#64748B] font-bold uppercase tracking-widest">
-                Page <span className="text-[#1E3A8A]">{pagination.page}</span> of {pagination.totalPages}
+                Page <span className="text-[#1E3A8A]">{pagination.page}</span>{" "}
+                of {pagination.totalPages}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setCurrentPage(pagination.page - 1)}
@@ -399,7 +429,7 @@ const JewelleryStock = () => {
       </div>
 
       {/* Advanced Filters Popup */}
-      <JewelleryFilters 
+      <JewelleryFilters
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
         filterOptions={filterOptions}
