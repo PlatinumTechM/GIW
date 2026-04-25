@@ -1,174 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlaskConical, Filter, X, Search, RefreshCw, SlidersHorizontal, Gem } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
 import JewelryFilters from "./JewelryFilters";
+import { jewelryAPI } from "../../../services/api.js";
+
+const normalizeCategory = (cat) => {
+  if (!cat) return "rings";
+  const c = cat.toString().toLowerCase().trim();
+  if (c.includes("ring")) return "rings";
+  if (c.includes("necklace") || c.includes("pendant")) return "necklaces";
+  if (c.includes("earring")) return "earrings";
+  if (c.includes("bracelet") || c.includes("bangle")) return "bracelets";
+  if (c.includes("wedding")) return "wedding-bands";
+  if (c.includes("engagement")) return "engagement-rings";
+  return c;
+};
+
+const normalizeMetal = (mat) => {
+  if (!mat) return "white-gold";
+  const m = mat.toString().toLowerCase().trim();
+  if (m.includes("white gold")) return "white-gold";
+  if (m.includes("yellow gold")) return "yellow-gold";
+  if (m.includes("rose gold")) return "rose-gold";
+  if (m.includes("platinum")) return "platinum";
+  if (m.includes("silver")) return "silver";
+  if (m.includes("two tone") || m.includes("two-tone")) return "two-tone";
+  return m.replace(/\s+/g, "-");
+};
+
+const normalizeShape = (shape) => {
+  if (!shape) return null;
+  return shape.toString().toLowerCase().trim();
+};
+
+const mapJewelryItem = (item) => {
+  const badge = item.diamond_type?.toString().toLowerCase().includes("lab")
+    ? "Lab-Created"
+    : item.status === "available" && item.created_at
+      ? (new Date(item.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? "New" : "Certified")
+      : item.status === "sold"
+        ? "Sold"
+        : null;
+
+  return {
+    id: item.id,
+    name: item.name || "Unnamed Jewelry",
+    category: normalizeCategory(item.category) || "None",
+    price: Number(item.price) || 0,
+    priceDisplay: `$${Number(item.price || 0).toLocaleString()}`,
+    image: item.jewellery_image1 ,
+    badge,
+    description: item.description || `${item.material || "None"} ${item.category || "None"}`.trim(),
+    metal: normalizeMetal(item.material) || "None",
+    shape: normalizeShape(item.diamond_shape) || "None",
+    stock_id: item.stock_id || "None",
+    status: item.status || "None",
+    material: item.material || "None",
+    diamond_type: item.diamond_type || "None",
+    diamond_shape: item.diamond_shape || "None",
+    weight: (item.weight && item.weight.toString().toLowerCase() !== "noneg") ? item.weight : null,
+    diamond_weight: item.diamond_weight || "None",
+    diamond_color: item.diamond_color || "None",
+    diamond_clarity: item.diamond_clarity || "None",
+    diamond_cut: item.diamond_cut || "None",
+    diamond_growth: item.diamond_growth || "None",
+    total_diamond_weight: item.total_diamond_weight || "None",
+    jewellery_image1: item.jewellery_image1,
+    jewellery_image2: item.jewellery_image2,
+    jewellery_image3: item.jewellery_image3,
+    jewellery_image4: item.jewellery_image4,
+    jewellery_image5: item.jewellery_image5,
+    jewellery_video: item.jewellery_video,
+    created_at: item.created_at,
+  };
+};
 
 const Jewelry = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const itemsPerPage = 9;
 
-  const items = [
-    {
-      id: 1,
-      name: "Royal Diamond Ring",
-      category: "rings",
-      price: 8200,
-      priceDisplay: "$8,200",
-      image:
-        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop",
-      badge: "Eco-Friendly",
-      rating: 4.9,
-      description: "18K White Gold with VS1 Natural Diamond",
-      metal: "white-gold",
-    },
-    {
-      id: 2,
-      name: "Eternal Love Necklace",
-      category: "necklaces",
-      price: 5600,
-      priceDisplay: "$5,600",
-      image:
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop",
-      badge: "New",
-      rating: 4.8,
-      description: "Platinum with Heart-shaped Natural Diamond",
-      metal: "platinum",
-    },
-    {
-      id: 3,
-      name: "Celestial Earrings",
-      category: "earrings",
-      price: 3400,
-      priceDisplay: "$3,400",
-      image:
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop",
-      badge: "Popular",
-      rating: 4.7,
-      description: "Rose Gold with Natural Cluster Diamonds",
-      metal: "rose-gold",
-    },
-    {
-      id: 4,
-      name: "Golden Era Bracelet",
-      category: "bracelets",
-      price: 9800,
-      priceDisplay: "$9,800",
-      image:
-        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop",
-      badge: "Premium",
-      rating: 5.0,
-      description: "22K Yellow Gold with Natural Baguette Diamonds",
-      metal: "yellow-gold",
-    },
-    {
-      id: 5,
-      name: "Sapphire Dream Ring",
-      category: "rings",
-      price: 6200,
-      priceDisplay: "$6,200",
-      image:
-        "https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=600&fit=crop",
-      badge: null,
-      rating: 4.6,
-      description: "White Gold with Natural Sapphire & Diamonds",
-      metal: "white-gold",
-    },
-    {
-      id: 6,
-      name: "Pearl Majesty Necklace",
-      category: "necklaces",
-      price: 4200,
-      priceDisplay: "$4,200",
-      image:
-        "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop",
-      badge: "Classic",
-      rating: 4.8,
-      description: "Lab Pearls with Diamond Clasp",
-      metal: "white-gold",
-    },
-    {
-      id: 7,
-      name: "Emerald Drop Earrings",
-      category: "earrings",
-      price: 7200,
-      priceDisplay: "$7,200",
-      image:
-        "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&h=600&fit=crop",
-      badge: "Rare",
-      rating: 4.9,
-      description: "Natural Emeralds with Diamond Halo",
-      metal: "yellow-gold",
-    },
-    {
-      id: 8,
-      name: "Infinity Diamond Bracelet",
-      category: "bracelets",
-      price: 4800,
-      priceDisplay: "$4,800",
-      image:
-        "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=600&fit=crop",
-      badge: "Trending",
-      rating: 4.7,
-      description: "White Gold with Natural Tennis Diamond Setting",
-      metal: "white-gold",
-    },
-    {
-      id: 9,
-      name: "Rose Gold Eternity Ring",
-      category: "rings",
-      price: 2800,
-      priceDisplay: "$2,800",
-      image:
-        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop",
-      badge: "Sale",
-      rating: 4.8,
-      description: "14K Rose Gold with Natural Pavé Diamonds",
-      metal: "rose-gold",
-    },
-    {
-      id: 10,
-      name: "Diamond Halo Pendant",
-      category: "necklaces",
-      price: 2200,
-      priceDisplay: "$2,200",
-      image:
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop",
-      badge: null,
-      rating: 4.5,
-      description: "Yellow Gold with Natural Diamond Halo",
-      metal: "yellow-gold",
-    },
-    {
-      id: 11,
-      name: "Platinum Stud Earrings",
-      category: "earrings",
-      price: 1800,
-      priceDisplay: "$1,800",
-      image:
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop",
-      badge: "Certified",
-      rating: 4.9,
-      description: "Platinum with Natural Solitaire Diamonds",
-      metal: "platinum",
-    },
-    {
-      id: 12,
-      name: "Yellow Gold Chain Bracelet",
-      category: "bracelets",
-      price: 1200,
-      priceDisplay: "$1,200",
-      image:
-        "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop",
-      badge: "New",
-      rating: 4.6,
-      description: "18K Yellow Gold Chain Link",
-      metal: "yellow-gold",
-    },
-  ];
+  useEffect(() => {
+    const fetchJewelry = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await jewelryAPI.getNaturalJewelry({ limit: 100 });
+        const rawItems = response.data || [];
+        setItems(rawItems.map(mapJewelryItem));
+      } catch (err) {
+        console.error("Failed to fetch jewelry:", err);
+        setError("Failed to load jewelry. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJewelry();
+  }, []);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
@@ -186,6 +120,36 @@ const Jewelry = () => {
       transition: { staggerChildren: 0.08, delayChildren: 0.1 },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-[#E2E8F0] border-t-[#1E3A8A]" />
+          <p className="text-sm text-[#64748B]">Loading jewelry collection...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+            <Filter className="h-8 w-8 text-red-400" />
+          </div>
+          <h3 className="mb-2 text-lg font-semibold text-[#0F172A]">{error}</h3>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-lg bg-[#1E3A8A] px-6 py-2 text-sm font-medium text-white transition-all hover:bg-[#1E40AF]"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -226,7 +190,7 @@ const Jewelry = () => {
               </motion.p>
             </div>
             <Link
-              to="/lab-grown-jewelry"
+              to="/user/lab-grown-jewelry"
               className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
             >
               <FlaskConical className="h-4 w-4" />
@@ -245,11 +209,13 @@ const Jewelry = () => {
           selectedMetals,
           selectedShapes,
           priceRange,
+          centerStoneWeightRange,
           activeFiltersCount,
           toggleMetal,
           toggleShape,
           setActiveCategory,
           setPriceRange,
+          setCenterStoneWeightRange,
         }) => (
           <>
             <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl shadow-sm">
@@ -307,6 +273,14 @@ const Jewelry = () => {
                           <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                             ${priceRange[0]} - ${priceRange[1]}
                             <button onClick={() => setPriceRange([0, 0])}>
+                              <X className="h-3 w-3 flex-shrink-0" />
+                            </button>
+                          </span>
+                        )}
+                        {(centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0) && (
+                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                            {centerStoneWeightRange[0]}ct - {centerStoneWeightRange[1]}ct
+                            <button onClick={() => setCenterStoneWeightRange([0, 0])}>
                               <X className="h-3 w-3 flex-shrink-0" />
                             </button>
                           </span>
