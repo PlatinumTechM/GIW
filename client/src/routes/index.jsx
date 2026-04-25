@@ -22,6 +22,7 @@ import ManageSubscription from "@/modules/admin/ManageSubscription";
 import AddStock from "@/modules/stock/AddStock";
 import AddStockManual from "@/modules/stock/AddStockManual";
 import SharePage from "@/modules/share/SharePage";
+import NotificationPage from "@/modules/notifications/NotificationPage";
 
 export const router = createBrowserRouter([
   {
@@ -151,6 +152,14 @@ export const router = createBrowserRouter([
       {
         path: "/share/:token",
         element: <SharePage />,
+      },
+      {
+        path: "/notifications",
+        element: (
+          <ProtectedRoute>
+            <NotificationPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/admin",
