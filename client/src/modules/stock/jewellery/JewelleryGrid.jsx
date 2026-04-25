@@ -78,8 +78,8 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
               </span>
             </div>
 
-            {/* Quick Actions Overlay */}
-            <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 backdrop-blur-[2px]">
+            {/* Quick Actions Overlay - Desktop Only */}
+            <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:flex items-center justify-center gap-2 backdrop-blur-[2px]">
               <button
                 onClick={() => onEdit(item)}
                 className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[#1E3A8A] hover:bg-[#1E3A8A] hover:text-white transition-all shadow-lg"
@@ -144,13 +144,31 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
             </div>
 
             <div className="mt-auto pt-1">
-               <div className="flex items-end justify-between">
+               <div className="flex items-center justify-between">
                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">Market Price</span>
-                    <span className="text-base font-black text-[#1E3A8A] tracking-tight">₹{Number(item.price).toLocaleString()}</span>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Market Price</span>
+                    <span className="text-sm font-black text-[#1E3A8A] tracking-tight">₹{Number(item.price).toLocaleString()}</span>
                  </div>
-                 <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A] transition-all text-slate-300">
-                    <ExternalLink className="w-4 h-4" />
+                 
+                 <div className="flex items-center gap-2">
+                   {/* Mobile Action Icons */}
+                   <button
+                    onClick={() => onEdit(item)}
+                    className="sm:hidden w-8 h-8 rounded-lg bg-[#1E3A8A]/5 text-[#1E3A8A] flex items-center justify-center active:bg-[#1E3A8A] active:text-white transition-all"
+                   >
+                    <Edit2 className="w-4 h-4" />
+                   </button>
+                   <button
+                    onClick={() => onDelete(item.id)}
+                    className="sm:hidden w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center active:bg-rose-500 active:text-white transition-all"
+                   >
+                    <Trash2 className="w-4 h-4" />
+                   </button>
+
+                   {/* Desktop Link Icon */}
+                   <div className="w-8 h-8 rounded-lg bg-slate-50 hidden sm:flex items-center justify-center group-hover:bg-[#1E3A8A]/10 group-hover:text-[#1E3A8A] transition-all text-slate-300">
+                      <ExternalLink className="w-4 h-4" />
+                   </div>
                  </div>
                </div>
             </div>
