@@ -22,12 +22,12 @@ export const bulkUpload = async (req, res) => {
       message: result.limitReached ? result.limitMessage : `Successfully uploaded ${result.insertedCount} stock items`,
 
       data: result,
-      
+
       limitReached: result.limitReached || false,
     });
   } catch (error) {
     console.error("Error at bulkUpload = ", error);
-    
+
     const status = (error.message?.includes("Subscription limit") || error.message?.includes("No active subscription")) ? 403 : 500;
 
     res.status(status).json({
@@ -382,7 +382,8 @@ export const getMyStocks = async (req, res) => {
 
 export const getFilterOptions = async (req, res) => {
   try {
-    const result = await stockService.getFilterOptions();
+    const userId = req.user?.id;
+    const result = await stockService.getFilterOptions(userId);
 
     res.status(200).json({
       success: true,

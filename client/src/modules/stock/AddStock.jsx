@@ -556,6 +556,7 @@ const AddStock = () => {
     setPendingFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
     setUserStockSearch("");
+    setShowFilters(false);
     setUserStockPage(1);
 
     // Clear legacy filters too
@@ -957,6 +958,7 @@ const AddStock = () => {
           `Saved ${result.data.insertedCount} rows${replaceMsg}, skipped ${result.data.skippedCount} rows`,
         );
         clearFile();
+        fetchFilterOptions(); // Refresh filter options to show new values
       } else {
         console.error("Backend error:", result);
         notify.error(
@@ -1093,22 +1095,23 @@ const AddStock = () => {
   });
   const [filterOptionsLoading, setFilterOptionsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchFilterOptions = async () => {
-      try {
-        setFilterOptionsLoading(true);
-        const response = await api.get("/stock/filters");
-        if (response.data.success) {
-          setFilterOptions(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching filter options:", error);
-      } finally {
-        setFilterOptionsLoading(false);
+  const fetchFilterOptions = useCallback(async () => {
+    try {
+      setFilterOptionsLoading(true);
+      const response = await api.get("/stock/filters");
+      if (response.data.success) {
+        setFilterOptions(response.data.data);
       }
-    };
-    fetchFilterOptions();
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    } finally {
+      setFilterOptionsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, [fetchFilterOptions]);
 
   // Use DB filter options
   const uniqueShapes = filterOptions.shapes;
@@ -1218,9 +1221,8 @@ const AddStock = () => {
           return (
             <td
               key={field}
-              className={`px-2 sm:px-3 py-2 sm:py-3 border-r border-[#E2E8F0] whitespace-nowrap text-xs sm:text-sm ${
-                isEmpty ? "text-[#94A3B8]" : "text-[#374151]"
-              }`}
+              className={`px-2 sm:px-3 py-2 sm:py-3 border-r border-[#E2E8F0] whitespace-nowrap text-xs sm:text-sm ${isEmpty ? "text-[#94A3B8]" : "text-[#374151]"
+                }`}
             >
               {field === "stock_id" && !isEmpty ? (
                 <span className="font-semibold text-[#1E3A8A]">{value}</span>
@@ -1234,13 +1236,12 @@ const AddStock = () => {
                 </span>
               ) : field === "status" ? (
                 <span
-                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
-                    item.status === "AVAILABLE" || !item.status
+                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${item.status === "AVAILABLE" || !item.status
                       ? "bg-green-100 text-green-700 border border-green-200"
                       : item.status === "SOLD"
                         ? "bg-red-100 text-red-700 border border-red-200"
                         : "bg-amber-100 text-amber-700 border border-amber-200"
-                  }`}
+                    }`}
                 >
                   {value}
                 </span>
@@ -1270,11 +1271,10 @@ const AddStock = () => {
             <div className="flex items-center bg-[#F1F5F9] p-1 rounded-xl w-full sm:w-auto">
               <button
                 onClick={() => setViewMode("show")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  viewMode === "show"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "show"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
+                  }`}
               >
                 <Table className="w-4 h-4" />
                 <span className="hidden sm:inline">Show Stock</span>
@@ -1282,11 +1282,10 @@ const AddStock = () => {
               </button>
               <button
                 onClick={() => setViewMode("import")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  viewMode === "import"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "import"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
+                  }`}
               >
                 <Upload className="w-4 h-4" />
                 <span className="hidden sm:inline">Imports</span>
@@ -1294,11 +1293,10 @@ const AddStock = () => {
               </button>
               <button
                 onClick={() => setViewMode("manual")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  viewMode === "manual"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "manual"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
+                  }`}
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Manual Entry</span>
@@ -1306,11 +1304,10 @@ const AddStock = () => {
               </button>
               <button
                 onClick={() => setViewMode("share-api")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                  viewMode === "share-api"
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "share-api"
                     ? "bg-[#1E3A8A] text-white shadow-md"
                     : "text-[#64748B] hover:text-[#0F172A]"
-                }`}
+                  }`}
               >
                 <Share2 className="w-4 h-4" />
                 <span className="hidden sm:inline">Share API</span>
@@ -1405,11 +1402,10 @@ const AddStock = () => {
                             <button
                               key={shape}
                               onClick={() => toggleArrayFilter("shape", shape)}
-                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${
-                                pendingFilters.shape.includes(shape)
+                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${pendingFilters.shape.includes(shape)
                                   ? "bg-indigo-600 text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
+                                }`}
                             >
                               {shape}
                             </button>
@@ -1443,11 +1439,10 @@ const AddStock = () => {
                             <button
                               key={color}
                               onClick={() => toggleArrayFilter("color", color)}
-                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${
-                                pendingFilters.color.includes(color)
+                              className={`px-3 py-1.5 rounded-md text-sm transition-all ${pendingFilters.color.includes(color)
                                   ? "bg-purple-600 text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
+                                }`}
                             >
                               {color}
                             </button>
@@ -1485,11 +1480,10 @@ const AddStock = () => {
                                 onClick={() =>
                                   toggleArrayFilter("clarity", clarity)
                                 }
-                                className={`px-2 py-1 rounded text-xs transition-all ${
-                                  pendingFilters.clarity.includes(clarity)
+                                className={`px-2 py-1 rounded text-xs transition-all ${pendingFilters.clarity.includes(clarity)
                                     ? "bg-emerald-600 text-white"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
+                                  }`}
                               >
                                 {clarity}
                               </button>
@@ -1525,11 +1519,10 @@ const AddStock = () => {
                                   onClick={() =>
                                     toggleArrayFilter("cut", fullNames[idx])
                                   }
-                                  className={`px-2 py-1 rounded text-xs transition-all ${
-                                    pendingFilters.cut.includes(fullNames[idx])
+                                  className={`px-2 py-1 rounded text-xs transition-all ${pendingFilters.cut.includes(fullNames[idx])
                                       ? "bg-pink-600 text-white"
                                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                  }`}
+                                    }`}
                                 >
                                   {cut}
                                 </button>
@@ -1558,11 +1551,10 @@ const AddStock = () => {
                             <button
                               key={lab}
                               onClick={() => toggleArrayFilter("lab", lab)}
-                              className={`px-2 py-1 rounded text-xs transition-all ${
-                                pendingFilters.lab.includes(lab)
+                              className={`px-2 py-1 rounded text-xs transition-all ${pendingFilters.lab.includes(lab)
                                   ? "bg-cyan-600 text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
+                                }`}
                             >
                               {lab}
                             </button>
@@ -1586,11 +1578,10 @@ const AddStock = () => {
                               onClick={() =>
                                 toggleArrayFilter("growthType", type)
                               }
-                              className={`flex-1 px-2 py-1.5 rounded text-sm transition-all ${
-                                pendingFilters.growthType.includes(type)
+                              className={`flex-1 px-2 py-1.5 rounded text-sm transition-all ${pendingFilters.growthType.includes(type)
                                   ? "bg-teal-600 text-white"
                                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
+                                }`}
                             >
                               {type}
                             </button>
@@ -1682,8 +1673,7 @@ const AddStock = () => {
                           <button
                             key={status}
                             onClick={() => handleStatusToggle(status)}
-                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${
-                              pendingFilters.status.includes(status)
+                            className={`px-3 py-1.5 rounded-md text-sm transition-all ${pendingFilters.status.includes(status)
                                 ? status === "AVAILABLE"
                                   ? "bg-green-600 text-white"
                                   : status === "SOLD"
@@ -1692,7 +1682,7 @@ const AddStock = () => {
                                       ? "bg-amber-500 text-white"
                                       : "bg-blue-600 text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            }`}
+                              }`}
                           >
                             {status}
                           </button>
@@ -1751,11 +1741,10 @@ const AddStock = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${
-                    hasActiveFilters()
+                  className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm ${hasActiveFilters()
                       ? "bg-blue-600 text-white"
                       : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
-                  }`}
+                    }`}
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span className="hidden sm:inline">Filters</span>
@@ -1912,28 +1901,26 @@ const AddStock = () => {
                 {appliedFilters.status.map((status) => (
                   <span
                     key={status}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${
-                      status === "AVAILABLE"
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${status === "AVAILABLE"
                         ? "bg-green-100 text-green-700"
                         : status === "SOLD"
                           ? "bg-red-100 text-red-700"
                           : status === "HOLD"
                             ? "bg-amber-100 text-amber-700"
                             : "bg-blue-100 text-blue-700"
-                    }`}
+                      }`}
                   >
                     {status}
                     <button
                       onClick={() => removeFilter("status", status)}
-                      className={`rounded p-0.5 ml-1 ${
-                        status === "AVAILABLE"
+                      className={`rounded p-0.5 ml-1 ${status === "AVAILABLE"
                           ? "hover:bg-green-200"
                           : status === "SOLD"
                             ? "hover:bg-red-200"
                             : status === "HOLD"
                               ? "hover:bg-amber-200"
                               : "hover:bg-blue-200"
-                      }`}
+                        }`}
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -1958,20 +1945,20 @@ const AddStock = () => {
                 {/* Price Range */}
                 {(appliedFilters.minPricePerCarat ||
                   appliedFilters.maxPricePerCarat) && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-xs">
-                    ${appliedFilters.minPricePerCarat || "0"}-$
-                    {appliedFilters.maxPricePerCarat || "∞"}
-                    <button
-                      onClick={() => {
-                        removeFilter("minPricePerCarat");
-                        removeFilter("maxPricePerCarat");
-                      }}
-                      className="hover:bg-rose-200 rounded p-0.5 ml-1"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-xs">
+                      ${appliedFilters.minPricePerCarat || "0"}-$
+                      {appliedFilters.maxPricePerCarat || "∞"}
+                      <button
+                        onClick={() => {
+                          removeFilter("minPricePerCarat");
+                          removeFilter("maxPricePerCarat");
+                        }}
+                        className="hover:bg-rose-200 rounded p-0.5 ml-1"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  )}
                 <button
                   onClick={clearAllFilters}
                   className="text-xs text-red-500 hover:text-red-600 hover:underline ml-2"
@@ -2098,11 +2085,10 @@ const AddStock = () => {
                             <th
                               key={field}
                               onClick={() => isSortable && handleSort(field)}
-                              className={`px-2 sm:px-3 py-2 sm:py-3 text-left font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm ${
-                                isSortable
+                              className={`px-2 sm:px-3 py-2 sm:py-3 text-left font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm ${isSortable
                                   ? "cursor-pointer hover:bg-gray-300 transition-all group"
                                   : ""
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-1">
                                 <span>
@@ -2258,11 +2244,10 @@ const AddStock = () => {
                 setIsDragging(true);
               }}
               onDragLeave={() => setIsDragging(false)}
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-                isDragging
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${isDragging
                   ? "border-emerald-500 bg-emerald-50"
                   : "border-[#E2E8F0] bg-white hover:border-emerald-300"
-              }`}
+                }`}
             >
               <div className="w-16 h-16 rounded-full bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
                 <Upload
@@ -2404,7 +2389,7 @@ const AddStock = () => {
 
         {/* VIEW 3: Manual Entry */}
         {viewMode === "manual" && (
-          <AddStockManual onStockAdded={fetchUserStock} />
+          <AddStockManual onStockAdded={() => { fetchUserStock(); fetchFilterOptions(); }} />
         )}
 
         {/* VIEW 4: Share API */}
@@ -2603,11 +2588,10 @@ const AddStock = () => {
                     {/* Copy Link */}
                     <button
                       onClick={copyToClipboard}
-                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
-                        copied
+                      className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${copied
                           ? "bg-green-100 text-green-700 border-2 border-green-200"
                           : "bg-indigo-50 text-indigo-700 border-2 border-indigo-100 hover:bg-indigo-100"
-                      }`}
+                        }`}
                     >
                       {copied ? (
                         <>

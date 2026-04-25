@@ -800,20 +800,28 @@ export const getByUserId = async (
   };
 };
 
-export const getFilterOptions = async () => {
-  const shapeQuery = `SELECT DISTINCT UPPER(shape) as value FROM diamond_stock WHERE shape IS NOT NULL AND shape != '' ORDER BY value`;
-  const colorQuery = `SELECT DISTINCT UPPER(color) as value FROM diamond_stock WHERE color IS NOT NULL AND color != '' ORDER BY value`;
-  const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock WHERE fancy_color IS NOT NULL AND fancy_color != '' ORDER BY value`;
-  const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock WHERE clarity IS NOT NULL AND clarity != '' ORDER BY value`;
-  const labQuery = `SELECT DISTINCT UPPER(lab) as value FROM diamond_stock WHERE lab IS NOT NULL AND lab != '' ORDER BY value`;
+export const getFilterOptions = async (userId = null) => {
+  const where = (field) => {
+    let base = `WHERE ${field} IS NOT NULL AND ${field} != ''`;
+    if (userId) base += ` AND user_id = $1`;
+    return base;
+  };
+
+  const shapeQuery = `SELECT DISTINCT UPPER(shape) as value FROM diamond_stock ${where('shape')} ORDER BY value`;
+  const colorQuery = `SELECT DISTINCT UPPER(color) as value FROM diamond_stock ${where('color')} ORDER BY value`;
+  const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock ${where('fancy_color')} ORDER BY value`;
+  const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock ${where('clarity')} ORDER BY value`;
+  const labQuery = `SELECT DISTINCT UPPER(lab) as value FROM diamond_stock ${where('lab')} ORDER BY value`;
+
+  const params = userId ? [userId] : [];
 
   const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult] =
     await Promise.all([
-      pool.query(shapeQuery),
-      pool.query(colorQuery),
-      pool.query(fancyColorQuery),
-      pool.query(clarityQuery),
-      pool.query(labQuery),
+      pool.query(shapeQuery, params),
+      pool.query(colorQuery, params),
+      pool.query(fancyColorQuery, params),
+      pool.query(clarityQuery, params),
+      pool.query(labQuery, params),
     ]);
 
   // Combine colors and fancy colors, remove duplicates

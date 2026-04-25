@@ -536,7 +536,7 @@ const InputField = ({
   );
 };
 
-const AddStockManual = () => {
+const AddStockManual = ({ onStockAdded }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
@@ -653,6 +653,7 @@ const AddStockManual = () => {
         diamond_video: null,
         certificate_image: null,
       });
+      if (onStockAdded) onStockAdded();
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to add stock";
