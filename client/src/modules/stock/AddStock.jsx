@@ -2194,7 +2194,7 @@ const AddStock = () => {
               </div>
 
               {/* API Import */}
-              <div
+              {/* <div
                 onClick={() =>
                   notify.info(
                     "Coming Soon",
@@ -2214,7 +2214,7 @@ const AddStock = () => {
                     Connect external data source
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Download Template */}
               <div
@@ -2388,7 +2388,9 @@ const AddStock = () => {
         )}
 
         {/* VIEW 3: Manual Entry */}
-        {viewMode === "manual" && <AddStockManual onStockAdded={fetchUserStock} />}
+        {viewMode === "manual" && (
+          <AddStockManual onStockAdded={fetchUserStock} />
+        )}
 
         {/* VIEW 4: Share API */}
         {viewMode === "share-api" && <ShareAPI />}

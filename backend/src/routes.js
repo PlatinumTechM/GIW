@@ -8,11 +8,11 @@ import shareApiRoutes from "./modules/share/share-api/share-api.routes.js";
 
 const app = express();
 
-app.use("/", shareApiRoutes);
 app.use("/v1/auth", authRoutes);
 app.use("/v1/admin", adminRoutes);
 app.use("/v1/stock", stockRoutes);
 app.use("/v1/jewellry-stock", jewellryRoutes);
 app.use("/v1/share", shareRoutes);
+app.use("/v1/share-api", shareApiRoutes);
 
 export default app;
