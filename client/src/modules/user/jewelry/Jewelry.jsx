@@ -7,15 +7,10 @@ import JewelryFilters from "./JewelryFilters";
 import { jewelryAPI } from "../../../services/api.js";
 
 const normalizeCategory = (cat) => {
-  if (!cat) return "rings";
-  const c = cat.toString().toLowerCase().trim();
-  if (c.includes("ring")) return "rings";
-  if (c.includes("necklace") || c.includes("pendant")) return "necklaces";
-  if (c.includes("earring")) return "earrings";
-  if (c.includes("bracelet") || c.includes("bangle")) return "bracelets";
-  if (c.includes("wedding")) return "wedding-bands";
-  if (c.includes("engagement")) return "engagement-rings";
-  return c;
+  if (!cat) return null;
+  const c = cat.toString().toUpperCase().trim();
+  const validCategories = ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"];
+  return validCategories.includes(c) ? c : "OTHER";
 };
 
 const normalizeMetal = (mat) => {
@@ -27,12 +22,14 @@ const normalizeMetal = (mat) => {
   if (m.includes("platinum")) return "platinum";
   if (m.includes("silver")) return "silver";
   if (m.includes("two tone") || m.includes("two-tone")) return "two-tone";
-  return m.replace(/\s+/g, "-");
+  return "other";
 };
 
 const normalizeShape = (shape) => {
   if (!shape) return null;
-  return shape.toString().toLowerCase().trim();
+  const s = shape.toString().toLowerCase().trim();
+  const predefinedShapes = ["round", "pear", "oval", "princess", "emerald", "cushion", "marquise", "heart", "radiant", "baguette", "hexagonal", "square emerald", "briolette", "trilliant", "half moon", "rose cut", "kite"];
+  return predefinedShapes.includes(s) ? s : "other";
 };
 
 const mapJewelryItem = (item) => {
@@ -47,10 +44,10 @@ const mapJewelryItem = (item) => {
   return {
     id: item.id,
     name: item.name || "Unnamed Jewelry",
-    category: normalizeCategory(item.category) || "None",
+    category: item.category || "None",
     price: Number(item.price) || 0,
     priceDisplay: `$${Number(item.price || 0).toLocaleString()}`,
-    image: item.jewellery_image1 ,
+    image: item.jewellery_image1,
     badge,
     description: item.description || `${item.material || "None"} ${item.category || "None"}`.trim(),
     metal: normalizeMetal(item.material) || "None",
@@ -84,6 +81,7 @@ const Jewelry = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("all");
   const itemsPerPage = 9;
 
   useEffect(() => {
@@ -91,7 +89,11 @@ const Jewelry = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await jewelryAPI.getNaturalJewelry({ limit: 100 });
+        const params = { limit: 100 };
+        if (activeCategory !== "all") {
+          params.categories = [activeCategory];
+        }
+        const response = await jewelryAPI.getNaturalJewelry(params);
         const rawItems = response.data || [];
         setItems(rawItems.map(mapJewelryItem));
       } catch (err) {
@@ -102,7 +104,7 @@ const Jewelry = () => {
       }
     };
     fetchJewelry();
-  }, []);
+  }, [activeCategory]);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
@@ -175,14 +177,14 @@ const Jewelry = () => {
                   Home
                 </Link>
                 <span>/</span>
-                <span className="text-[#1E3A8A]">NaturalJewelry</span>
+                <span className="text-[#1E3A8A]">Natural Jewelry</span>
               </motion.div>
 
               <motion.h1
                 variants={fadeInUp}
                 className="text-2xl font-bold text-[#0F172A]"
               >
-                NaturalJewelry Collection
+                Natural Jewelry Collection
               </motion.h1>
 
               <motion.p variants={fadeInUp} className="text-sm text-[#64748B]">
@@ -194,13 +196,13 @@ const Jewelry = () => {
               className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
             >
               <FlaskConical className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">View Lab-Grown</span>
+              <span className="text-xs sm:text-sm">View Lab-Grown Jewelry</span>
             </Link>
           </motion.div>
         </div>
       </section>
 
-      <JewelryFilters items={items} searchQuery={searchQuery} setSearchQuery={setSearchQuery}>
+      <JewelryFilters items={items} searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeCategory={activeCategory} setActiveCategory={setActiveCategory}>
         {({
           filteredItems,
           filteredItemsCount,
@@ -219,99 +221,98 @@ const Jewelry = () => {
         }) => (
           <>
             <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl shadow-sm">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                    <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('openMobileFilters'))}
-                      className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
-                    >
-                      <SlidersHorizontal className="h-4 w-4" />
-                      <span className="text-xs sm:text-sm">Filters</span>
-                      {activeFiltersCount > 0 && (
-                        <span className="bg-[#1E3A8A] text-white text-xs px-1.5 py-0.5 rounded-full">
-                          {activeFiltersCount}
+              <div className="w-full px-4 sm:px-6 lg:px-8">                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('openMobileFilters'))}
+                    className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span className="text-xs sm:text-sm">Filters</span>
+                    {activeFiltersCount > 0 && (
+                      <span className="bg-[#1E3A8A] text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </button>
+                  <span className="ml-10 text-xs sm:text-sm text-[#64748B]">Natural Jewelry</span>
+                  {activeFiltersCount > 0 && (
+                    <>
+                      <span className="text-sm text-[#64748B]">•</span>
+                      <span className="text-sm text-[#64748B]">Active:</span>
+                      {activeCategory !== "all" && (
+                        <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                          <span className="truncate max-w-[80px] sm:max-w-none">{activeCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+                          <button onClick={() => setActiveCategory("all")}>
+                            <X className="h-3 w-3 flex-shrink-0" />
+                          </button>
                         </span>
                       )}
-                    </button>
-                    <span className="text-xs sm:text-sm text-[#64748B]">NaturalJewelry</span>
-                    {activeFiltersCount > 0 && (
-                      <>
-                        <span className="text-sm text-[#64748B]">•</span>
-                        <span className="text-sm text-[#64748B]">Active:</span>
-                        {activeCategory !== "all" && (
-                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
-                            <span className="truncate max-w-[80px] sm:max-w-none">{activeCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-                            <button onClick={() => setActiveCategory("all")}>
-                              <X className="h-3 w-3 flex-shrink-0" />
-                            </button>
-                          </span>
-                        )}
-                        {selectedShapes.map((shape) => (
-                          <span
-                            key={shape}
-                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
-                          >
-                            {shape}
-                            <button onClick={() => toggleShape(shape)}>
-                              <X className="h-3 w-3 flex-shrink-0" />
-                            </button>
-                          </span>
-                        ))}
-                        {selectedMetals.map((metal) => (
-                          <span
-                            key={metal}
-                            className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
-                          >
-                            <span className="truncate max-w-[80px] sm:max-w-none">{metal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
-                            <button onClick={() => toggleMetal(metal)}>
-                              <X className="h-3 w-3 flex-shrink-0" />
-                            </button>
-                          </span>
-                        ))}
-                        {(priceRange[0] > 0 || priceRange[1] > 0) && (
-                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
-                            ${priceRange[0]} - ${priceRange[1]}
-                            <button onClick={() => setPriceRange([0, 0])}>
-                              <X className="h-3 w-3 flex-shrink-0" />
-                            </button>
-                          </span>
-                        )}
-                        {(centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0) && (
-                          <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
-                            {centerStoneWeightRange[0]}ct - {centerStoneWeightRange[1]}ct
-                            <button onClick={() => setCenterStoneWeightRange([0, 0])}>
-                              <X className="h-3 w-3 flex-shrink-0" />
-                            </button>
-                          </span>
-                        )}
-                        <button
-                          onClick={clearAllFilters}
-                          className="flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
+                      {selectedShapes.map((shape) => (
+                        <span
+                          key={shape}
+                          className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
                         >
-                          <RefreshCw className="h-3 w-3" />
-                          Clear all
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                    <div className="w-full sm:w-auto">
-                      <input
-                        type="text"
-                        placeholder="Search jewelry..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="input-field text-sm"
-                      />
-                    </div>
+                          {shape}
+                          <button onClick={() => toggleShape(shape)}>
+                            <X className="h-3 w-3 flex-shrink-0" />
+                          </button>
+                        </span>
+                      ))}
+                      {selectedMetals.map((metal) => (
+                        <span
+                          key={metal}
+                          className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                        >
+                          <span className="truncate max-w-[80px] sm:max-w-none">{metal.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+                          <button onClick={() => toggleMetal(metal)}>
+                            <X className="h-3 w-3 flex-shrink-0" />
+                          </button>
+                        </span>
+                      ))}
+                      {(priceRange[0] > 0 || priceRange[1] > 0) && (
+                        <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                          ${priceRange[0]} - ${priceRange[1]}
+                          <button onClick={() => setPriceRange([0, 0])}>
+                            <X className="h-3 w-3 flex-shrink-0" />
+                          </button>
+                        </span>
+                      )}
+                      {(centerStoneWeightRange[0] > 0 || centerStoneWeightRange[1] > 0) && (
+                        <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-2 sm:px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                          {centerStoneWeightRange[0]}ct - {centerStoneWeightRange[1]}ct
+                          <button onClick={() => setCenterStoneWeightRange([0, 0])}>
+                            <X className="h-3 w-3 flex-shrink-0" />
+                          </button>
+                        </span>
+                      )}
+                      <button
+                        onClick={clearAllFilters}
+                        className="flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Clear all
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div className="w-full sm:w-auto">
+                    <input
+                      type="text"
+                      placeholder="Search jewelry..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="input-field text-sm"
+                    />
                   </div>
                 </div>
+              </div>
               </div>
             </section>
 
             <section className="py-4 sm:py-8">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="w-full px-4 sm:px-6 lg:px-8">
                 <JewelryGrid
                   items={filteredItems}
                   itemsPerPage={itemsPerPage}
