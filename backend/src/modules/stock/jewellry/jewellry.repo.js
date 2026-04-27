@@ -40,21 +40,74 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.categories && Array.isArray(filters.categories) && filters.categories.length > 0) {
-    whereConditions.push(`category = ANY($${paramIndex})`);
-    values.push(filters.categories);
-    paramIndex++;
+    // Handle OTHER category - items not in listed categories
+    if (filters.categories.includes("OTHER")) {
+      const listedCategories = filters.categories.filter(c => c !== "OTHER");
+      if (listedCategories.length > 0) {
+        // OTHER: items not in the listed categories
+        whereConditions.push(`(category IS NULL OR category NOT IN (${listedCategories.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
+        values.push(...listedCategories);
+        paramIndex += listedCategories.length;
+      } else {
+        // If only OTHER is selected, show items with null or empty category
+        whereConditions.push(`(category IS NULL OR category = '' OR category NOT IN ('RING', 'NECKLACE', 'EARRINGS', 'BRACELET', 'PENDANT', 'BANGLE', 'BROOCH'))`);
+      }
+    } else {
+      // Normal category filtering
+      whereConditions.push(`category = ANY($${paramIndex})`);
+      values.push(filters.categories);
+      paramIndex++;
+    }
   }
 
   if (filters.materials && Array.isArray(filters.materials) && filters.materials.length > 0) {
-    whereConditions.push(`material = ANY($${paramIndex})`);
-    values.push(filters.materials);
-    paramIndex++;
+    // Handle OTHER material - items not in listed predefined materials
+    const predefinedMaterials = ["WHITE GOLD", "YELLOW GOLD", "ROSE GOLD", "PLATINUM", "SILVER", "TWO TONE"];
+    
+    if (filters.materials.includes("other")) {
+      const listedMaterials = filters.materials.map(m => m.toUpperCase()).filter(m => m !== "OTHER");
+      if (listedMaterials.length > 0) {
+        // OTHER + specific materials: items not in predefined OR matching specific materials
+        whereConditions.push(`(material IS NULL OR material NOT IN (${predefinedMaterials.map((_, i) => `$${paramIndex + i}`).join(",")}) OR UPPER(material) = ANY($${paramIndex + predefinedMaterials.length}))`);
+        values.push(...predefinedMaterials, listedMaterials);
+        paramIndex += predefinedMaterials.length + 1;
+      } else {
+        // If only OTHER is selected, show items with materials not in predefined list
+        whereConditions.push(`(material IS NULL OR material NOT IN (${predefinedMaterials.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
+        values.push(...predefinedMaterials);
+        paramIndex += predefinedMaterials.length;
+      }
+    } else {
+      // Normal material filtering
+      whereConditions.push(`UPPER(material) = ANY($${paramIndex})`);
+      values.push(filters.materials.map(m => m.toUpperCase()));
+      paramIndex++;
+    }
   }
 
   if (filters.shapes && Array.isArray(filters.shapes) && filters.shapes.length > 0) {
-    whereConditions.push(`diamond_shape = ANY($${paramIndex})`);
-    values.push(filters.shapes);
-    paramIndex++;
+    // Handle OTHER shape - items not in listed predefined shapes
+    const predefinedShapes = ["ROUND", "PEAR", "OVAL", "PRINCESS", "EMERALD", "CUSHION", "MARQUISE", "HEART", "RADIANT", "BAGUETTE", "HEXAGONAL", "SQUARE EMERALD", "BRIOLETTE", "TRILLIANT", "HALF MOON", "ROSE CUT", "KITE"];
+    
+    if (filters.shapes.includes("other")) {
+      const listedShapes = filters.shapes.filter(s => s !== "other");
+      if (listedShapes.length > 0) {
+        // OTHER + specific shapes: items not in predefined OR matching specific shapes
+        whereConditions.push(`(diamond_shape IS NULL OR diamond_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}) OR diamond_shape = ANY($${paramIndex + predefinedShapes.length}))`);
+        values.push(...predefinedShapes, listedShapes);
+        paramIndex += predefinedShapes.length + 1;
+      } else {
+        // If only OTHER is selected, show items with shapes not in predefined list
+        whereConditions.push(`(diamond_shape IS NULL OR diamond_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
+        values.push(...predefinedShapes);
+        paramIndex += predefinedShapes.length;
+      }
+    } else {
+      // Normal shape filtering
+      whereConditions.push(`diamond_shape = ANY($${paramIndex})`);
+      values.push(filters.shapes);
+      paramIndex++;
+    }
   }
 
   if (filters.colors && Array.isArray(filters.colors) && filters.colors.length > 0) {
@@ -219,7 +272,7 @@ export const getFilterOptions = async (userId) => {
   ]);
 
   return {
-    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE"],
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
     materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
     statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
     shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
@@ -246,7 +299,7 @@ export const getPublicFilterOptions = async () => {
   ]);
 
   return {
-    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE"],
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
     materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
     statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
     shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
