@@ -20,8 +20,10 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isJoinDropdownOpen, setIsJoinDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
+  const joinDropdownRef = useRef(null);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -67,6 +69,9 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsUserDropdownOpen(false);
       }
+      if (joinDropdownRef.current && !joinDropdownRef.current.contains(event.target)) {
+        setIsJoinDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -82,14 +87,14 @@ const Navbar = () => {
         label: "Home",
         icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
       },
-      isAuthenticated
+      isAuthenticated && user?.role === "Seller"
         ? {
           path: "user/add-stock",
           label: "Diamond",
           icon: "M12 3L2 12l10 9 10-9-10-9z",
         }
         : null,
-      isAuthenticated
+      isAuthenticated && user?.role === "Seller"
         ? {
           path: "user/jewellery-stock",
           label: "Jewellery",
@@ -110,10 +115,6 @@ const Navbar = () => {
         icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
       },
     ].filter(Boolean);
-    // Hide Home, Stock/Pricing, Contact for admin users - only show Dashboard in dropdown
-    // if (user?.role === 'admin') {
-    //   return links.filter(link => link.label !== "Home" && link.label !== "Stock" && link.label !== "Pricing" && link.label !== "Contact");
-
     // Hide Home, Stock, Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === "admin") {
       return links.filter(
@@ -125,6 +126,17 @@ const Navbar = () => {
           link.label !== "Contact",
       );
     }
+
+    // Hide Home and Contact for Seller users - only show Diamond and Jewellery
+    if (user?.role === "Seller") {
+      return links.filter(
+        (link) =>
+          link.label !== "Home" &&
+          link.label !== "Pricing" &&
+          link.label !== "Contact",
+      );
+    }
+
     return links;
   };
 
@@ -326,6 +338,17 @@ const Navbar = () => {
                                     {user?.email}
                                   </p>
                                 </div>
+                                <div className="mt-1">
+                                  <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${
+                                    user?.role === 'Seller' 
+                                      ? 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20'
+                                      : user?.role === 'admin'
+                                      ? 'bg-[#1E3A8A]/10 text-[#1E3A8A] border border-[#1E3A8A]/20'
+                                      : 'bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20'
+                                  }`}>
+                                    {user?.role || 'Buyer'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -381,12 +404,51 @@ const Navbar = () => {
                   >
                     Sign In
                   </Link>
-                  <Link
-                    to="/register"
-                    className="px-4 py-2 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#1E40AF] rounded-xl shadow-md shadow-[#1E3A8A]/20 hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all duration-300 hover:-translate-y-0.5"
-                  >
-                    Get Started
-                  </Link>
+                  <div className="relative" ref={joinDropdownRef}>
+                    <button
+                      onClick={() => setIsJoinDropdownOpen(!isJoinDropdownOpen)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#1E40AF] rounded-xl shadow-md shadow-[#1E3A8A]/20 hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
+                    >
+                      Get Started
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isJoinDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isJoinDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-[1001] overflow-hidden"
+                        >
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700]"></div>
+                          <div className="p-2 space-y-1">
+                            <Link
+                              to="/register?role=Buyer"
+                              onClick={() => setIsJoinDropdownOpen(false)}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                <User className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">Join as Buyer</span>
+                            </Link>
+                            <Link
+                              to="/register?role=Seller"
+                              onClick={() => setIsJoinDropdownOpen(false)}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                <Package className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">Join as Seller</span>
+                            </Link>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </>
               )}
             </div>
@@ -601,25 +663,46 @@ const Navbar = () => {
                         </svg>
                         Sign In
                       </Link>
-                      <Link
-                        to="/register"
-                        className="flex items-center gap-3 px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
-                      >
-                        <svg
-                          className="w-5 h-5 text-[#93C5FD]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      <div className="space-y-2">
+                        <Link
+                          to="/register?role=Buyer"
+                          className="flex items-center gap-3 px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                          />
-                        </svg>
-                        Get Started
-                      </Link>
+                          <svg
+                            className="w-5 h-5 text-[#93C5FD]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          Join as Buyer
+                        </Link>
+                        <Link
+                          to="/register?role=Seller"
+                          className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white text-sm font-medium rounded-xl shadow-md hover:from-[#1E40AF] hover:to-[#2563EB] transition-all"
+                        >
+                          <svg
+                            className="w-5 h-5 text-[#93C5FD]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                          </svg>
+                          Join as Seller
+                        </Link>
+                      </div>
                     </>
                   )}
                 </motion.div>

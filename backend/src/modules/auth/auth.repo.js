@@ -53,13 +53,13 @@ export const findUserByPhone = async (phone) => {
 };
 
 export const createUser = async (userData) => {
-  const { name, email, company, phone, address, gst, password, document, type } =
+  const { name, email, company, phone, address, gst, password, document, type, role } =
     userData;
 
   const query = `INSERT INTO users 
-    (name, email, company, phone, address, gst, password, document, role, type) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-    RETURNING id, name, email, company, phone, address, gst, document, role, type, created_at`;
+    (name, email, company, phone, address, gst, password, document, role, type, is_active) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+    RETURNING id, name, email, company, phone, address, gst, document, role, type, is_active, created_at`;
 
   const result = await pool.query(query, [
     name,
@@ -70,8 +70,9 @@ export const createUser = async (userData) => {
     gst,
     password,
     document || null,
-    "user", // Default role
-    type || []
+    role || "Buyer",
+    type || [],
+    true
   ]);
   return result.rows[0];
 };

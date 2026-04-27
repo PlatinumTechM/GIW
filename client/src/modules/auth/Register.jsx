@@ -1,27 +1,29 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Input from "../../components/ui/Input";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import notify from "../../utils/notifications.jsx";
 import { formatFieldValue } from "../../utils/formatters.js";
 import api from "@/services/api";
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     company: "",
     address: "",
+    city: "",
+    country: "",
     phone: "",
     gst: "",
     password: "",
     confirmPassword: "",
     upload: null,
     type: [], // Multi-select array
+    role: "Buyer", // Default role
   });
 
-  const [focusedField, setFocusedField] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +33,13 @@ const Register = () => {
 
   useEffect(() => {
     setIsLoaded(true);
-  }, []);
+    // Get role from URL query params
+    const params = new URLSearchParams(location.search);
+    const roleParam = params.get('role');
+    if (roleParam && (roleParam === 'Buyer' || roleParam === 'Seller')) {
+      setFormData(prev => ({ ...prev, role: roleParam }));
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -87,6 +95,8 @@ const Register = () => {
       submitData.append("company", formData.company.trim());
       submitData.append("phone", formData.phone);
       submitData.append("address", formData.address);
+      submitData.append("city", formData.city);
+      submitData.append("country", formData.country);
       submitData.append("gst", formData.gst);
       submitData.append("password", formData.password);
       submitData.append("confirmPassword", formData.confirmPassword);
@@ -96,8 +106,7 @@ const Register = () => {
       }
 
       submitData.append("type", JSON.stringify(formData.type));
-
-
+      submitData.append("role", formData.role);
 
       const response = await api.post(`/auth/register`, submitData);
       const data = response.data;
@@ -117,12 +126,15 @@ const Register = () => {
         email: "",
         company: "",
         address: "",
+        city: "",
+        country: "",
         phone: "",
         gst: "",
         password: "",
         confirmPassword: "",
         upload: null,
-        type: []
+        type: [],
+        role: "Buyer",
       });
 
       // Redirect to login after 2 seconds
@@ -138,45 +150,6 @@ const Register = () => {
     }
   };
 
-
-  const icons = {
-    name: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-    email: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-      </svg>
-    ),
-    company: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    ),
-    phone: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-      </svg>
-    ),
-    address: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    gst: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-    password: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-    ),
-  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row overflow-x-hidden w-full max-w-full">
@@ -341,13 +314,31 @@ const Register = () => {
         <div className="w-full max-w-2xl mx-auto py-6 sm:py-8 lg:py-8 px-0 sm:px-0">
           {/* Mobile Welcome Text - Only shows below header */}
           <div className="lg:hidden text-left mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-semibold text-[#0F172A]">Create Account</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base sm:text-lg font-semibold text-[#0F172A]">Create Account</h2>
+              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                formData.role === "Buyer"
+                  ? "bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20"
+                  : "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20"
+              }`}>
+                {formData.role}
+              </div>
+            </div>
             <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Register your diamond business</p>
           </div>
 
           {/* Desktop Header */}
           <div className="hidden lg:block mb-4 lg:mb-6">
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#0F172A] mb-2">Create Account</h1>
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl lg:text-3xl font-bold text-[#0F172A]">Create Account</h1>
+              <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                formData.role === "Buyer"
+                  ? "bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20"
+                  : "bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20"
+              }`}>
+                {formData.role}
+              </div>
+            </div>
             <p className="text-sm lg:text-base text-[#64748B]">Register your diamond business with GIW</p>
           </div>
 
@@ -371,37 +362,31 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Full Name
+                  Full Name <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <input
                   type="text"
                   name="name"
                   placeholder="John Smith"
                   value={formData.name}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("name")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "name"}
+                  className="input-field"
                   required
-                  icon={icons.name}
                 />
               </div>
 
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Email Address
+                  Email Address <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <input
                   type="email"
                   name="email"
                   placeholder="dealer@company.com"
                   value={formData.email}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("email")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "email"}
+                  className="input-field"
                   required
-                  icon={icons.email}
                 />
               </div>
             </div>
@@ -410,37 +395,31 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Company Name
+                  Company Name {formData.role === "Seller" && <span className="text-red-500">*</span>}
                 </label>
-                <Input
+                <input
                   type="text"
                   name="company"
                   placeholder="Diamond Traders Ltd"
                   value={formData.company}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("company")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "company"}
-                  required
-                  icon={icons.company}
+                  className="input-field"
+                  required={formData.role === "Seller"}
                 />
               </div>
 
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Mobile Number
+                  Mobile Number <span className="text-red-500">*</span>
                 </label>
-                <Input
+                <input
                   type="tel"
                   name="phone"
                   placeholder="+91 98765 43210"
                   value={formData.phone}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("phone")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "phone"}
+                  className="input-field"
                   required
-                  icon={icons.phone}
                 />
               </div>
             </div>
@@ -448,21 +427,47 @@ const Register = () => {
             {/* Address */}
             <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                Business Address
+                Business Address {formData.role === "Seller" && <span className="text-red-500">*</span>}
               </label>
-              <div className="relative">
-                <div className="absolute left-3.5 top-3.5 text-[#94A3B8] z-10">
-                  {icons.address}
-                </div>
-                <textarea
-                  name="address"
-                  placeholder="Enter your full business address..."
-                  rows="2"
-                  value={formData.address}
+              <textarea
+                name="address"
+                placeholder="Enter your full business address..."
+                rows="2"
+                value={formData.address}
+                onChange={handleChange}
+                className="input-field resize-none"
+                required={formData.role === "Seller"}
+              />
+            </div>
+
+            {/* City & Country Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-[#0F172A] mb-2">
+                  City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  placeholder="Surat"
+                  value={formData.city}
                   onChange={handleChange}
-                  onFocus={() => setFocusedField("address")}
-                  onBlur={() => setFocusedField(null)}
-                  className="w-full min-w-0 px-3 py-2 pl-10 border border-gray-200 rounded-md resize-none pt-3 text-sm sm:text-base"
+                  className="input-field"
+                  required
+                />
+              </div>
+
+              <div className="min-w-0">
+                <label className="block text-sm font-medium text-[#0F172A] mb-2">
+                  Country <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="country"
+                  placeholder="India"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="input-field"
                   required
                 />
               </div>
@@ -478,7 +483,9 @@ const Register = () => {
                   { id: 'natural_diamond', label: 'Natural Diamond' },
                   { id: 'lab_grown_diamond', label: 'Lab-grown Diamond' },
                   { id: 'natural_jewellery', label: 'Natural Jewellery' },
-                  { id: 'lab_grown_jewellery', label: 'Lab-grown Jewellery' }
+                  { id: 'lab_grown_jewellery', label: 'Lab-grown Jewellery' },
+                  { id: 'rough', label: 'Rough' },
+                  { id: 'gemstone', label: 'GemStone' }
                 ].map((type) => (
                   <label
                     key={type.id}
@@ -515,19 +522,16 @@ const Register = () => {
             {/* GST */}
             <div className="min-w-0">
               <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                GST Number
+                GST Number {formData.role === "Seller" && <span className="text-red-500">*</span>}
               </label>
-              <Input
+              <input
                 type="text"
                 name="gst"
                 placeholder="22AAAAA0000A1Z5"
                 value={formData.gst}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("gst")}
-                onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "gst"}
-                required
-                icon={icons.gst}
+                className="input-field"
+                required={formData.role === "Seller"}
               />
             </div>
 
@@ -535,76 +539,70 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 lg:gap-5 min-w-0">
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onFocus={() => setFocusedField("password")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "password"}
-                  required
-                  icon={icons.password}
-                  rightElement={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
-                    >
-                      {showPassword ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18" />
-                        </svg>
-                      )}
-                    </button>
-                  }
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="input-field pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="min-w-0">
                 <label className="block text-sm font-medium text-[#0F172A] mb-2">
-                  Confirm Password
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  onFocus={() => setFocusedField("confirmPassword")}
-                  onBlur={() => setFocusedField(null)}
-                  isFocused={focusedField === "confirmPassword"}
-                  required
-                  icon={icons.password}
-                  rightElement={
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
-                    >
-                      {showConfirmPassword ? (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18" />
-                        </svg>
-                      )}
-                    </button>
-                  }
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="input-field pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
