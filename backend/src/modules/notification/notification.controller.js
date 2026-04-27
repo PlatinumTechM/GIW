@@ -25,11 +25,13 @@ export const createNotification = async (req, res) => {
   try {
     const senderId = req.user.id;
     const { title, message, type } = req.body;
+    const image = req.file ? `/uploads/Notification/${req.file.filename}` : null;
 
     const notification = await notificationService.createNotification(senderId, {
       title,
       message,
       type,
+      image,
     });
 
     res.status(201).json({
@@ -97,11 +99,13 @@ export const updateNotification = async (req, res) => {
     const userId = req.user.id;
     const { id } = req.params;
     const { title, message, type } = req.body;
+    const image = req.file ? `/uploads/Notification/${req.file.filename}` : req.body.image;
 
     const notification = await notificationService.updateNotification(id, userId, {
       title,
       message,
       type,
+      image,
     });
 
     res.status(200).json({
