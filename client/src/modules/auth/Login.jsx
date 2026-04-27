@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import Input from "../../components/ui/Input";
 import notify from "../../utils/notifications.jsx";
 
 const Login = () => {
@@ -12,7 +11,6 @@ const Login = () => {
   });
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [focusedField, setFocusedField] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
@@ -61,18 +59,10 @@ const Login = () => {
       const result = await login(formData.identifier, formData.password, rememberMe);
 
       if (result.success) {
-        // Get role from localStorage (stored by AuthContext)
-        const role = localStorage.getItem('role') || 'user';
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-        // Show notification based on role
-        if (role === 'admin') {
-          notify.success("Welcome Back", `Welcome back, ${user.name || 'Admin'}!`);
-          navigate("/admin");
-        } else {
-          notify.success("Login Successful", `Welcome, ${user.name || 'User'}!`);
-          navigate("/user/home");
-        }
+        const user = result.user || JSON.parse(localStorage.getItem('user') || '{}');
+        const role = user.role || 'Buyer';
+        notify.success("Login Successful", `Welcome, ${role}!`);
+        navigate(result.redirectUrl || "/user/home");
       } else {
         notify.error("Login Failed", result.error || "Invalid credentials");
         setError(result.error || "Unable to sign in");
@@ -328,31 +318,14 @@ const Login = () => {
               <label className="block text-sm font-medium text-[#0F172A] mb-1.5">
                 Email or Mobile Number
               </label>
-              <Input
+              <input
                 type="text"
                 name="identifier"
                 placeholder="dealer@company.com or 9876543210"
                 value={formData.identifier}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("identifier")}
-                onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "identifier"}
+                className="input-field"
                 required
-                icon={
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                }
               />
             </div>
 
@@ -361,81 +334,34 @@ const Login = () => {
               <label className="block text-sm font-medium text-[#0F172A] mb-1.5">
                 Password
               </label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                onFocus={() => setFocusedField("password")}
-                onBlur={() => setFocusedField(null)}
-                isFocused={focusedField === "password"}
-                required
-                icon={
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                }
-                rightElement={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
-                  >
-                    {showPassword ? (
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M3 3l18 18"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                }
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="input-field pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#3B82F6] transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.675m2.617-2.617A10.05 10.05 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.05 10.05 0 01-2.037 3.324M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3l18 18" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Forgot Password */}

@@ -18,7 +18,7 @@ export const login = async (req, res) => {
       path: "/",
     });
 
-    res.status(200).json({ token: result.token, user: result.user });
+    res.status(200).json({ token: result.token, user: result.user, redirectUrl: result.redirectUrl });
   } catch (error) {
     console.error("Error at login = ", error);
     res.status(401).json({ error: error.message });
@@ -36,7 +36,8 @@ export const register = async (req, res) => {
       gst,
       password,
       confirmPassword,
-      type
+      type,
+      role
     } = req.body;
     
     // Parse type if it's a string (from multipart form)
@@ -62,7 +63,8 @@ export const register = async (req, res) => {
       password,
       confirmPassword,
       document,
-      type: parsedType
+      type: parsedType,
+      role
     });
 
     res.status(201).json({
