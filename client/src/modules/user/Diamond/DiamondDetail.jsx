@@ -105,7 +105,7 @@ const DiamondDetail = () => {
       keyToSymbol: stock.key_to_symbol || null,
       lwRatio: stock.lw_ratio || null,
       culetCondition: stock.culet_condition || null,
-      location: stock.city || "Surat",
+      location: stock.city || "None",
       state: stock.state || null,
       country: stock.country || null,
       certificateImage: stock.certificate_image && stock.certificate_image.trim() !== "" && stock.certificate_image.toUpperCase() !== "NONE" ? stock.certificate_image : null,
@@ -199,17 +199,27 @@ const DiamondDetail = () => {
 
   const getShapeIcon = (shape) => {
     const shapeMap = {
-      Round: "/diamond shap icon/round.svg",
-      Oval: "/diamond shap icon/oval.svg",
-      Pear: "/diamond shap icon/pear.svg",
-      Princess: "/diamond shap icon/princess.svg",
-      Emerald: "/diamond shap icon/emerald.svg",
-      Cushion: "/diamond shap icon/cub.svg",
-      Marquise: "/diamond shap icon/marquise.svg",
-      Heart: "/diamond shap icon/heart.svg",
-      Radiant: "/diamond shap icon/radiant.svg",
+      ROUND: "/diamond shap icon/round.svg",
+      OVAL: "/diamond shap icon/oval.svg",
+      PEAR: "/diamond shap icon/pear.svg",
+      PRINCESS: "/diamond shap icon/princess.svg",
+      EMERALD: "/diamond shap icon/emerald.svg",
+      CUSHION: "/diamond shap icon/cub.svg",
+      MARQUISE: "/diamond shap icon/marquise.svg",
+      HEART: "/diamond shap icon/heart.svg",
+      RADIANT: "/diamond shap icon/radiant.svg",
+      BAGUETTE: "/diamond shap icon/Baguette.svg",
+      HEXAGONAL: "/diamond shap icon/Hexagonal.svg",
+      "SQUARE EMERALD": "/diamond shap icon/Square Emerald.svg",
+      BRIOLETTE: "/diamond shap icon/Briolette.svg",
+      TRILLIANT: "/diamond shap icon/Trilliant.svg",
+      "HALF MOON": "/diamond shap icon/half moon.svg",
+      "ROSE CUT": "/diamond shap icon/rose cut.svg",
+      KITE: "/diamond shap icon/kite.svg",
+      OTHER: "/diamond shap icon/other.svg",
     };
-    return shapeMap[shape] || "/diamond shap icon/round.svg";
+    const normalizedShape = shape ? shape.toUpperCase().trim() : "OTHER";
+    return shapeMap[normalizedShape] || "/diamond shap icon/other.svg";
   };
 
   const getGradeStyles = (grade, type) => {
@@ -311,12 +321,12 @@ const DiamondDetail = () => {
   return (
     <div className="min-h-screen pt-4 pb-16" style={{ background: `linear-gradient(135deg, ${theme.background} 0%, #FFFFFF 50%, #F1F5F9 100%)` }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb & Back */}
+        {/* Back Button */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6 flex items-center gap-4"
+          className="mb-6"
         >
           <motion.button
             onClick={() => navigate(-1)}
@@ -330,33 +340,6 @@ const DiamondDetail = () => {
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
             <span>Back</span>
           </motion.button>
-
-          <motion.nav
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 text-sm"
-          >
-            {["Diamonds", diamond.type?.replace(/-/g, " "), diamond.id].map((item, i, arr) => (
-              <span key={i} className="flex items-center gap-2">
-                <motion.span
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * i }}
-                  className="capitalize"
-                  style={{ 
-                    color: i === arr.length - 1 ? theme.primary : theme.textMuted,
-                    fontWeight: i === arr.length - 1 ? 600 : 400 
-                  }}
-                >
-                  {item}
-                </motion.span>
-                {i < arr.length - 1 && (
-                  <span style={{ color: theme.border }}>/</span>
-                )}
-              </span>
-            ))}
-          </motion.nav>
         </motion.div>
 
         {/* Main Content Card */}
@@ -438,21 +421,6 @@ const DiamondDetail = () => {
                   >
                     <Heart className={`h-5 w-5 ${isLiked && "fill-current"}`} />
                   </motion.div>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleCopy()}
-                  className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
-                  style={{ 
-                    background: theme.surface,
-                    color: theme.textMuted,
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = theme.primary; e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = theme.surface; e.currentTarget.style.color = theme.textMuted; }}
-                >
-                  <Copy className="h-5 w-5" />
                 </motion.button>
               </div>
             </div>
@@ -655,7 +623,7 @@ const DiamondDetail = () => {
                     { label: "Fancy Color", value: diamond.fancyColor || "None" },
                     { label: "Color Intensity", value: diamond.colorIntensity || "None" },
                     { label: "Color Overtone", value: diamond.colorOvertone || "None" },
-                    { label: "City", value: diamond.location || "Surat" },
+                    { label: "City", value: diamond.location || "None" },
                     { label: "State", value: diamond.state || "None" },
                     { label: "Country", value: diamond.country || "None" },
                     { label: "Fluorescence", value: diamond.fluorescence || "None" },
@@ -739,12 +707,12 @@ const DiamondDetail = () => {
                   >
                     <img
                       src={getShapeIcon(diamond.shape)}
-                      alt={diamond.shape}
+                      alt={diamond.shape }
                       className="h-6 w-6"
                     />
                   </motion.div>
                   <span className="text-sm font-medium" style={{ color: theme.textMuted }}>
-                    {diamond.shape} Shape • Surat • {diamond.colorType} Diamond
+                    {diamond.shape ? `${diamond.shape} Shape` : 'Shape'} • {diamond.colorType} Diamond
                   </span>
                   {diamond.status && ["HOLD", "SOLD", "MEMO"].includes(diamond.status.toUpperCase()) && (
                     <motion.span
@@ -764,21 +732,23 @@ const DiamondDetail = () => {
                 </div>
 
                 <h2 className="text-2xl font-bold" style={{ color: theme.secondary }}>
-                  {diamond.carat} Carat {diamond.color} {diamond.clarity} {diamond.shape}
+                  {diamond.carat ? `${diamond.carat} Carat` : ''} {diamond.color || ''} {diamond.clarity || ''} {diamond.shape || ''}
                 </h2>
 
                 {/* Location Badge */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium"
-                  style={{ background: theme.background, color: theme.textMuted, border: `1px solid ${theme.border}` }}
-                >
-                  <MapPin className="h-4 w-4" style={{ color: theme.danger }} />
-                  <span>Location: <span className="font-semibold" style={{ color: theme.secondary }}>{diamond.location || "Surat"}</span></span>
-                </motion.div>
+                {diamond.location && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium"
+                    style={{ background: theme.background, color: theme.textMuted, border: `1px solid ${theme.border}` }}
+                  >
+                    <MapPin className="h-4 w-4" style={{ color: theme.danger }} />
+                    <span>Location: <span className="font-semibold" style={{ color: theme.secondary }}>{diamond.location}</span></span>
+                  </motion.div>
+                )}
 
-                {diamond.colorType === "Fancy" && (
+                {diamond.colorType === "Fancy" && diamond.fancyIntensity && diamond.fancyIntensity !== "None" && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -786,7 +756,7 @@ const DiamondDetail = () => {
                     style={{ background: "linear-gradient(135deg, #EC4899 0%, #F43F5E 100%)" }}
                   >
                     <Sparkles className="h-4 w-4" />
-                    {diamond.fancyIntensity} {diamond.color}
+                    {diamond.fancyIntensity} {diamond.color || ''}
                     {diamond.fancyOvertone && diamond.fancyOvertone !== "None" && (
                       <span>with {diamond.fancyOvertone} Overtone</span>
                     )}
@@ -835,7 +805,7 @@ const DiamondDetail = () => {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                     className="mt-1 text-4xl font-bold"
                   >
-                    ${diamond.price.toLocaleString()}
+                    ${diamond.price ? diamond.price.toLocaleString() : "0"}
                   </motion.p>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -853,8 +823,8 @@ const DiamondDetail = () => {
               {/* Specs Grid */}
               <motion.div variants={itemVariants} className="grid grid-cols-3 gap-4">
                 {[
-                  { icon: Scale, label: "Carat Weight", value: `${diamond.carat} ct` },
-                  { icon: Gem, label: "Shape", value: diamond.shape, sub: `${diamond.colorType} Diamond` },
+                  { icon: Scale, label: "Carat Weight", value: diamond.carat ? `${diamond.carat} ct` : "None" },
+                  { icon: Gem, label: "Shape", value: diamond.shape || "None", sub: `${diamond.colorType} Diamond` },
                   { icon: Sparkles, label: "Color Grade", value: diamond.color },
                   { icon: Eye, label: "Clarity", value: diamond.clarity },
                   { icon: Diamond, label: "Final Price", value: diamond.finalPrice ? `$${diamond.finalPrice.toLocaleString()}` : "None", sub: "Total Price" },

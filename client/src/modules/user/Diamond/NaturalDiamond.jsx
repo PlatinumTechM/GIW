@@ -46,7 +46,6 @@ const NaturalDiamond = () => {
   const [activeTab, setActiveTab] = useState("Single Stone");
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Use shared diamond filters hook
   const filters = useDiamondFilters();
@@ -337,19 +336,6 @@ const NaturalDiamond = () => {
                 </>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              {/* Search Bar - Like Jewelry.jsx */}
-              <div className="block">
-                <input
-                  type="text"
-                  placeholder="Search diamonds..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  icon={<Search className="h-4 w-4 text-[#64748B]" />}
-                  className="w-32 input-field"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -447,7 +433,6 @@ const NaturalDiamond = () => {
                 type="natural"
                 viewMode={viewMode}
                 sortBy={sortBy}
-                searchQuery={searchQuery}
                 filters={appliedFilters}
               />
             </div>

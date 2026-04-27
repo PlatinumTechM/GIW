@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   ChevronDown,
   Sparkles,
@@ -141,8 +142,29 @@ const FilterSection = ({
   </div>
 );
 
+// Helper functions for localStorage
+const saveFiltersToStorage = (filters) => {
+  try {
+    localStorage.setItem('diamondFilters', JSON.stringify(filters));
+  } catch (error) {
+    console.error('Error saving filters to localStorage:', error);
+  }
+};
+
+const loadFiltersFromStorage = () => {
+  try {
+    const saved = localStorage.getItem('diamondFilters');
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.error('Error loading filters from localStorage:', error);
+    return null;
+  }
+};
+
 // Custom Hook for Filter State
 export const useDiamondFilters = () => {
+  const location = useLocation();
+  const isDetailPage = location.pathname.includes('/diamond/') && location.pathname.split('/').length > 4;
   // Pending filter states (what user is selecting)
   const [pendingShapes, setPendingShapes] = useState([]);
   const [pendingShowOnlyMedia, setPendingShowOnlyMedia] = useState(false);
@@ -258,6 +280,127 @@ export const useDiamondFilters = () => {
   const [shade, setShade] = useState("");
   // Sort by - Applied
   const [sortBy, setSortBy] = useState("featured");
+
+  // Load filters from localStorage on mount and when storage changes
+  const loadFilters = useCallback(() => {
+    const savedFilters = loadFiltersFromStorage();
+    if (savedFilters) {
+      setSelectedShapes(savedFilters.selectedShapes || []);
+      setShowOnlyMedia(savedFilters.showOnlyMedia || false);
+      setAvailableItems(savedFilters.availableItems || false);
+      setCaratMin(savedFilters.caratMin || "");
+      setCaratMax(savedFilters.caratMax || "");
+      setPriceMin(savedFilters.priceMin || "");
+      setPriceMax(savedFilters.priceMax || "");
+      setColorType(savedFilters.colorType || "White");
+      setSelectedWhiteColors(savedFilters.selectedWhiteColors || []);
+      setSelectedFancyColors(savedFilters.selectedFancyColors || []);
+      setSelectedFancyIntensity(savedFilters.selectedFancyIntensity || "");
+      setSelectedFancyOvertone(savedFilters.selectedFancyOvertone || "");
+      setSelectedClarities(savedFilters.selectedClarities || []);
+      setSelectedCuts(savedFilters.selectedCuts || []);
+      setSelectedPolish(savedFilters.selectedPolish || []);
+      setSelectedSymmetry(savedFilters.selectedSymmetry || []);
+      setSelectedCertifications(savedFilters.selectedCertifications || []);
+      setCertificateType(savedFilters.certificateType || null);
+      setSelectedFluorescence(savedFilters.selectedFluorescence || []);
+      setLengthMin(savedFilters.lengthMin || "");
+      setLengthMax(savedFilters.lengthMax || "");
+      setWidthMin(savedFilters.widthMin || "");
+      setWidthMax(savedFilters.widthMax || "");
+      setHeightMin(savedFilters.heightMin || "");
+      setHeightMax(savedFilters.heightMax || "");
+      setRatioMin(savedFilters.ratioMin || "");
+      setRatioMax(savedFilters.ratioMax || "");
+      setDepthMin(savedFilters.depthMin || "");
+      setDepthMax(savedFilters.depthMax || "");
+      setTableMin(savedFilters.tableMin || "");
+      setTableMax(savedFilters.tableMax || "");
+      setCrownHeightMin(savedFilters.crownHeightMin || "");
+      setCrownHeightMax(savedFilters.crownHeightMax || "");
+      setCrownAngleMin(savedFilters.crownAngleMin || "");
+      setCrownAngleMax(savedFilters.crownAngleMax || "");
+      setPavilionDepthMin(savedFilters.pavilionDepthMin || "");
+      setPavilionDepthMax(savedFilters.pavilionDepthMax || "");
+      setPavilionAngleMin(savedFilters.pavilionAngleMin || "");
+      setPavilionAngleMax(savedFilters.pavilionAngleMax || "");
+      setGirdleMin(savedFilters.girdleMin || "");
+      setGirdleMax(savedFilters.girdleMax || "");
+      setMilky(savedFilters.milky || "");
+      setEyeClean(savedFilters.eyeClean || "");
+      setShade(savedFilters.shade || "");
+      setSortBy(savedFilters.sortBy || "featured");
+      // Sync pending states
+      setPendingShapes(savedFilters.selectedShapes || []);
+      setPendingShowOnlyMedia(savedFilters.showOnlyMedia || false);
+      setPendingAvailableItems(savedFilters.availableItems || false);
+      setPendingCaratMin(savedFilters.caratMin || "");
+      setPendingCaratMax(savedFilters.caratMax || "");
+      setPendingPriceMin(savedFilters.priceMin || "");
+      setPendingPriceMax(savedFilters.priceMax || "");
+      setPendingColorType(savedFilters.colorType || "White");
+      setPendingWhiteColors(savedFilters.selectedWhiteColors || []);
+      setPendingFancyColors(savedFilters.selectedFancyColors || []);
+      setPendingFancyIntensity(savedFilters.selectedFancyIntensity || "");
+      setPendingFancyOvertone(savedFilters.selectedFancyOvertone || "");
+      setPendingClarities(savedFilters.selectedClarities || []);
+      setPendingCuts(savedFilters.selectedCuts || []);
+      setPendingPolish(savedFilters.selectedPolish || []);
+      setPendingSymmetry(savedFilters.selectedSymmetry || []);
+      setPendingCertifications(savedFilters.selectedCertifications || []);
+      setPendingCertificateType(savedFilters.certificateType || null);
+      setPendingFluorescence(savedFilters.selectedFluorescence || []);
+      setPendingLengthMin(savedFilters.lengthMin || "");
+      setPendingLengthMax(savedFilters.lengthMax || "");
+      setPendingWidthMin(savedFilters.widthMin || "");
+      setPendingWidthMax(savedFilters.widthMax || "");
+      setPendingHeightMin(savedFilters.heightMin || "");
+      setPendingHeightMax(savedFilters.heightMax || "");
+      setPendingRatioMin(savedFilters.ratioMin || "");
+      setPendingRatioMax(savedFilters.ratioMax || "");
+      setPendingDepthMin(savedFilters.depthMin || "");
+      setPendingDepthMax(savedFilters.depthMax || "");
+      setPendingTableMin(savedFilters.tableMin || "");
+      setPendingTableMax(savedFilters.tableMax || "");
+      setPendingCrownHeightMin(savedFilters.crownHeightMin || "");
+      setPendingCrownHeightMax(savedFilters.crownHeightMax || "");
+      setPendingCrownAngleMin(savedFilters.crownAngleMin || "");
+      setPendingCrownAngleMax(savedFilters.crownAngleMax || "");
+      setPendingPavilionDepthMin(savedFilters.pavilionDepthMin || "");
+      setPendingPavilionDepthMax(savedFilters.pavilionDepthMax || "");
+      setPendingPavilionAngleMin(savedFilters.pavilionAngleMin || "");
+      setPendingPavilionAngleMax(savedFilters.pavilionAngleMax || "");
+      setPendingGirdleMin(savedFilters.girdleMin || "");
+      setPendingGirdleMax(savedFilters.girdleMax || "");
+      setPendingMilky(savedFilters.milky || "");
+      setPendingEyeClean(savedFilters.eyeClean || "");
+      setPendingShade(savedFilters.shade || "");
+      setPendingSortBy(savedFilters.sortBy || "featured");
+    }
+  }, []);
+
+  // Load filters on mount
+  useEffect(() => {
+    loadFilters();
+  }, [loadFilters]);
+
+  // Listen for storage changes (when navigating back from other tabs/windows)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'diamondFilters') {
+        loadFilters();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [loadFilters]);
+
+  // Reload filters when navigating back from detail page
+  useEffect(() => {
+    if (!isDetailPage) {
+      loadFilters();
+    }
+  }, [location.pathname, isDetailPage, loadFilters]);
 
   // Toggle functions for pending states
   const toggleShape = useCallback((shape) => {
@@ -381,6 +524,55 @@ export const useDiamondFilters = () => {
     setEyeClean(pendingEyeClean);
     setShade(pendingShade);
     setSortBy(pendingSortBy);
+
+    // Save to localStorage
+    saveFiltersToStorage({
+      selectedShapes: pendingShapes,
+      showOnlyMedia: pendingShowOnlyMedia,
+      availableItems: pendingAvailableItems,
+      caratMin: pendingCaratMin,
+      caratMax: pendingCaratMax,
+      priceMin: pendingPriceMin,
+      priceMax: pendingPriceMax,
+      colorType: pendingColorType,
+      selectedWhiteColors: pendingWhiteColors,
+      selectedFancyColors: pendingFancyColors,
+      selectedFancyIntensity: pendingFancyIntensity,
+      selectedFancyOvertone: pendingFancyOvertone,
+      selectedClarities: pendingClarities,
+      selectedCuts: pendingCuts,
+      selectedPolish: pendingPolish,
+      selectedSymmetry: pendingSymmetry,
+      selectedCertifications: pendingCertifications,
+      certificateType: pendingCertificateType,
+      selectedFluorescence: pendingFluorescence,
+      lengthMin: pendingLengthMin,
+      lengthMax: pendingLengthMax,
+      widthMin: pendingWidthMin,
+      widthMax: pendingWidthMax,
+      heightMin: pendingHeightMin,
+      heightMax: pendingHeightMax,
+      ratioMin: pendingRatioMin,
+      ratioMax: pendingRatioMax,
+      depthMin: pendingDepthMin,
+      depthMax: pendingDepthMax,
+      tableMin: pendingTableMin,
+      tableMax: pendingTableMax,
+      crownHeightMin: pendingCrownHeightMin,
+      crownHeightMax: pendingCrownHeightMax,
+      crownAngleMin: pendingCrownAngleMin,
+      crownAngleMax: pendingCrownAngleMax,
+      pavilionDepthMin: pendingPavilionDepthMin,
+      pavilionDepthMax: pendingPavilionDepthMax,
+      pavilionAngleMin: pendingPavilionAngleMin,
+      pavilionAngleMax: pendingPavilionAngleMax,
+      girdleMin: pendingGirdleMin,
+      girdleMax: pendingGirdleMax,
+      milky: pendingMilky,
+      eyeClean: pendingEyeClean,
+      shade: pendingShade,
+      sortBy: pendingSortBy,
+    });
   }, [
     pendingShapes,
     pendingShowOnlyMedia,
@@ -617,6 +809,12 @@ export const useDiamondFilters = () => {
     setEyeClean("");
     setShade("");
     setSortBy("featured");
+    // Clear localStorage
+    try {
+      localStorage.removeItem('diamondFilters');
+    } catch (error) {
+      console.error('Error clearing filters from localStorage:', error);
+    }
   }, []);
 
   const appliedFilters = useMemo(

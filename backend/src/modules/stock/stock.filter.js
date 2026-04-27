@@ -137,6 +137,60 @@ const addColorFilter = (conditions, values, filterValue, paramIndex) => {
   return { added: true, paramIndex: paramIndex + items.length };
 };
 
+// Predefined shapes that are considered "standard" (not OTHER)
+const PREDEFINED_SHAPES = [
+  "ROUND", "PEAR", "OVAL", "PRINCESS", "EMERALD", "CUSHION", "MARQUISE",
+  "HEART", "RADIANT", "BAGUETTE", "HEXAGONAL", "SQUARE EMERALD", "BRIOLETTE",
+  "TRILLIANT", "HALF MOON", "ROSE CUT", "KITE"
+];
+
+// Helper: Add shape filter with special handling for "OTHER"
+const addShapeFilter = (conditions, values, filterValue, paramIndex) => {
+  if (!filterValue) return { added: false, paramIndex };
+
+  // Convert string to array if needed
+  let itemsArray;
+  if (typeof filterValue === "string") {
+    itemsArray = filterValue.split(",");
+  } else if (Array.isArray(filterValue)) {
+    itemsArray = filterValue;
+  } else {
+    return { added: false, paramIndex };
+  }
+
+  if (!itemsArray || itemsArray.length === 0) return { added: false, paramIndex };
+
+  // Filter out empty values and normalize
+  const items = itemsArray.filter(item => item && item.trim()).map(item => item.trim().toUpperCase());
+  if (items.length === 0) return { added: false, paramIndex };
+
+  // Check if "OTHER" is selected
+  const hasOther = items.includes("OTHER");
+  const specificShapes = items.filter(s => s !== "OTHER");
+
+  if (hasOther) {
+    if (specificShapes.length > 0) {
+      // OTHER + specific shapes: show shapes not in predefined OR matching specific shapes
+      const placeholders = PREDEFINED_SHAPES.map((_, i) => `$${paramIndex + i}`).join(",");
+      conditions.push(`(UPPER(shape) NOT IN (${placeholders}) OR UPPER(shape) = ANY($${paramIndex + PREDEFINED_SHAPES.length}))`);
+      values.push(...PREDEFINED_SHAPES, specificShapes);
+      return { added: true, paramIndex: paramIndex + PREDEFINED_SHAPES.length + 1 };
+    } else {
+      // Only OTHER selected: show shapes not in predefined list
+      const placeholders = PREDEFINED_SHAPES.map((_, i) => `$${paramIndex + i}`).join(",");
+      conditions.push(`UPPER(shape) NOT IN (${placeholders})`);
+      values.push(...PREDEFINED_SHAPES);
+      return { added: true, paramIndex: paramIndex + PREDEFINED_SHAPES.length };
+    }
+  } else {
+    // Normal shape filtering - only specific shapes
+    const placeholders = specificShapes.map((_, i) => `$${paramIndex + i}`).join(",");
+    conditions.push(`UPPER(shape) IN (${placeholders})`);
+    values.push(...specificShapes);
+    return { added: true, paramIndex: paramIndex + specificShapes.length };
+  }
+};
+
 // Main function: Build SQL WHERE conditions from filter object
 export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) => {
   const whereConditions = [...baseConditions];
@@ -155,7 +209,8 @@ export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) 
   result = addArrayFilter(whereConditions, values, "status", filters.status, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
-  result = addArrayFilter(whereConditions, values, "shape", filters.shape, paramIndex);
+  // Shape filter with special handling for "OTHER"
+  result = addShapeFilter(whereConditions, values, filters.shape, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
   result = addColorFilter(whereConditions, values, filters.color, paramIndex);
@@ -179,21 +234,6 @@ export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) 
 
   result = addRangeFilter(whereConditions, values, "price_per_carat", filters.minPricePerCarat, filters.maxPricePerCarat, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
-
-  // Global search (searches multiple fields)
-  if (filters.search) {
-    whereConditions.push(`(
-      stock_id ILIKE $${paramIndex} OR
-      certificate_number ILIKE $${paramIndex} OR
-      shape ILIKE $${paramIndex} OR
-      color ILIKE $${paramIndex} OR
-      clarity ILIKE $${paramIndex} OR
-      lab ILIKE $${paramIndex} OR
-      cut ILIKE $${paramIndex}
-    )`);
-    values.push(`%${filters.search}%`);
-    paramIndex++;
-  }
 
   return { whereConditions, values, paramIndex };
 };
