@@ -1,7 +1,7 @@
 import { pool } from "../../config/db.js";
 
 export const findNotificationById = async (id) => {
-  const query = `SELECT id, user_id, sender_id, title, message, type, is_read, created_at, updated_at
+  const query = `SELECT id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at
                  FROM notifications WHERE id = $1`;
   const result = await pool.query(query, [id]);
   return result.rows[0];
@@ -10,7 +10,7 @@ export const findNotificationById = async (id) => {
 export const findAllNotifications = async (userId, filters = {}) => {
   const { search, type, is_read, sent_by } = filters;
   
-  let query = `SELECT n.id, n.user_id, n.sender_id, n.title, n.message, n.type, n.is_read, n.created_at, n.updated_at,
+  let query = `SELECT n.id, n.user_id, n.sender_id, n.title, n.message, n.type, n.image, n.is_read, n.created_at, n.updated_at,
                         u.name as sender_name, u.company as sender_company
                  FROM notifications n
                  LEFT JOIN users u ON n.sender_id = u.id`;
@@ -67,12 +67,12 @@ export const findUnreadNotificationsByUserId = async (userId) => {
 };
 
 export const createNotification = async (notificationData) => {
-  const { user_id, sender_id, title, message, type } = notificationData;
+  const { user_id, sender_id, title, message, type, image } = notificationData;
 
   const query = `INSERT INTO notifications
-    (user_id, sender_id, title, message, type)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING id, user_id, sender_id, title, message, type, is_read, created_at, updated_at`;
+    (user_id, sender_id, title, message, type, image)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at`;
 
   const result = await pool.query(query, [
     user_id,
@@ -80,19 +80,20 @@ export const createNotification = async (notificationData) => {
     title,
     message,
     type || "natural-diamonds",
+    image,
   ]);
   return result.rows[0];
 };
 
 export const updateNotification = async (id, userId, notificationData) => {
-  const { title, message, type } = notificationData;
+  const { title, message, type, image } = notificationData;
 
   const query = `UPDATE notifications
-    SET title = $1, message = $2, type = $3, updated_at = NOW()
-    WHERE id = $4 AND sender_id = $5
-    RETURNING id, user_id, sender_id, title, message, type, is_read, created_at, updated_at`;
+    SET title = $1, message = $2, type = $3, image = $4, updated_at = NOW()
+    WHERE id = $5 AND sender_id = $6
+    RETURNING id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at`;
 
-  const result = await pool.query(query, [title, message, type, id, userId]);
+  const result = await pool.query(query, [title, message, type, image, id, userId]);
   return result.rows[0];
 };
 

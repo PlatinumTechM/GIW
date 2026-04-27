@@ -19,7 +19,7 @@ export const getNotificationById = async (id, userId) => {
 };
 
 export const createNotification = async (senderId, notificationData) => {
-  const { title, message, type } = notificationData;
+  const { title, message, type, image } = notificationData;
 
   if (!title || !message) {
     throw new Error("Title and message are required");
@@ -35,6 +35,7 @@ export const createNotification = async (senderId, notificationData) => {
     title,
     message,
     type: type || "natural-diamonds",
+    image,
   });
 
   return notification;
@@ -55,7 +56,7 @@ export const updateNotification = async (id, userId, notificationData) => {
     throw new Error("You do not have permission to edit this notification");
   }
 
-  const { title, message, type } = notificationData;
+  const { title, message, type, image } = notificationData;
 
   if (!title || !message) {
     throw new Error("Title and message are required");
@@ -69,6 +70,7 @@ export const updateNotification = async (id, userId, notificationData) => {
     title,
     message,
     type: type || "natural-diamonds",
+    image,
   });
 
   return updatedNotification;
