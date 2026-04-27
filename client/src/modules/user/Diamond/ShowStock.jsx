@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
 import { stockAPI } from "../../../services/api.js";
 
-const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, searchQuery = "" }) => {
+const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) => {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +89,6 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
         if (filters?.caratMax) params.maxCarat = filters.caratMax;
         if (filters?.priceMin) params.minPrice = filters.priceMin;
         if (filters?.priceMax) params.maxPrice = filters.priceMax;
-        if (searchQuery?.trim()) params.search = searchQuery.trim();
 
         // Detailed filters
         if (filters?.cuts?.length > 0) params.cut = filters.cuts.join(",");
@@ -168,12 +167,12 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     };
 
     fetchStocks();
-  }, [type, currentPage, filters, searchQuery, sortBy]);
+  }, [type, currentPage, filters, sortBy]);
 
-  // Reset to page 1 when filters or search change
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, sortBy, searchQuery]);
+  }, [filters, sortBy]);
 
   const toggleSelect = (id) => {
     if (selectedItems.includes(id)) {
@@ -353,41 +352,32 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   className="lg:hidden p-4 cursor-pointer"
                   onClick={() => openDiamondDetail(item)}
                 >
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex-shrink-0 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.shape}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold text-[#0F172A]">
-                            {item.shape} {item.carat}ct
-                          </h3>
-                          <p className="text-sm text-[#64748B] mt-0.5">
-                            {item.colorType === "Fancy" && item.fancyIntensity ? `${item.fancyIntensity} ` : ""}
-                            {item.color} · {item.clarity}
-                          </p>
-                        </div>
-                        <p className="text-lg font-bold text-[#1E3A8A] whitespace-nowrap">
-                          ${item.price.toLocaleString()}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-[#0F172A]">
+                          {item.shape} {item.carat}ct
+                        </h3>
+                        <p className="text-sm text-[#64748B] mt-0.5">
+                          {item.colorType === "Fancy" && item.fancyIntensity ? `${item.fancyIntensity} ` : ""}
+                          {item.color} · {item.clarity}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.cut} Cut</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.polish} P</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.symmetry} S</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.fluorescence}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber}</span>
-                        {item.available && (
-                          <span className="text-xs text-green-600 font-medium">Available</span>
-                        )}
-                      </div>
+                      <p className="text-lg font-bold text-[#1E3A8A] whitespace-nowrap">
+                        ${item.price.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.cut} Cut</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.polish} P</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.symmetry} S</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.fluorescence}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber}</span>
+                      {item.available && (
+                        <span className="text-xs text-green-600 font-medium">Available</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -429,7 +419,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   animate={{ scale: hoveredItem === item.id ? 1.1 : 1 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   onError={(e) => {
-                    e.target.style.display = "none";
+                    e.target.style.display = "None";
                   }}
                 />
 

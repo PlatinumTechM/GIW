@@ -59,7 +59,6 @@ export const getAllStocks = async (req, res) => {
       minPricePerCarat,
       maxPricePerCarat,
       growthType,
-      search,
       type,
       polish,
       symmetry,
@@ -111,7 +110,6 @@ export const getAllStocks = async (req, res) => {
       maxCarat: maxCarat ? parseFloat(maxCarat) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-      search,
       type: req.diamondType || type,
       // Detailed filters
       cut,
@@ -159,7 +157,6 @@ export const getAllStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
-      search,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };
@@ -335,7 +332,6 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat,
       maxPricePerCarat,
       growthType,
-      search,
       sortBy,
       sortOrder,
     } = req.query;
@@ -354,7 +350,6 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
-      search,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };

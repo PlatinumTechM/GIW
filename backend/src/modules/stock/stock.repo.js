@@ -180,10 +180,39 @@ export const getAll = async (page, limit, sortBy, filters) => {
   // Array filters (comma-separated values)
   if (filters.shape) {
     const shapes = filters.shape.split(",").map((s) => s.trim().toUpperCase());
-    const placeholders = shapes.map((_, i) => `$${paramIndex + i}`).join(", ");
-    whereConditions.push(`UPPER(shape) IN (${placeholders})`);
-    values.push(...shapes);
-    paramIndex += shapes.length;
+
+    // Predefined shapes that are considered "standard" (not OTHER)
+    const PREDEFINED_SHAPES = [
+      "ROUND", "PEAR", "OVAL", "PRINCESS", "EMERALD", "CUSHION", "MARQUISE",
+      "HEART", "RADIANT", "BAGUETTE", "HEXAGONAL", "SQUARE EMERALD", "BRIOLETTE",
+      "TRILLIANT", "HALF MOON", "ROSE CUT", "KITE"
+    ];
+
+    // Check if "OTHER" is selected
+    const hasOther = shapes.includes("OTHER");
+    const specificShapes = shapes.filter(s => s !== "OTHER");
+
+    if (hasOther) {
+      if (specificShapes.length > 0) {
+        // OTHER + specific shapes: show shapes not in predefined OR matching specific shapes
+        const placeholders = PREDEFINED_SHAPES.map((_, i) => `$${paramIndex + i}`).join(", ");
+        whereConditions.push(`(UPPER(shape) NOT IN (${placeholders}) OR UPPER(shape) IN (${specificShapes.map((_, i) => `$${paramIndex + PREDEFINED_SHAPES.length + i}`).join(", ")}))`);
+        values.push(...PREDEFINED_SHAPES, ...specificShapes);
+        paramIndex += PREDEFINED_SHAPES.length + specificShapes.length;
+      } else {
+        // Only OTHER selected: show shapes not in predefined list
+        const placeholders = PREDEFINED_SHAPES.map((_, i) => `$${paramIndex + i}`).join(", ");
+        whereConditions.push(`UPPER(shape) NOT IN (${placeholders})`);
+        values.push(...PREDEFINED_SHAPES);
+        paramIndex += PREDEFINED_SHAPES.length;
+      }
+    } else {
+      // Normal shape filtering - only specific shapes
+      const placeholders = shapes.map((_, i) => `$${paramIndex + i}`).join(", ");
+      whereConditions.push(`UPPER(shape) IN (${placeholders})`);
+      values.push(...shapes);
+      paramIndex += shapes.length;
+    }
   }
 
   if (filters.color) {
