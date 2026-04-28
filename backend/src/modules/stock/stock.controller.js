@@ -97,6 +97,11 @@ export const getAllStocks = async (req, res) => {
       shade,
       hasMedia,
       certificateType,
+      heartArrow,
+      noBgm,
+      location,
+      supplier,
+      treatment,
     } = req.query;
 
     const filters = {
@@ -106,6 +111,8 @@ export const getAllStocks = async (req, res) => {
       shape,
       color,
       clarity,
+      location,
+      supplier,
       minCarat: minCarat ? parseFloat(minCarat) : null,
       maxCarat: maxCarat ? parseFloat(maxCarat) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
@@ -147,6 +154,9 @@ export const getAllStocks = async (req, res) => {
       shade,
       hasMedia: hasMedia === "true",
       certificateType,
+      heartArrow: heartArrow === "true",
+      noBgm: noBgm === "true",
+      location,
       weight,
       minWeight: minWeight ? parseFloat(minWeight) : null,
       maxWeight: maxWeight ? parseFloat(maxWeight) : null,
@@ -157,6 +167,8 @@ export const getAllStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
+      treatment,
+      supplier,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };
