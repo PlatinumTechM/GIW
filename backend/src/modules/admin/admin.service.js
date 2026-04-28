@@ -13,8 +13,8 @@ export const verifyAdminPassword = async (password) => {
 };
 
 // Get all users
-export const getAllUsers = async () => {
-  const users = await adminRepo.getAllUsers();
+export const getAllUsers = async (search = "") => {
+  const users = await adminRepo.getAllUsers(search);
   return users.map((user) => ({
     id: user.id,
     name: user.name,

@@ -108,8 +108,8 @@ export const authAPI = {
     return response.data;
   },
 
-  getAllUsers: async () => {
-    const response = await api.get("/admin/users");
+  getAllUsers: async (params = {}) => {
+    const response = await api.get("/admin/users", { params });
     return response.data;
   },
 
