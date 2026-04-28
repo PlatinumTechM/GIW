@@ -692,16 +692,18 @@ export const getAll = async (page, limit, sortBy, filters) => {
   // Data query
   const dataQuery = `
     SELECT
-      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
-      fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
-      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
-      length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
-      state, country, treatment, depth_percentage, table_percentage, rap_price,
-      rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
-      laser_description, growth_type, key_to_symbol, lw_ratio, culet_size, culet_condition,
-      gridle_thin, gridle_thick, gridle_condition, gridle_per, crown_height, crown_angle,
-      pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
-    FROM diamond_stock
+      ds.id, ds.type, ds.user_id, ds.stock_id, ds.certificate_number, ds.weight, ds.shape, ds.color,
+      ds.fancy_color, ds.fancy_color_intensity, ds.fancy_color_overtone, ds.clarity, ds.cut, ds.polish,
+      ds.symmetry, ds.fluorescence, ds.fluorescence_color, ds.fluorescence_intensity, ds.measurements,
+      ds.length, ds.width, ds.height, ds.shade, ds.milky, ds.eye_clean, ds.lab, ds.certificate_comment, ds.city,
+      ds.state, ds.country, ds.treatment, ds.depth_percentage, ds.table_percentage, ds.rap_price,
+      ds.rap_per_carat, ds.price_per_carat, ds.final_price, ds.discount, ds.heart_arrow, ds.star_length,
+      ds.laser_description, ds.growth_type, ds.key_to_symbol, ds.lw_ratio, ds.culet_size, ds.culet_condition,
+      ds.gridle_thin, ds.gridle_thick, ds.gridle_condition, ds.gridle_per, ds.crown_height, ds.crown_angle,
+      ds.pavilion_depth, ds.pavilion_angle, ds.status, ds.diamond_image1, ds.diamond_video, ds.certificate_image,
+      u.company as supplier_name
+    FROM diamond_stock ds
+    LEFT JOIN users u ON ds.user_id = u.id
     ${whereClause}
     ORDER BY ${orderBy.replace(/\b(created_at|final_price|weight|color)\b/g, 'ds.$1')}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -954,6 +956,12 @@ export const getByUserId = async (
     paramIndex++;
   }
 
+  if (filters.party) {
+    whereConditions.push(`ds.party = $${paramIndex}`);
+    values.push(filters.party);
+    paramIndex++;
+  }
+
   const whereClause = `WHERE ${whereConditions.join(" AND ")}`;
   const orderClause = "ds.created_at DESC, ds.id DESC";
 
@@ -965,16 +973,16 @@ export const getByUserId = async (
   // Data query
   const dataQuery = `
     SELECT
-      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
-      fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
-      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
-      length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
-      state, country, treatment, depth_percentage, table_percentage, rap_price,
-      rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
-      laser_description, growth_type, key_to_symbol, lw_ratio, culet_size, culet_condition,
-      gridle_thin, gridle_thick, gridle_condition, gridle_per, crown_height, crown_angle,
-      pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
-    FROM diamond_stock
+      ds.id, ds.type, ds.user_id, ds.stock_id, ds.certificate_number, ds.weight, ds.shape, ds.color,
+      ds.fancy_color, ds.fancy_color_intensity, ds.fancy_color_overtone, ds.clarity, ds.cut, ds.polish,
+      ds.symmetry, ds.fluorescence, ds.fluorescence_color, ds.fluorescence_intensity, ds.measurements,
+      ds.length, ds.width, ds.height, ds.shade, ds.milky, ds.eye_clean, ds.lab, ds.certificate_comment, ds.city,
+      ds.state, ds.country, ds.treatment, ds.depth_percentage, ds.table_percentage, ds.rap_price,
+      ds.rap_per_carat, ds.price_per_carat, ds.final_price, ds.discount, ds.heart_arrow, ds.star_length,
+      ds.laser_description, ds.growth_type, ds.key_to_symbol, ds.lw_ratio, ds.culet_size, ds.culet_condition,
+      ds.gridle_thin, ds.gridle_thick, ds.gridle_condition, ds.gridle_per, ds.crown_height, ds.crown_angle, ds.party,
+      ds.pavilion_depth, ds.pavilion_angle, ds.status, ds.diamond_image1, ds.diamond_video, ds.certificate_image
+    FROM diamond_stock ds
     ${whereClause}
     ORDER BY ${orderClause}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
