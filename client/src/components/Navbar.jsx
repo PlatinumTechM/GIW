@@ -20,6 +20,7 @@ import {
   User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { notificationAPI } from "@/services/api";
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -29,15 +30,50 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isJoinDropdownOpen, setIsJoinDropdownOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3); // Demo unread count
+  const [unreadCount, setUnreadCount] = useState(0); // Initialize to 0
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
+
+    // Fetch unread notification count if authenticated
+    if (isAuthenticated && user?.role !== "admin") {
+      fetchUnreadCount();
+
+      // Implement polling for real-time updates (every 30 seconds)
+      const interval = setInterval(fetchUnreadCount, 30000);
+
+      // Refresh when tab becomes visible again
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+          fetchUnreadCount();
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        clearInterval(interval);
+      };
+    }
+
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isAuthenticated, user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await notificationAPI.getUnreadCount();
+      if (response.success) {
+        // Correcting data mapping: backend returns { success: true, data: { count: X } }
+        setUnreadCount(response.data?.count || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -90,7 +126,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`sticky top-0 left-0 right-0 z-[1000] transition-all duration-300 border-b border-gray-100/50 py-3 ${isScrolled
+      className={`relative left-0 right-0 z-[1000] transition-all duration-300 border-b border-gray-100/50 py-3 ${isScrolled
         ? "bg-white/40 backdrop-blur-2xl shadow-lg shadow-black/5"
         : "bg-white/10 backdrop-blur-md"
         }`}
