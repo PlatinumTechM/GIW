@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import "./Home.css"
 import {
   Diamond,
   Shield,
@@ -87,7 +88,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[var(--bg-primary)] text-black">
+    <div className="home-page min-h-screen overflow-x-hidden bg-[var(--bg-primary)] text-black">
       {/* Hero Section */}
       <section className="relative flex py-16 items-center overflow-hidden">
         {/* Background */}
@@ -104,8 +105,8 @@ const Home = () => {
         />
 
         {/* Glow Orbs - Static */}
-        <div className="absolute right-16 top-20 h-80 w-80 rounded-full bg-[#3B82F6]/10 blur-3xl" />
-        <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-[#1E3A8A]/10 blur-3xl" />
+        <div className="absolute right-16 top-20 h-80 w-80 rounded-full bg-[#2e7c9e]/10 blur-3xl" />
+        <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-[#4aa3c7]/10 blur-3xl" />
 
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-4 pb-8 sm:px-6 lg:grid-cols-2 lg:px-8">
           {/* Left */}
@@ -113,7 +114,7 @@ const Home = () => {
             <h1 className="mb-6 text-4xl font-bold leading-tight text-[#0F172A] sm:text-5xl lg:text-6xl">
               Trust & Clarity in
               <br />
-              <span className="bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#1E3A8A] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#2e7c9e] via-[#4aa3c7] to-[#2e7c9e] bg-clip-text text-transparent">
                 Diamond Trading
               </span>
             </h1>
@@ -165,7 +166,7 @@ const Home = () => {
         {/* Scroll - Static */}
         <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block">
           <div className="flex h-10 w-6 justify-center rounded-full border-2 border-[#CBD5E1] pt-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-[#3B82F6]" />
+            <div className="h-1.5 w-1.5 rounded-full bg-[#2e7c9e]" />
           </div>
         </div>
       </section>
