@@ -38,14 +38,14 @@ function AuthProvider({ children }) {
   const login = async (identifier, password, rememberMe = false) => {
     try {
       const response = await authAPI.login(identifier, password, rememberMe);
-      const { user: userData } = response;
+      const { user: userData, redirectUrl } = response;
 
       // Token is stored in httpOnly cookie by backend
       // Only store role in localStorage for UI purposes
-      localStorage.setItem("role", userData.role || "user");
+      localStorage.setItem("role", userData.role || "Buyer");
       setUser(userData);
 
-      return { success: true };
+      return { success: true, user: userData, redirectUrl };
     } catch (error) {
       console.error("Login error:", error);
       console.error("Error response:", error.response);

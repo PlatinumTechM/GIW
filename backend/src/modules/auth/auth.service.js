@@ -39,8 +39,27 @@ export const login = async (identifier, password) => {
   // Fetch user with subscription info
   const userWithSubscription = await authRepo.findUserWithSubscription(user.id);
 
+  // Check if subscription plan has expired
+  if (userWithSubscription.plan_expiry && userWithSubscription.subscription_status === 'active') {
+    const expiryDate = new Date(userWithSubscription.plan_expiry);
+    const currentDate = new Date();
+    if (expiryDate < currentDate) {
+      throw new Error("Your subscription plan has expired. Please renew to continue.");
+    }
+  }
+
+  // Determine redirect URL based on role
+  const userRole = userWithSubscription.role || "Buyer";
+  let redirectUrl = "/user/home";
+  if (userRole === "Seller") {
+    redirectUrl = "/user/add-stock";
+  } else if (userRole === "admin") {
+    redirectUrl = "/admin";
+  }
+
   return {
     token,
+    redirectUrl,
     user: {
       id: userWithSubscription.id,
       name: userWithSubscription.name,
@@ -49,7 +68,7 @@ export const login = async (identifier, password) => {
       phone: userWithSubscription.phone,
       address: userWithSubscription.address,
       gst: userWithSubscription.gst,
-      role: userWithSubscription.role || "user",
+      role: userRole,
       isActive: userWithSubscription.is_active,
       planName: userWithSubscription.plan_name,
       planExpiry: userWithSubscription.plan_expiry,
@@ -73,11 +92,17 @@ export const register = async (userData) => {
     confirmPassword,
     document,
     type,
+    role,
   } = userData;
 
   // Validation
-  if (!name || !email || !company || !phone || !address || !gst || !password) {
-    throw new Error("All fields are required");
+  if (!name || !email || !phone || !password) {
+    throw new Error("Name, email, phone, and password are required");
+  }
+
+  // For Seller, company, address, and gst are required
+  if (role === "Seller" && (!company || !address || !gst)) {
+    throw new Error("Company, address, and GST are required for Seller");
   }
 
   if (password !== confirmPassword) {
@@ -103,6 +128,7 @@ export const register = async (userData) => {
     password,
     document,
     type,
+    role: role || "Buyer",
   });
 
   return {

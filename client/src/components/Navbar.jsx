@@ -23,7 +23,10 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isJoinDropdownOpen, setIsJoinDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const dropdownRef = useRef(null);
+  const joinDropdownRef = useRef(null);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
 
@@ -61,7 +64,20 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
     setIsUserDropdownOpen(false);
   }, [location]);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsUserDropdownOpen(false);
+      }
+      if (joinDropdownRef.current && !joinDropdownRef.current.contains(event.target)) {
+        setIsJoinDropdownOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const getNavLinks = () => {
     const hasActiveSubscription = user?.subscriptionStatus === "active";
     const links = [
@@ -72,9 +88,54 @@ const Navbar = () => {
       { path: "/contact", label: "Contact", Icon: PhoneCall },
     ].filter(Boolean);
 
+      {
+        path: isAuthenticated ? "/user/home" : "/",
+        label: "Home",
+        icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+      },
+      isAuthenticated && user?.role === "Seller"
+        ? {
+          path: "user/add-stock",
+          label: "Diamond",
+          icon: "M12 3L2 12l10 9 10-9-10-9z",
+        }
+        : null,
+      isAuthenticated && user?.role === "Seller"
+        ? {
+          path: "user/jewellery-stock",
+          label: "Jewellery",
+          icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+        }
+        : null,
+      // Hide Pricing if user has active subscription
+      !hasActiveSubscription
+        ? {
+          path: "/pricing",
+          label: "Pricing",
+          icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 01118 0z",
+        }
+        : null,
+      {
+        path: "/contact",
+        label: "Contact",
+        icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+      },
+    ].filter(Boolean);
+    // Hide Home, Stock, Pricing, Contact for admin users - only show Dashboard in dropdown
     if (user?.role === "admin") {
       return links.filter(link => !["Home", "Diamond", "Jewellery", "Pricing", "Contact"].includes(link.label));
     }
+
+    // Hide Home and Contact for Seller users - only show Diamond and Jewellery
+    if (user?.role === "Seller") {
+      return links.filter(
+        (link) =>
+          link.label !== "Home" &&
+          link.label !== "Pricing" &&
+          link.label !== "Contact",
+      );
+    }
+
     return links;
   };
 
@@ -185,7 +246,41 @@ const Navbar = () => {
                             <UserCircle className="w-4 h-4 text-[#2e7c9e]" />
                             <span>My Profile</span>
                           </Link>
-
+                          {/* User Info Header */}
+                          <div className="px-4 py-3 bg-gradient-to-r from-[#F8FAFC] to-white border-b border-[#E2E8F0]">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FFD700] via-[#FFA500] to-[#B8860B] p-[2px]">
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] flex items-center justify-center">
+                                  <span className="text-white text-sm font-semibold">
+                                    {user?.name?.charAt(0)?.toUpperCase() ||
+                                      user?.email?.charAt(0)?.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-[#0F172A] truncate">
+                                  {user?.name || "Valued Customer"}
+                                </p>
+                                <div className="flex items-center gap-1">
+                                  <Sparkles className="w-3 h-3 text-[#FFD700]" />
+                                  <p className="text-xs text-[#94A3B8] truncate">
+                                    {user?.email}
+                                  </p>
+                                </div>
+                                <div className="mt-1">
+                                  <span className={`inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${
+                                    user?.role === 'Seller' 
+                                      ? 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20'
+                                      : user?.role === 'admin'
+                                      ? 'bg-[#1E3A8A]/10 text-[#1E3A8A] border border-[#1E3A8A]/20'
+                                      : 'bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20'
+                                  }`}>
+                                    {user?.role || 'Buyer'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                           {/* <Link to="/profile" className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#475569] hover:text-[#2e7c9e] hover:bg-[#d9f0fa]/30 rounded-xl transition-all group">
                             <Settings className="w-4 h-4 text-[#2e7c9e]" />
                             <span>Settings</span>
@@ -214,6 +309,92 @@ const Navbar = () => {
                 </Link>
               </div>
             )}
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-medium text-[#475569] hover:text-[#1E3A8A] rounded-xl hover:bg-[#F1F5F9] transition-all duration-300"
+                  >
+                    Sign In
+                  </Link>
+                  <div className="relative" ref={joinDropdownRef}>
+                    <button
+                      onClick={() => setIsJoinDropdownOpen(!isJoinDropdownOpen)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-[#1E3A8A] hover:bg-[#1E40AF] rounded-xl shadow-md shadow-[#1E3A8A]/20 hover:shadow-lg hover:shadow-[#1E3A8A]/30 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
+                    >
+                      Get Started
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isJoinDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isJoinDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl shadow-[#0F172A]/15 border border-[#E2E8F0] py-2 z-[1001] overflow-hidden"
+                        >
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700]"></div>
+                          <div className="p-2 space-y-1">
+                            <Link
+                              to="/register?role=Buyer"
+                              onClick={() => setIsJoinDropdownOpen(false)}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                <User className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">Join as Buyer</span>
+                            </Link>
+                            <Link
+                              to="/register?role=Seller"
+                              onClick={() => setIsJoinDropdownOpen(false)}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#475569] hover:text-[#1E3A8A] hover:bg-gradient-to-r hover:from-[#1E3A8A]/5 hover:to-transparent rounded-xl transition-all duration-200 group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center group-hover:bg-[#1E3A8A]/20 transition-colors">
+                                <Package className="w-4 h-4" />
+                              </div>
+                              <span className="font-medium">Join as Seller</span>
+                            </Link>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <motion.button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            whileTap={{ scale: 0.95 }}
+            className="md:hidden relative p-2 rounded-xl hover:bg-[#F1F5F9] transition-all duration-300"
+          >
+            <div className="w-6 h-5 relative flex flex-col justify-between">
+              <motion.span
+                animate={{
+                  rotate: isMobileMenuOpen ? 45 : 0,
+                  y: isMobileMenuOpen ? 8 : 0,
+                }}
+                className="w-full h-0.5 rounded-full bg-[#1E3A8A] origin-center"
+              />
+              <motion.span
+                animate={{ opacity: isMobileMenuOpen ? 0 : 1 }}
+                className="w-full h-0.5 rounded-full bg-[#1E3A8A]"
+              />
+              <motion.span
+                animate={{
+                  rotate: isMobileMenuOpen ? -45 : 0,
+                  y: isMobileMenuOpen ? -8 : 0,
+                }}
+                className="w-full h-0.5 rounded-full bg-[#1E3A8A] origin-center"
+              />
+            </div>
+          </motion.button>
+        </div>
 
             {/* Mobile Menu Toggle */}
             <button
@@ -262,6 +443,174 @@ const Navbar = () => {
         )}
       </AnimatePresence>
     </nav>
+                  {isAuthenticated ? (
+                    <div className="space-y-2">
+                      {/* Notification Link - Mobile */}
+                      <NavLink
+                        to="/notifications"
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                            isActive
+                              ? "bg-[#1E3A8A] text-white shadow-md"
+                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                          }`
+                        }
+                        onClick={() => setUnreadCount(0)}
+                      >
+                        <div className="relative">
+                          <Bell className="w-5 h-5" />
+                          {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        Notifications
+                      </NavLink>
+
+                      {/* Admin Dashboard Link - Only for admin */}
+                      {user?.role === "admin" && (
+                        <NavLink
+                          to="/admin"
+                          className={({ isActive }) =>
+                            `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
+                              ? "bg-[#1E3A8A] text-white shadow-md"
+                              : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                            }`
+                          }
+                        >
+                          <svg
+                            className={`w-5 h-5 ${({ isActive }) => (isActive ? "text-[#93C5FD]" : "text-[#94A3B8]")}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                            />
+                          </svg>
+                          Dashboard
+                        </NavLink>
+                      )}
+                      {/* Profile Button */}
+                      <NavLink
+                        to="/profile"
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive
+                            ? "bg-[#1E3A8A] text-white shadow-md"
+                            : "text-[#475569] hover:bg-[#F8FAFC] hover:text-[#1E3A8A]"
+                          }`
+                        }
+                      >
+                        <svg
+                          className={`w-5 h-5 ${({ isActive }) => (isActive ? "text-[#93C5FD]" : "text-[#94A3B8]")}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        Profile
+                      </NavLink>
+                      {/* Logout Button */}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-3 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-all"
+                      >
+                        <svg
+                          className="w-5 h-5 text-red-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        className="flex items-center gap-3 px-4 py-3 text-[#475569] text-sm font-medium rounded-xl hover:bg-[#F8FAFC] hover:text-[#1E3A8A] transition-all"
+                      >
+                        <svg
+                          className="w-5 h-5 text-[#94A3B8]"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        Sign In
+                      </Link>
+                      <div className="space-y-2">
+                        <Link
+                          to="/register?role=Buyer"
+                          className="flex items-center gap-3 px-4 py-3 bg-[#1E3A8A] text-white text-sm font-medium rounded-xl shadow-md hover:bg-[#1E40AF] transition-all"
+                        >
+                          <svg
+                            className="w-5 h-5 text-[#93C5FD]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          Join as Buyer
+                        </Link>
+                        <Link
+                          to="/register?role=Seller"
+                          className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1E3A8A] to-[#3B82F6] text-white text-sm font-medium rounded-xl shadow-md hover:from-[#1E40AF] hover:to-[#2563EB] transition-all"
+                        >
+                          <svg
+                            className="w-5 h-5 text-[#93C5FD]"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={1.5}
+                              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                            />
+                          </svg>
+                          Join as Seller
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   );
 };
 
