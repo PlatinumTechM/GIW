@@ -15,8 +15,8 @@ const App = () => {
 
   return (
     <>
-      {!isAdminPage && <Navbar />}
-      <main className={!isAdminPage ? "pt-20 sm:pt-24" : ""}>
+      {!isAdminPage && !isAuthPage && <Navbar />}
+      <main className={!isAdminPage ? "" : ""}>
         <Outlet />
       </main>
       {!isAuthPage && !isAdminPage && <Footer />}
