@@ -1367,7 +1367,7 @@ const AddStock = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilters(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000]"
             />
             {/* Modal */}
             <motion.div
@@ -1375,9 +1375,9 @@ const AddStock = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 pb-5 pointer-events-none"
+              className="fixed inset-0 z-[2010] flex items-center justify-center p-4 pointer-events-none"
             >
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl lg:max-w-4xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden pointer-events-auto border border-gray-200">
+              <div className="bg-white rounded-2xl shadow-2xl w-[98%] sm:w-[94%] md:max-w-4xl max-h-[95vh] flex flex-col overflow-hidden pointer-events-auto border border-gray-200">
                 {/* Header */}
                 <div className="flex-none flex items-center justify-between px-4 py-2.5 border-b border-gray-200 bg-slate-900 text-white">
                   <div className="flex items-center gap-2">
@@ -2514,13 +2514,13 @@ const AddStock = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowMarkupModal(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none p-4"
+              className="fixed inset-0 flex items-center justify-center z-[2010] pointer-events-none p-4"
             >
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto overflow-hidden">
                 {/* Header */}
@@ -2626,13 +2626,13 @@ const AddStock = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowShareModal(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+              className="fixed inset-0 flex items-center justify-center z-[2010] p-4"
             >
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                 {/* Header */}
@@ -2736,7 +2736,7 @@ const AddStock = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[2000] p-4"
             onClick={() => setShowSubscriptionModal(false)}
           >
             <motion.div
