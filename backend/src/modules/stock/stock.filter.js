@@ -25,13 +25,13 @@ const addArrayFilter = (conditions, values, field, filterValue, paramIndex) => {
 
   if (items.length === 1) {
     // Single value - use equals
-    conditions.push(`${field} = $${paramIndex}`);
+    conditions.push(`UPPER(${field}) = $${paramIndex}`);
     values.push(items[0]);
     return { added: true, paramIndex: paramIndex + 1 };
   } else {
     // Multiple values - use IN
     const placeholders = items.map((_, i) => `$${paramIndex + i}`).join(",");
-    conditions.push(`${field} IN (${placeholders})`);
+    conditions.push(`UPPER(${field}) IN (${placeholders})`);
     values.push(...items);
     return { added: true, paramIndex: paramIndex + items.length };
   }
@@ -207,6 +207,9 @@ export const buildStockFilters = (filters, startIndex = 1, baseConditions = []) 
 
   // Array filters (dropdown multi-selects)
   result = addArrayFilter(whereConditions, values, "status", filters.status, paramIndex);
+  if (result.added) paramIndex = result.paramIndex;
+
+  result = addArrayFilter(whereConditions, values, "party", filters.party, paramIndex);
   if (result.added) paramIndex = result.paramIndex;
 
   // Shape filter with special handling for "OTHER"

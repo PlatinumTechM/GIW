@@ -28,6 +28,7 @@ const ALL_COLUMNS = [
   "type",
   "user_id",
   "stock_id",
+  "party",
   "certificate_number",
   "weight",
 
@@ -632,7 +633,7 @@ export const getAll = async (page, limit, sortBy, filters) => {
   // Data query
   const dataQuery = `
     SELECT
-      id, type, user_id, stock_id, certificate_number, weight, shape, color,
+      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
       fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
       symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
       length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
@@ -800,7 +801,7 @@ export const getByUserId = async (
   const offsetIndex = paramIndex + 1;
   const dataQuery = `
     SELECT
-      id, type, user_id, stock_id, certificate_number, weight, shape, color,
+      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
       fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
       symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
       length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
@@ -841,16 +842,18 @@ export const getFilterOptions = async (userId = null) => {
   const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock ${where('fancy_color')} ORDER BY value`;
   const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock ${where('clarity')} ORDER BY value`;
   const labQuery = `SELECT DISTINCT UPPER(lab) as value FROM diamond_stock ${where('lab')} ORDER BY value`;
+  const partyQuery = `SELECT DISTINCT party as value FROM diamond_stock ${where('party')} ORDER BY value`;
 
   const params = userId ? [userId] : [];
 
-  const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult] =
+  const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult, partyResult] =
     await Promise.all([
       pool.query(shapeQuery, params),
       pool.query(colorQuery, params),
-      pool.query(fancyColorQuery, params),
+      pool.query(fancyColorQuery ? fancyColorQuery : "SELECT 1", params), // handle missing fancyColor if needed, but it's defined
       pool.query(clarityQuery, params),
       pool.query(labQuery, params),
+      pool.query(partyQuery, params),
     ]);
 
   // Combine colors and fancy colors, remove duplicates
@@ -867,6 +870,7 @@ export const getFilterOptions = async (userId = null) => {
     colors: allColors,
     clarities: clarityResult.rows.map((r) => r.value),
     labs: labOptions,
+    parties: partyResult.rows.map((r) => r.value),
   };
 };
 

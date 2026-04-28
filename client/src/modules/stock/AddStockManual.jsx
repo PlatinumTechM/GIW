@@ -24,6 +24,7 @@ import api from "../../services/api";
 
 const INITIAL_FORM_DATA = {
   stock_id: "",
+  party: "",
   type: "",
   certificate_number: "",
   weight: "",
@@ -261,6 +262,7 @@ const FIELD_MAPPINGS = {
     "ref #",
     "reference",
   ],
+  party: ["party", "supplier", "vendor", "source", "party name", "party_name"],
   certificate_number: [
     "certificate number",
     "cert no",
@@ -846,6 +848,13 @@ const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
                       onChange={handleInputChange}
                       required
                       placeholder="Enter unique stock ID"
+                    />
+                    <InputField
+                      label="Party"
+                      name="party"
+                      value={formData.party}
+                      onChange={handleInputChange}
+                      placeholder="Enter party name"
                     />
                     <InputField
                       label="Type"

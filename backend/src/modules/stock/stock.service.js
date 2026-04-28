@@ -31,6 +31,8 @@ const FIELD_MAPPINGS = {
     "reference",
   ],
 
+  party: ["party", "supplier", "vendor", "source", "party name", "party_name"],
+
   certificate_number: [
     "certificate number",
     "cert no",
@@ -703,6 +705,8 @@ const convertToDbFormat = (mappedData, userId = null) => {
     user_id: userId,
 
     stock_id: parseString(mappedData.stock_id)?.toUpperCase(),
+
+    party: parseString(mappedData.party),
 
     certificate_number: parseString(mappedData.certificate_number),
 

@@ -24,6 +24,8 @@ import {
   Scale,
   DollarSign,
   Tag,
+  Users,
+  ChevronDown,
 } from "lucide-react";
 import api from "@/services/api";
 import * as XLSX from "xlsx";
@@ -35,6 +37,7 @@ const PUBLIC_COLUMNS = [
   "weight",
   "shape",
   "color",
+  "party",
   "fancy_color",
   "fancy_color_intensity",
   "fancy_color_overtone",
@@ -108,6 +111,7 @@ const SharePage = () => {
     minPricePerCarat: "",
     maxPricePerCarat: "",
     growthType: [],
+    party: [],
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
@@ -124,6 +128,7 @@ const SharePage = () => {
     minPricePerCarat: "",
     maxPricePerCarat: "",
     growthType: [],
+    party: [],
   });
 
   // Filter options
@@ -131,6 +136,7 @@ const SharePage = () => {
     shapes: [],
     colors: [],
     clarities: [],
+    parties: [],
   });
   const [filterOptionsLoading, setFilterOptionsLoading] = useState(false);
 
@@ -164,11 +170,13 @@ const SharePage = () => {
     const shapes = [...new Set(stocks.map(s => s.shape).filter(Boolean))];
     const colors = [...new Set(stocks.map(s => s.color).filter(Boolean))];
     const clarities = [...new Set(stocks.map(s => s.clarity).filter(Boolean))];
+    const parties = [...new Set(stocks.map(s => s.party).filter(Boolean))];
     
     setFilterOptions({
       shapes: shapes.sort(),
       colors: colors.sort(),
       clarities: clarities.sort(),
+      parties: parties.sort(),
     });
     setFilterOptionsLoading(false);
   }, []);
@@ -219,6 +227,7 @@ const SharePage = () => {
       minPricePerCarat: "",
       maxPricePerCarat: "",
       growthType: [],
+      party: [],
     };
     setPendingFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
@@ -250,6 +259,7 @@ const SharePage = () => {
       appliedFilters.clarity.length > 0 ||
       appliedFilters.lab.length > 0 ||
       appliedFilters.growthType.length > 0 ||
+      appliedFilters.party.length > 0 ||
       appliedFilters.minWeight ||
       appliedFilters.maxWeight ||
       appliedFilters.minPricePerCarat ||
@@ -269,6 +279,7 @@ const SharePage = () => {
     count += appliedFilters.clarity.length;
     count += appliedFilters.lab.length;
     count += appliedFilters.growthType.length;
+    count += appliedFilters.party.length;
     if (appliedFilters.minWeight || appliedFilters.maxWeight) count++;
     if (appliedFilters.minPricePerCarat || appliedFilters.maxPricePerCarat) count++;
     if (searchQuery) count++;
@@ -284,6 +295,7 @@ const SharePage = () => {
       (item.shape && item.shape.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.certificate_number && item.certificate_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.color && item.color.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.party && item.party.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.clarity && item.clarity.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Applied filters
@@ -296,6 +308,7 @@ const SharePage = () => {
     const matchesClarity = appliedFilters.clarity.length === 0 || appliedFilters.clarity.includes(item.clarity);
     const matchesLab = appliedFilters.lab.length === 0 || appliedFilters.lab.includes(item.lab);
     const matchesGrowthType = appliedFilters.growthType.length === 0 || appliedFilters.growthType.includes(item.growth_type);
+    const matchesParty = appliedFilters.party.length === 0 || (item.party && appliedFilters.party.some(p => p.toUpperCase() === item.party.toUpperCase()));
     const matchesWeight = (!appliedFilters.minWeight || item.weight >= parseFloat(appliedFilters.minWeight)) &&
                          (!appliedFilters.maxWeight || item.weight <= parseFloat(appliedFilters.maxWeight));
     const matchesPrice = (!appliedFilters.minPricePerCarat || item.price_per_carat >= parseFloat(appliedFilters.minPricePerCarat)) &&
@@ -312,6 +325,7 @@ const SharePage = () => {
       matchesClarity &&
       matchesLab &&
       matchesGrowthType &&
+      matchesParty &&
       matchesWeight &&
       matchesPrice
     );
@@ -412,41 +426,7 @@ const SharePage = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
-      <div className="bg-white border-b border-[#E2E8F0] sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-            
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Shared Stock</h1>
-                <p className="text-sm text-gray-500">
-                  Viewing filtered stock data •{" "}
-                  <span className="text-amber-600 font-medium">
-                    Expires in {expiresIn}
-                  </span>
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={handleDownloadExcel}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors text-sm"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span className="sm:hidden">Excel</span>
-                <span className="hidden sm:inline">Download Excel</span>
-              </button>
-              <Link
-                to="/"
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -577,6 +557,14 @@ const SharePage = () => {
               <span key={type} className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">
                 {type}
                 <button onClick={() => removeFilter("growthType", type)} className="hover:bg-teal-200 rounded p-0.5 ml-1">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            {appliedFilters.party?.map((p) => (
+              <span key={p} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                Party: {p}
+                <button onClick={() => removeFilter("party", p)} className="hover:bg-blue-200 rounded p-0.5 ml-1">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -828,11 +816,11 @@ const SharePage = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 pb-10 pointer-events-none"
               >
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl lg:max-w-4xl max-h-[85vh] overflow-hidden pointer-events-auto border border-gray-200">
+                <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl lg:max-w-4xl max-h-[calc(100vh-140px)] flex flex-col overflow-hidden pointer-events-auto border border-gray-200">
                   {/* Header */}
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-slate-900 text-white">
+                  <div className="flex-none flex items-center justify-between px-4 py-2.5 border-b border-gray-200 bg-slate-900 text-white">
                     <div className="flex items-center gap-2">
                       <SlidersHorizontal className="w-5 h-5" />
                       <h2 className="text-base font-semibold">Filter Stock</h2>
@@ -846,28 +834,49 @@ const SharePage = () => {
                   </div>
 
                   {/* Filter Content */}
-                  <div className="p-3 overflow-y-auto max-h-[calc(85vh-120px)] bg-gray-50">
-                    <div className="space-y-2">
-                      {/* Search Row */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex-1 overflow-y-auto p-2.5 bg-gray-50">
+                    <div className="space-y-1.5">
+                      {/* Search & Party Row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         <input
                           type="text"
                           value={pendingFilters.stockId}
                           onChange={(e) => handlePendingFilterChange("stockId", e.target.value)}
                           placeholder="Search By Stock ID.."
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <input
                           type="text"
                           value={pendingFilters.certificate}
                           onChange={(e) => handlePendingFilterChange("certificate", e.target.value)}
                           placeholder="Search By Certificate Number.."
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        <div className="relative">
+                          <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            value={pendingFilters.party?.[0] || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPendingFilters(prev => ({
+                                ...prev,
+                                party: val ? [val] : []
+                              }));
+                            }}
+                          >
+                            <option value="">All Parties</option>
+                            {filterOptions.parties?.map((p) => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
                       </div>
 
                       {/* Shape */}
-                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                         <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                           <DiamondIcon className="w-4 h-4 text-indigo-500" />
                           Shape
@@ -900,7 +909,7 @@ const SharePage = () => {
                       </div>
 
                       {/* Color */}
-                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                         <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                           <Palette className="w-4 h-4 text-purple-500" />
                           Color
@@ -935,7 +944,7 @@ const SharePage = () => {
                       {/* Clarity, Cut, Lab */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {/* Clarity */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <Sparkles className="w-4 h-4 text-emerald-500" />
                             Clarity
@@ -968,7 +977,7 @@ const SharePage = () => {
                         </div>
 
                         {/* Cut */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <Scissors className="w-4 h-4 text-pink-500" />
                             Cut
@@ -994,7 +1003,7 @@ const SharePage = () => {
                         </div>
 
                         {/* Lab */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <Building2 className="w-4 h-4 text-cyan-500" />
                             Lab
@@ -1020,7 +1029,7 @@ const SharePage = () => {
                       {/* Growth, Weight, Price */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {/* Growth Type */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <Microscope className="w-4 h-4 text-teal-500" />
                             Growth
@@ -1043,7 +1052,7 @@ const SharePage = () => {
                         </div>
 
                         {/* Weight */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <Scale className="w-4 h-4 text-orange-500" />
                             Weight
@@ -1069,7 +1078,7 @@ const SharePage = () => {
                         </div>
 
                         {/* Price */}
-                        <div className="bg-white p-3 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
+                        <div className="bg-white p-2.5 rounded-lg border border-gray-200 col-span-2 sm:col-span-1">
                           <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                             <DollarSign className="w-4 h-4 text-rose-500" />
                             Price
@@ -1096,7 +1105,7 @@ const SharePage = () => {
                       </div>
 
                       {/* Status */}
-                      <div className="bg-white p-3 rounded-lg border border-gray-200">
+                      <div className="bg-white p-2.5 rounded-lg border border-gray-200">
                         <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
                           <Tag className="w-4 h-4 text-green-500" />
                           Status
@@ -1127,7 +1136,7 @@ const SharePage = () => {
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                  <div className="flex-none flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-white">
                     <button
                       onClick={clearAllFilters}
                       className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"

@@ -121,6 +121,7 @@ const DiamondDetail = () => {
       diamondImage4: stock.diamond_image4,
       diamondImage5: stock.diamond_image5,
       mediaAvailable: getAvailableMediaTypes(stock),
+      party: stock.party,
     };
   };
 
@@ -627,6 +628,7 @@ const DiamondDetail = () => {
                     { label: "State", value: diamond.state || "None" },
                     { label: "Country", value: diamond.country || "None" },
                     { label: "Fluorescence", value: diamond.fluorescence || "None" },
+                    { label: "Party", value: diamond.party || "None" },
                     diamond.mediaAvailable && diamond.mediaAvailable !== "None" && { label: "Media Available", value: diamond.mediaAvailable },
                   ].filter(Boolean).map((item, idx) => (
                     <motion.div
