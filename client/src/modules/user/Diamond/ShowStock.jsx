@@ -66,6 +66,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
       eyeClean: stock.eye_clean,
       shade: stock.shade,
       type: stock.type,
+      party: stock.party,
     };
   };
 
@@ -279,7 +280,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
         // List View
         <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
           {/* Table Header */}
-          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
+          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
             <div>Carat</div>
             <div>Color</div>
             <div>Clarity</div>
@@ -287,6 +288,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
             <div>Polish</div>
             <div>Symmetry</div>
             <div>Fluor</div>
+            <div>Party</div>
             <div>Certification</div>
             <div className="text-right">Price</div>
           </div>
@@ -313,7 +315,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
               >
                 {/* Desktop Row */}
                 <div
-                  className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center cursor-pointer"
+                  className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center cursor-pointer"
                   onClick={() => openDiamondDetail(item)}
                 >
                   <div className="flex items-center gap-2">
@@ -347,6 +349,9 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                   </div>
                   <div>
                     <span className="font-medium text-[#0F172A]">{item.fluorescence}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-[#0F172A]">{item.party || "-"}</span>
                   </div>
                   <div>
                     <div className="flex flex-col">
@@ -389,7 +394,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                       <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.fluorescence}</span>
                     </div>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber}</span>
+                      <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber} · {item.party || "-"}</span>
                       {item.available && (
                         <span className="text-xs text-green-600 font-medium">Available</span>
                       )}
@@ -498,7 +503,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
 
                 {/* Specs */}
                 <p className="mb-3 text-sm text-[#64748B] line-clamp-2">
-                  {item.cut} Cut · {item.polish} Polish · {item.symmetry} Symmetry · {item.fluorescence}
+                  {item.cut} Cut · {item.polish} Polish · {item.symmetry} Symmetry · {item.fluorescence} · {item.party || "No Party"}
                 </p>
 
                 {/* Price */}

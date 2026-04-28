@@ -28,6 +28,7 @@ const ALL_COLUMNS = [
   "type",
   "user_id",
   "stock_id",
+  "party",
   "certificate_number",
   "weight",
 
@@ -691,18 +692,16 @@ export const getAll = async (page, limit, sortBy, filters) => {
   // Data query
   const dataQuery = `
     SELECT
-      ds.id, ds.type, ds.user_id, ds.stock_id, ds.certificate_number, ds.weight, ds.shape, ds.color,
-      ds.fancy_color, ds.fancy_color_intensity, ds.fancy_color_overtone, ds.clarity, ds.cut, ds.polish,
-      ds.symmetry, ds.fluorescence, ds.fluorescence_color, ds.fluorescence_intensity, ds.measurements,
-      ds.length, ds.width, ds.height, ds.shade, ds.milky, ds.eye_clean, ds.lab, ds.certificate_comment, ds.city,
-      ds.state, ds.country, ds.treatment, ds.depth_percentage, ds.table_percentage, ds.rap_price,
-      ds.rap_per_carat, ds.price_per_carat, ds.final_price, ds.discount, ds.heart_arrow, ds.star_length,
-      ds.laser_description, ds.growth_type, ds.key_to_symbol, ds.lw_ratio, ds.culet_size, ds.culet_condition,
-      ds.gridle_thin, ds.gridle_thick, ds.gridle_condition, ds.gridle_per, ds.crown_height, ds.crown_angle,
-      ds.pavilion_depth, ds.pavilion_angle, ds.status, ds.diamond_image1, ds.diamond_video, ds.certificate_image,
-      u.company as supplier_name
-    FROM diamond_stock ds
-    LEFT JOIN users u ON ds.user_id = u.id
+      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
+      fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
+      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
+      length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
+      state, country, treatment, depth_percentage, table_percentage, rap_price,
+      rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
+      laser_description, growth_type, key_to_symbol, lw_ratio, culet_size, culet_condition,
+      gridle_thin, gridle_thick, gridle_condition, gridle_per, crown_height, crown_angle,
+      pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
+    FROM diamond_stock
     ${whereClause}
     ORDER BY ${orderBy.replace(/\b(created_at|final_price|weight|color)\b/g, 'ds.$1')}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -966,16 +965,16 @@ export const getByUserId = async (
   // Data query
   const dataQuery = `
     SELECT
-      ds.id, ds.type, ds.user_id, ds.stock_id, ds.certificate_number, ds.weight, ds.shape, ds.color,
-      ds.fancy_color, ds.fancy_color_intensity, ds.fancy_color_overtone, ds.clarity, ds.cut, ds.polish,
-      ds.symmetry, ds.fluorescence, ds.fluorescence_color, ds.fluorescence_intensity, ds.measurements,
-      ds.length, ds.width, ds.height, ds.shade, ds.milky, ds.eye_clean, ds.lab, ds.certificate_comment, ds.city,
-      ds.state, ds.country, ds.treatment, ds.depth_percentage, ds.table_percentage, ds.rap_price,
-      ds.rap_per_carat, ds.price_per_carat, ds.final_price, ds.discount, ds.heart_arrow, ds.star_length,
-      ds.laser_description, ds.growth_type, ds.key_to_symbol, ds.lw_ratio, ds.culet_size, ds.culet_condition,
-      ds.gridle_thin, ds.gridle_thick, ds.gridle_condition, ds.gridle_per, ds.crown_height, ds.crown_angle,
-      ds.pavilion_depth, ds.pavilion_angle, ds.status, ds.diamond_image1, ds.diamond_video, ds.certificate_image
-    FROM diamond_stock ds
+      id, type, user_id, stock_id, party, certificate_number, weight, shape, color,
+      fancy_color, fancy_color_intensity, fancy_color_overtone, clarity, cut, polish,
+      symmetry, fluorescence, fluorescence_color, fluorescence_intensity, measurements,
+      length, width, height, shade, milky, eye_clean, lab, certificate_comment, city,
+      state, country, treatment, depth_percentage, table_percentage, rap_price,
+      rap_per_carat, price_per_carat, final_price, discount, heart_arrow, star_length,
+      laser_description, growth_type, key_to_symbol, lw_ratio, culet_size, culet_condition,
+      gridle_thin, gridle_thick, gridle_condition, gridle_per, crown_height, crown_angle,
+      pavilion_depth, pavilion_angle, status, diamond_image1, diamond_video, certificate_image
+    FROM diamond_stock
     ${whereClause}
     ORDER BY ${orderClause}
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -1007,16 +1006,18 @@ export const getFilterOptions = async (userId = null) => {
   const fancyColorQuery = `SELECT DISTINCT UPPER(fancy_color) as value FROM diamond_stock ${where('fancy_color')} ORDER BY value`;
   const clarityQuery = `SELECT DISTINCT UPPER(clarity) as value FROM diamond_stock ${where('clarity')} ORDER BY value`;
   const labQuery = `SELECT DISTINCT UPPER(lab) as value FROM diamond_stock ${where('lab')} ORDER BY value`;
+  const partyQuery = `SELECT DISTINCT party as value FROM diamond_stock ${where('party')} ORDER BY value`;
 
   const params = userId ? [userId] : [];
 
-  const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult] =
+  const [shapeResult, colorResult, fancyColorResult, clarityResult, labResult, partyResult] =
     await Promise.all([
       pool.query(shapeQuery, params),
       pool.query(colorQuery, params),
-      pool.query(fancyColorQuery, params),
+      pool.query(fancyColorQuery ? fancyColorQuery : "SELECT 1", params), // handle missing fancyColor if needed, but it's defined
       pool.query(clarityQuery, params),
       pool.query(labQuery, params),
+      pool.query(partyQuery, params),
     ]);
 
   // Combine colors and fancy colors, remove duplicates
@@ -1036,6 +1037,7 @@ export const getFilterOptions = async (userId = null) => {
     colors: allColors,
     clarities: clarityResult.rows.map((r) => r.value),
     labs: labOptions,
+    parties: partyResult.rows.map((r) => r.value),
     suppliers: supplierResult.rows.map((r) => r.value),
   };
 };

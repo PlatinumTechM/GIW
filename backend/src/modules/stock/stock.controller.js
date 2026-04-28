@@ -344,6 +344,7 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat,
       maxPricePerCarat,
       growthType,
+      party,
       sortBy,
       sortOrder,
     } = req.query;
@@ -362,6 +363,7 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
+      party,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };
