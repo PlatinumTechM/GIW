@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+/* ============================================
+   GIW Diamond Exchange - Elite SaaS Theme
+   Modern Enterprise Minimalism Design System
+   ============================================ */
+
+:root {
+  /* Refined Color Palette */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-accent: #e0f2fe;
+
+  --accent-primary: #2e7c9e; /* Turquoise Blue */
+  --accent-secondary: #4aa3c7; /* Lighter Turquoise */
+  --accent-hover: #1b5d7a;
+  --accent-soft: rgba(46, 124, 158, 0.1);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --border-light: rgba(46, 124, 158, 0.1);
+  --border-focus: #2e7c9e;
+
+  /* Modern Shadow System (Layered) */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card:
+    0 10px 15px -3px rgba(46, 124, 158, 0.05),
+    0 4px 6px -4px rgba(46, 124, 158, 0.05);
+  --shadow-hover:
+    0 20px 25px -5px rgba(46, 124, 158, 0.1),
+    0 8px 10px -6px rgba(46, 124, 158, 0.05);
+  --shadow-premium:
+    0 25px 50px -12px rgba(15, 23, 42, 0.08);
+
+  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Re-designing the Core Components */
+
+/* Premium Card Style */
+.card-premium {
+  @apply bg-white rounded-2xl transition-all duration-300;
+  border: 2px solid transparent;
+  box-shadow: var(--shadow-card);
+}
+
+.card-premium:hover {
+  @apply -translate-y-1.5;
+  box-shadow: var(--shadow-hover);
+  border-color: #2e7c9e;
+}
+
+/* The "3D" effect replacement - Elegant Offset */
+.card-turquoise-3d {
+  @apply bg-white rounded-2xl transition-all duration-500 overflow-hidden relative;
+  border: 2px solid transparent;
+  box-shadow: var(--shadow-card);
+}
+
+.card-turquoise-3d:hover {
+  @apply -translate-y-2;
+  box-shadow: var(--shadow-premium);
+  border-color: #2e7c9e; /* Turquoise on hover */
+}
+
+/* Icon Containers - Rectangular Design */
+.icon-rectangle-3d {
+  @apply w-14 h-10 rounded-xl flex items-center justify-center transition-all duration-300;
+  background-color: var(--bg-accent);
+  color: var(--accent-primary);
+  box-shadow: 0 4px 10px rgba(46, 124, 158, 0.1);
+}
+
+.card-turquoise-3d:hover .icon-rectangle-3d {
+  @apply scale-110 rotate-3;
+  background-color: #2e7c9e;
+  color: white;
+  box-shadow: 0 10px 20px rgba(46, 124, 158, 0.2);
+}
+
+/* Custom Hover Effects for Titles and Text */
+.card-turquoise-3d h3,
+.card-turquoise-3d p {
+  transition: all 0.3s var(--ease-premium);
+}
+
+/* Input Fields */
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl border border-gray-200 bg-white transition-all duration-200 outline-none;
+}
+
+.input-field:focus {
+  @apply border-[#2e7c9e] ring-4 ring-[#2e7c9e]/10;
+}
+
+/* Buttons */
+.home-page .btn-primary {
+  @apply px-10 py-4 rounded-2xl font-bold text-white transition-all duration-500 flex items-center gap-3;
+  background-color: #2e7c9e !important;
+  background-image: none !important;
+  border: 2px solid #d9f0fa !important;
+  box-shadow: 
+    0 10px 25px -5px rgba(46, 124, 158, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.home-page .btn-primary:hover {
+  @apply -translate-y-1.5 scale-[1.03];
+  background-color: #1b5d7a !important;
+  border-color: #164e63 !important; /* Darker border on hover */
+  box-shadow: 0 20px 40px -10px rgba(46, 124, 158, 0.5) !important;
+}
+
+.home-page .btn-secondary {
+  @apply px-10 py-4 rounded-2xl font-bold transition-all duration-500 bg-white flex items-center gap-3;
+  border: 2px solid #d9f0fa !important;
+  color: #2e7c9e !important;
+  box-shadow: 0 4px 12px rgba(46, 124, 158, 0.05) !important;
+}
+
+.home-page .btn-secondary:hover {
+  @apply -translate-y-1.5 bg-[#f0f9ff];
+  border-color: #1b5d7a !important; /* Darker border on hover */
+  color: #1b5d7a !important;
+  box-shadow: 0 15px 30px -5px rgba(46, 124, 158, 0.15) !important;
+}
+
+/* Glassmorphism utility */
+.glass-morphism {
+  @apply backdrop-blur-xl bg-white/70 border border-white/20;
+}
+
+/* Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
