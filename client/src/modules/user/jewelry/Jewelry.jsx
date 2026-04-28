@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlaskConical, Filter, X, Search, RefreshCw, SlidersHorizontal, Gem } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
@@ -76,6 +76,7 @@ const mapJewelryItem = (item) => {
 
 const Jewelry = () => {
   const navigate = useNavigate();
+  const { role } = useParams();
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState([]);
@@ -173,7 +174,7 @@ const Jewelry = () => {
                 variants={fadeInUp}
                 className="mb-2 flex items-center gap-2 text-sm text-[#64748B]"
               >
-                <Link to="/user/home" className="hover:text-[#1E3A8A]">
+                <Link to={`/${role}/home`} className="hover:text-[#1E3A8A]">
                   Home
                 </Link>
                 <span>/</span>
@@ -192,7 +193,7 @@ const Jewelry = () => {
               </motion.p>
             </div>
             <Link
-              to="/user/lab-grown-jewelry"
+              to={`/${role}/lab-grown-jewelry`}
               className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
             >
               <FlaskConical className="h-4 w-4" />
@@ -320,7 +321,7 @@ const Jewelry = () => {
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                   type="natural"
-                  onItemClick={(item) => navigate(`/user/jewelry/natural/${item.id}`)}
+                  onItemClick={(item) => navigate(`/${role}/jewelry/natural/${item.id}`)}
                   onAddToCart={(item) => console.log("Add to cart:", item.name)}
                   onAddToWishlist={(item) =>
                     console.log("Add to wishlist:", item.name)

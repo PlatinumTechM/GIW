@@ -62,7 +62,21 @@ const Login = () => {
         const user = result.user || JSON.parse(localStorage.getItem('user') || '{}');
         const role = user.role || 'Buyer';
         notify.success("Login Successful", `Welcome, ${role}!`);
-        navigate(result.redirectUrl || "/user/home");
+        
+        // Determine redirect URL based on role
+        let redirectUrl = result.redirectUrl;
+        if (!redirectUrl) {
+          const rolePath = role.toLowerCase();
+          if (role === 'Seller') {
+            redirectUrl = `/${rolePath}/diamond`;
+          } else if (role === 'admin') {
+            redirectUrl = "/admin";
+          } else {
+            redirectUrl = `/${rolePath}/home`;
+          }
+        }
+        
+        navigate(redirectUrl);
       } else {
         notify.error("Login Failed", result.error || "Invalid credentials");
         setError(result.error || "Unable to sign in");

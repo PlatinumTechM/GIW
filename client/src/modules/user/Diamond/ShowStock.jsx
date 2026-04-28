@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
 import { stockAPI } from "../../../services/api.js";
 
 const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) => {
   const navigate = useNavigate();
+  const { role } = useParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -20,7 +21,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
       console.error("Invalid diamond ID:", diamond.id);
       return;
     }
-    navigate(`/user/diamond/${type}/${diamond.id}`);
+    navigate(`/${role}/diamond/${type}/${diamond.id}`);
   };
 
   // Map backend data to frontend format
