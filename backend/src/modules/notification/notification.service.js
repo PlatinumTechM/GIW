@@ -11,7 +11,7 @@ export const getUnreadNotifications = async (userId) => {
 };
 
 export const getNotificationById = async (id, userId) => {
-  const notification = await notificationRepo.findNotificationById(id);
+  const notification = await notificationRepo.findNotificationById(id, userId);
   if (!notification) {
     throw new Error("Notification not found");
   }
@@ -47,7 +47,7 @@ export const getAllUsersForNotification = async (currentUserId) => {
 };
 
 export const updateNotification = async (id, userId, notificationData) => {
-  const existingNotification = await notificationRepo.findNotificationById(id);
+  const existingNotification = await notificationRepo.findNotificationById(id, userId);
   if (!existingNotification) {
     throw new Error("Notification not found");
   }
@@ -77,7 +77,7 @@ export const updateNotification = async (id, userId, notificationData) => {
 };
 
 export const markAsRead = async (id, userId) => {
-  const existingNotification = await notificationRepo.findNotificationById(id);
+  const existingNotification = await notificationRepo.findNotificationById(id, userId);
   if (!existingNotification) {
     throw new Error("Notification not found");
   }
@@ -87,7 +87,7 @@ export const markAsRead = async (id, userId) => {
 };
 
 export const markAsUnread = async (id, userId) => {
-  const existingNotification = await notificationRepo.findNotificationById(id);
+  const existingNotification = await notificationRepo.findNotificationById(id, userId);
   if (!existingNotification) {
     throw new Error("Notification not found");
   }
@@ -102,7 +102,7 @@ export const markAllAsRead = async (userId) => {
 };
 
 export const deleteNotification = async (id, userId) => {
-  const existingNotification = await notificationRepo.findNotificationById(id);
+  const existingNotification = await notificationRepo.findNotificationById(id, userId);
   if (!existingNotification) {
     throw new Error("Notification not found");
   }

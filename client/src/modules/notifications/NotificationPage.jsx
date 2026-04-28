@@ -721,8 +721,8 @@ const NotificationPage = () => {
                     variants={itemVariants}
                     onClick={() => handleSelectNotification(n)}
                     className={`relative flex cursor-pointer items-start gap-3 p-4 transition-all ${selectedNotification?.id === n.id
-                        ? "bg-blue-50 shadow-sm ring-1 ring-blue-100/50"
-                        : !n.is_read ? "bg-slate-50/50" : "bg-white hover:bg-slate-50"
+                      ? "bg-blue-50 shadow-sm ring-1 ring-blue-100/50"
+                      : !n.is_read ? "bg-slate-50/50" : "bg-white hover:bg-slate-50"
                       }`}
                   >
                     {!n.is_read && (

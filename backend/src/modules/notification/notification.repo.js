@@ -1,23 +1,27 @@
 import { pool } from "../../config/db.js";
 
-export const findNotificationById = async (id) => {
-  const query = `SELECT id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at
+export const findNotificationById = async (id, userId) => {
+  const query = `SELECT id, user_id, sender_id, title, message, type, image, 
+                        ($2 = ANY(read_by)) as is_read, 
+                        created_at, updated_at
                  FROM notifications WHERE id = $1`;
-  const result = await pool.query(query, [id]);
+  const result = await pool.query(query, [id, userId]);
   return result.rows[0];
 };
 
 export const findAllNotifications = async (userId, filters = {}) => {
   const { search, type, is_read, sent_by } = filters;
   
-  let query = `SELECT n.id, n.user_id, n.sender_id, n.title, n.message, n.type, n.image, n.is_read, n.created_at, n.updated_at,
+  let query = `SELECT n.id, n.user_id, n.sender_id, n.title, n.message, n.type, n.image, 
+                        ($1 = ANY(n.read_by)) as is_read, 
+                        n.created_at, n.updated_at,
                         u.name as sender_name, u.company as sender_company
                  FROM notifications n
                  LEFT JOIN users u ON n.sender_id = u.id`;
   
   const conditions = [];
-  const params = [];
-  let paramIndex = 1;
+  const params = [userId];
+  let paramIndex = 2;
 
   if (search) {
     conditions.push(`(n.title ILIKE $${paramIndex} OR n.message ILIKE $${paramIndex} OR u.name ILIKE $${paramIndex})`);
@@ -32,9 +36,11 @@ export const findAllNotifications = async (userId, filters = {}) => {
   }
 
   if (is_read && is_read !== 'all') {
-    conditions.push(`n.is_read = $${paramIndex}`);
-    params.push(is_read === 'read');
-    paramIndex++;
+    if (is_read === 'read') {
+      conditions.push(`$1 = ANY(n.read_by)`);
+    } else {
+      conditions.push(`NOT ($1 = ANY(n.read_by))`);
+    }
   }
 
   if (sent_by && sent_by !== 'all' && userId) {
@@ -58,9 +64,11 @@ export const findAllNotifications = async (userId, filters = {}) => {
 };
 
 export const findUnreadNotificationsByUserId = async (userId) => {
-  const query = `SELECT id, user_id, sender_id, title, message, type, is_read, created_at, updated_at
+  const query = `SELECT id, user_id, sender_id, title, message, type, 
+                        false as is_read, 
+                        created_at, updated_at
                  FROM notifications
-                 WHERE user_id = $1 AND is_read = false
+                 WHERE NOT ($1 = ANY(read_by))
                  ORDER BY created_at DESC`;
   const result = await pool.query(query, [userId]);
   return result.rows;
@@ -72,7 +80,7 @@ export const createNotification = async (notificationData) => {
   const query = `INSERT INTO notifications
     (user_id, sender_id, title, message, type, image)
     VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at`;
+    RETURNING id, user_id, sender_id, title, message, type, image, false as is_read, created_at, updated_at`;
 
   const result = await pool.query(query, [
     user_id,
@@ -91,48 +99,37 @@ export const updateNotification = async (id, userId, notificationData) => {
   const query = `UPDATE notifications
     SET title = $1, message = $2, type = $3, image = $4, updated_at = NOW()
     WHERE id = $5 AND sender_id = $6
-    RETURNING id, user_id, sender_id, title, message, type, image, is_read, created_at, updated_at`;
+    RETURNING id, user_id, sender_id, title, message, type, image, ($6 = ANY(read_by)) as is_read, created_at, updated_at`;
 
   const result = await pool.query(query, [title, message, type, image, id, userId]);
   return result.rows[0];
 };
 
 export const markAsRead = async (id, userId) => {
-  // Update legacy global flag for DB visibility
-  await pool.query(`UPDATE notifications SET is_read = true WHERE id = $1`, [id]);
-
-  // Track individual user read status
-  const query = `INSERT INTO notification_reads (notification_id, user_id)
-                 VALUES ($1, $2)
-                 ON CONFLICT (notification_id, user_id) DO NOTHING
-                 RETURNING notification_id as id`;
+  const query = `UPDATE notifications 
+                 SET read_by = array_append(read_by, $2) 
+                 WHERE id = $1 AND NOT ($2 = ANY(read_by))
+                 RETURNING id`;
 
   const result = await pool.query(query, [id, userId]);
-  return result.rows[0];
+  return result.rows[0] || { id }; // Return id even if already read
 };
 
 export const markAsUnread = async (id, userId) => {
-  // Update legacy global flag
-  await pool.query(`UPDATE notifications SET is_read = false WHERE id = $1`, [id]);
-
-  // Remove individual user read status
-  const query = `DELETE FROM notification_reads
-                 WHERE notification_id = $1 AND user_id = $2
-                 RETURNING notification_id as id`;
+  const query = `UPDATE notifications 
+                 SET read_by = array_remove(read_by, $2) 
+                 WHERE id = $1
+                 RETURNING id`;
 
   const result = await pool.query(query, [id, userId]);
-  return result.rows[0];
+  return result.rows[0] || { id };
 };
 
 export const markAllAsRead = async (userId) => {
-  // Update legacy global flag for all notifications
-  await pool.query(`UPDATE notifications SET is_read = true`);
-
-  // Track read status for this user only
-  const query = `INSERT INTO notification_reads (notification_id, user_id)
-                 SELECT id, $1 FROM notifications
-                 ON CONFLICT DO NOTHING
-                 RETURNING notification_id as id`;
+  const query = `UPDATE notifications 
+                 SET read_by = array_append(read_by, $1) 
+                 WHERE NOT ($1 = ANY(read_by))
+                 RETURNING id`;
 
   const result = await pool.query(query, [userId]);
   return result.rows;
@@ -150,8 +147,8 @@ export const deleteNotification = async (id, userId) => {
 export const getUnreadCount = async (userId) => {
   const query = `SELECT COUNT(*) as count
                  FROM notifications
-                 WHERE is_read = false`;
-  const result = await pool.query(query);
+                 WHERE NOT ($1 = ANY(read_by))`;
+  const result = await pool.query(query, [userId]);
   return parseInt(result.rows[0].count);
 };
 
