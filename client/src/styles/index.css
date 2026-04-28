@@ -86,9 +86,9 @@ body {
   opacity: 1;
 }
 
-/* Icon Containers */
+/* Icon Containers - Rectangular Design */
 .icon-rectangle-3d {
-  @apply w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300;
+  @apply w-14 h-10 rounded-xl flex items-center justify-center transition-all duration-300;
   background-color: var(--bg-accent);
   color: var(--accent-primary);
   box-shadow: 0 4px 10px rgba(46, 124, 158, 0.1);
