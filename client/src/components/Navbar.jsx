@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Diamond, 
-  Menu, 
-  X, 
-  UserCircle, 
-  LogOut, 
-  Bell, 
+import {
+  Diamond,
+  Menu,
+  X,
+  UserCircle,
+  LogOut,
+  Bell,
   ChevronDown,
   LayoutDashboard,
   Home as HomeIcon,
@@ -50,27 +50,50 @@ const Navbar = () => {
 
   const getNavLinks = () => {
     const hasActiveSubscription = user?.subscriptionStatus === "active";
-    const links = [
-      { path: isAuthenticated ? "/user/home" : "/", label: "Home", Icon: HomeIcon },
-      isAuthenticated ? { path: "/user/add-stock", label: "Diamond", Icon: Gem } : null,
-      isAuthenticated ? { path: "/user/jewellery-stock", label: "Jewellery", Icon: ShoppingBag } : null,
-      !hasActiveSubscription ? { path: "/pricing", label: "Pricing", Icon: CreditCard } : null,
-      { path: "/contact", label: "Contact", Icon: PhoneCall },
-    ].filter(Boolean);
+    const role = user?.role || "Buyer";
 
-    if (user?.role === "admin") {
-      return links.filter(link => !["Home", "Diamond", "Jewellery", "Pricing", "Contact"].includes(link.label));
+    // Base links
+    const links = [];
+
+    // Home is only for non-sellers or non-authenticated users
+    if (!isAuthenticated || role !== "Seller") {
+      const homePath = isAuthenticated ? `/${role.toLowerCase()}/home` : "/";
+      links.push({ path: homePath, label: "Home", Icon: HomeIcon });
+
+      // Add Pricing for public users
+      if (!isAuthenticated) {
+        links.push({ path: "/pricing", label: "Plans", Icon: CreditCard });
+      }
+    }
+
+    // Role-specific links
+    if (isAuthenticated) {
+      const rolePath = role.toLowerCase();
+      if (role === "Seller") {
+        links.push(
+          { path: `/${rolePath}/diamond`, label: "Diamond", Icon: Gem },
+          { path: `/${rolePath}/jewellery`, label: "Jewellery", Icon: ShoppingBag },
+          { path: `/${rolePath}/pricing`, label: "Plans", Icon: CreditCard }
+        );
+      }
+      // Buyers only get Home and Contact (added below)
+    }
+
+    // Contact is for everyone
+    links.push({ path: "/contact", label: "Contact", Icon: PhoneCall });
+
+    if (role === "admin") {
+      return []; // Admin links are in the dropdown
     }
     return links;
   };
 
   return (
     <nav
-      className={`sticky top-0 left-0 right-0 z-[1000] transition-all duration-300 border-b border-gray-100/50 py-3 ${
-        isScrolled 
-          ? "bg-white/40 backdrop-blur-2xl shadow-lg shadow-black/5" 
-          : "bg-white/10 backdrop-blur-md"
-      }`}
+      className={`sticky top-0 left-0 right-0 z-[1000] transition-all duration-300 border-b border-gray-100/50 py-3 ${isScrolled
+        ? "bg-white/40 backdrop-blur-2xl shadow-lg shadow-black/5"
+        : "bg-white/10 backdrop-blur-md"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -95,10 +118,9 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 group relative ${
-                    isActive 
-                      ? "text-white bg-[#2e7c9e] shadow-md shadow-[#2e7c9e]/20" 
-                      : "text-[#475569] hover:text-[#2e7c9e] hover:bg-white/50"
+                  `px-5 py-2 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2.5 group relative ${isActive
+                    ? "text-white bg-[#2e7c9e] shadow-md shadow-[#2e7c9e]/20"
+                    : "text-[#475569] hover:text-[#2e7c9e] hover:bg-white/50"
                   }`
                 }
               >
@@ -187,7 +209,7 @@ const Navbar = () => {
             ) : (
               <div className="hidden lg:flex items-center gap-4">
                 <Link to="/login" className="px-5 py-2.5 text-sm font-bold text-[#475569] hover:text-[#2e7c9e] transition-colors">Sign In</Link>
-                
+
                 {/* Get Started Dropdown */}
                 <div className="relative" onMouseEnter={() => setIsJoinDropdownOpen(true)} onMouseLeave={() => setIsJoinDropdownOpen(false)}>
                   <button className="btn-primary px-6 py-2.5 text-sm flex items-center gap-2">
@@ -257,11 +279,10 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-bold transition-all ${
-                    location.pathname === link.path
-                      ? "text-[#2e7c9e] bg-[#d9f0fa]/30"
-                      : "text-[#475569] hover:bg-gray-50"
-                  }`}
+                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl text-base font-bold transition-all ${location.pathname === link.path
+                    ? "text-[#2e7c9e] bg-[#d9f0fa]/30"
+                    : "text-[#475569] hover:bg-gray-50"
+                    }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <link.Icon className="w-5 h-5" />

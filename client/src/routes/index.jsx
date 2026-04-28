@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import App from "@/App";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Home from "@/modules/home/Home";
@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/user/home",
+        path: "/:role/home",
         element: (
           <ProtectedRoute>
             <UserHome />
@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/natural-diamonds",
+        path: ":role/natural-diamonds",
         element: (
           <ProtectedRoute>
             <NaturalDiamond />
@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/lab-grown-diamonds",
+        path: ":role/lab-grown-diamonds",
         element: (
           <ProtectedRoute>
             <LabGrownDiamond />
@@ -83,11 +83,19 @@ export const router = createBrowserRouter([
         element: <Pricing />,
       },
       {
+        path: ":role/pricing",
+        element: (
+          <ProtectedRoute>
+            <Pricing />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/contact",
         element: <Contact />,
       },
       {
-        path: "user/jewelry",
+        path: ":role/jewelry",
         element: (
           <ProtectedRoute>
             <Jewelry />
@@ -103,7 +111,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/lab-grown-jewelry",
+        path: ":role/lab-grown-jewelry",
         element: (
           <ProtectedRoute>
             <LabGrownJewelry />
@@ -119,7 +127,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/diamond/:type/:id",
+        path: ":role/diamond/:type/:id",
         element: (
           <ProtectedRoute>
             <DiamondDetail />
@@ -127,7 +135,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/jewelry/:type/:id",
+        path: ":role/jewelry/:type/:id",
         element: (
           <ProtectedRoute>
             <JewelryDetail />
@@ -135,7 +143,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/add-stock",
+        path: ":role/diamond",
         element: (
           <ProtectedRoute>
             <AddStock />
@@ -143,7 +151,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/add-stock-manually",
+        path: ":role/diamond-manually",
         element: (
           <ProtectedRoute>
             <AddStockManual />
@@ -151,7 +159,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "user/jewellery-stock",
+        path: ":role/jewellery",
         element: (
           <ProtectedRoute>
             <JewelleryStock />
@@ -191,6 +199,27 @@ export const router = createBrowserRouter([
             element: <UserManagement />,
           },
         ],
+      },
+      // Legacy Redirects
+      {
+        path: "/user/home",
+        element: <Navigate to="/buyer/home" replace />,
+      },
+      {
+        path: "/user/add-stock",
+        element: <Navigate to="/seller/diamond" replace />,
+      },
+      {
+        path: "/user/jewellry-stock",
+        element: <Navigate to="/seller/jewellery" replace />,
+      },
+      {
+        path: "/user/natural-diamonds",
+        element: <Navigate to="/buyer/natural-diamonds" replace />,
+      },
+      {
+        path: "/user/lab-grown-diamonds",
+        element: <Navigate to="/buyer/lab-grown-diamonds" replace />,
       },
     ],
   },
