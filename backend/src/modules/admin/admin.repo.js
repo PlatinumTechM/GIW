@@ -9,8 +9,8 @@ export const verifyAdmin = async (password) => {
   return result.rows[0];
 };
 
-export const getAllUsers = async () => {
-  const query = `
+export const getAllUsers = async (search = "") => {
+  let query = `
     SELECT 
       u.id, u.name, u.email, u.password, u.company, u.phone, u.address,
       u.gst, u.document, u.is_active, u.role, u.type, u.created_at,
@@ -23,9 +23,26 @@ export const getAllUsers = async () => {
     LEFT JOIN user_subscriptions us ON u.id = us.user_id AND us.status = 'active'
     LEFT JOIN subscription_plans sp ON us.plan_id = sp.id
     LEFT JOIN subscription_usage su ON u.id = su.user_id
-    ORDER BY u.created_at DESC
+    WHERE u.role != 'admin'
   `;
-  const result = await pool.query(query);
+
+  const params = [];
+  let paramCount = 0;
+
+  if (search && search.trim()) {
+    const searchTerm = search.trim().toLowerCase();
+    paramCount++;
+    query += ` AND (
+      LOWER(u.name) LIKE $${paramCount} OR
+      LOWER(u.email) LIKE $${paramCount} OR
+      LOWER(u.company) LIKE $${paramCount}
+    )`;
+    params.push(`${searchTerm}%`);
+  }
+
+  query += ` ORDER BY u.created_at DESC`;
+
+  const result = await pool.query(query, params);
   return result.rows;
 };
 
