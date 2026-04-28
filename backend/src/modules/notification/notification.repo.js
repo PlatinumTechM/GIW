@@ -68,7 +68,7 @@ export const findUnreadNotificationsByUserId = async (userId) => {
                         false as is_read, 
                         created_at, updated_at
                  FROM notifications
-                 WHERE NOT ($1 = ANY(read_by))
+                 WHERE NOT ($1 = ANY(read_by)) AND sender_id != $1
                  ORDER BY created_at DESC`;
   const result = await pool.query(query, [userId]);
   return result.rows;
@@ -147,7 +147,7 @@ export const deleteNotification = async (id, userId) => {
 export const getUnreadCount = async (userId) => {
   const query = `SELECT COUNT(*) as count
                  FROM notifications
-                 WHERE NOT ($1 = ANY(read_by))`;
+                 WHERE NOT ($1 = ANY(read_by)) AND sender_id != $1`;
   const result = await pool.query(query, [userId]);
   return parseInt(result.rows[0].count);
 };

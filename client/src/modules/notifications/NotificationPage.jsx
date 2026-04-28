@@ -22,6 +22,7 @@ import {
   Image as ImageIcon,
   Maximize2,
   Download,
+  ChevronDown,
 } from "lucide-react";
 import { notificationAPI } from "../../services/api.js";
 import { showSuccess, showError } from "@/utils/notifications.jsx";
@@ -419,20 +420,6 @@ const NotificationPage = () => {
 
 
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <button
-                      onClick={() => markAsRead(selectedNotification.id)}
-                      className={`flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2 transition-all sm:h-10 sm:px-3 ${selectedNotification.is_read
-                        ? "border-slate-100 bg-slate-50 text-slate-400"
-                        : "border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-100 shadow-sm"
-                        }`}
-                      title={selectedNotification.is_read ? "Read" : "Mark as Read"}
-                      disabled={selectedNotification.is_read}
-                    >
-                      <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="hidden md:inline text-xs font-bold">
-                        {selectedNotification.is_read ? "Read" : "Mark as Read"}
-                      </span>
-                    </button>
 
                     {Number(user?.id) === Number(selectedNotification.sender_id) && (
                       <div className="flex items-center gap-1 border-l border-slate-100 pl-1 sm:gap-2 sm:pl-2">
@@ -722,10 +709,10 @@ const NotificationPage = () => {
                     onClick={() => handleSelectNotification(n)}
                     className={`relative flex cursor-pointer items-start gap-3 p-4 transition-all ${selectedNotification?.id === n.id
                       ? "bg-blue-50 shadow-sm ring-1 ring-blue-100/50"
-                      : !n.is_read ? "bg-slate-50/50" : "bg-white hover:bg-slate-50"
+                      : (!n.is_read && Number(n.sender_id) !== Number(user?.id)) ? "bg-slate-50/50" : "bg-white hover:bg-slate-50"
                       }`}
                   >
-                    {!n.is_read && (
+                    {!n.is_read && Number(n.sender_id) !== Number(user?.id) && (
                       <div className="absolute left-0 top-0 h-full w-1 bg-blue-500" />
                     )}
                     {selectedNotification?.id === n.id && (
@@ -735,10 +722,10 @@ const NotificationPage = () => {
                     <div className="min-w-0 flex-1 text-left">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 truncate">
-                          <h4 className={`truncate text-sm font-bold ${!n.is_read ? "text-[#0F172A]" : "text-slate-500"}`}>
+                          <h4 className={`truncate text-sm font-bold ${(!n.is_read && Number(n.sender_id) !== Number(user?.id)) ? "text-[#0F172A]" : "text-slate-500"}`}>
                             {n.sender_name || "System"}
                           </h4>
-                          {!n.is_read && (
+                          {!n.is_read && Number(n.sender_id) !== Number(user?.id) && (
                             <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
                           )}
                         </div>
@@ -768,97 +755,130 @@ const NotificationPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCreateForm(false)}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="fixed inset-0 z-[2010] flex items-center justify-center p-2 sm:p-4"
             >
-              <div className="w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4 shrink-0">
-                  <h3 className="text-lg font-extrabold text-[#0F172A]">Create Notification</h3>
-                  <button onClick={() => setShowCreateForm(false)} className="text-slate-400 hover:text-slate-600">
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                <form onSubmit={handleCreateNotification} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Title</label>
-                    <input
-                      type="text"
-                      value={newNotification.title}
-                      onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
-                      className="input-field"
-                      placeholder="Notification title..."
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Message</label>
-                    <textarea
-                      value={newNotification.message}
-                      onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
-                      className="input-field"
-                      rows={4}
-                      placeholder="Write your message here..."
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Type</label>
-                    <select
-                      value={newNotification.type}
-                      onChange={(e) => setNewNotification({ ...newNotification, type: e.target.value })}
-                      className="input-field"
-                    >
-                      <option value="">Select Type</option>
-                      {notificationTypes.slice(1).map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Attachment (Optional)</label>
-                    <div className="flex flex-col gap-3">
-                      <div className="relative">
-                        <input
-                          type="file"
-                          id="create-image-upload"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                        />
-                        <label
-                          htmlFor="create-image-upload"
-                          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
-                        >
-                          <ImageIcon className="h-5 w-5 text-slate-400" />
-                          <span className="text-sm font-bold text-slate-500 text-center">
-                            {selectedFile ? selectedFile.name : "Choose an image..."}
-                          </span>
-                        </label>
+              <div className="w-[98%] sm:w-[94%] md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border border-slate-200">
+                {/* Slim Header */}
+                <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#2e7c9e] rounded-xl flex items-center justify-center text-white shadow-sm">
+                        <Send className="w-5 h-5" />
                       </div>
-                      {previewUrl && (
-                        <div className="relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-                          <img src={previewUrl} alt="Preview" className="h-40 w-full object-contain p-2" />
-                          <button
-                            type="button"
-                            onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
-                            className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white shadow-md hover:bg-red-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="text-base font-bold text-slate-800 tracking-tight">New Notification</h3>
+                        <p className="text-[10px] font-semibold text-[#2e7c9e] uppercase tracking-wider">System Broadcast</p>
+                      </div>
                     </div>
+                    <button 
+                      onClick={() => setShowCreateForm(false)}
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700"
-                  >
-                    <Send className="h-4 w-4" />
-                    Send Notification
-                  </button>
+                </div>
+
+                {/* Compact Form */}
+                <form onSubmit={handleCreateNotification} className="flex-1 flex flex-col overflow-hidden">
+                  <div className="flex-1 overflow-y-auto p-7 space-y-5 custom-scrollbar">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Subject Header
+                        </label>
+                        <input
+                          type="text"
+                          value={newNotification.title}
+                          onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] focus:ring-2 focus:ring-[#2e7c9e]/10 outline-none text-[14px] font-medium transition-all"
+                          placeholder="Notification title..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Detailed Message
+                        </label>
+                        <textarea
+                          value={newNotification.message}
+                          onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] focus:ring-2 focus:ring-[#2e7c9e]/10 outline-none text-[14px] font-medium resize-none min-h-[100px] transition-all"
+                          placeholder="Type your message..."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Category</label>
+                          <div className="relative group">
+                            <select
+                              value={newNotification.type}
+                              onChange={(e) => setNewNotification({ ...newNotification, type: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] bg-white outline-none text-[13px] font-semibold appearance-none cursor-pointer"
+                            >
+                              <option value="">Select Category</option>
+                              {notificationTypes.slice(1).map((t) => (
+                                <option key={t.value} value={t.value}>{t.label}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-hover:text-[#2e7c9e]" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Media</label>
+                          <input type="file" id="create-image-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
+                          <label
+                            htmlFor="create-image-upload"
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:bg-white hover:border-[#2e7c9e] transition-all group"
+                          >
+                            <ImageIcon className="w-4 h-4 text-slate-400 group-hover:text-[#2e7c9e]" />
+                            <span className="text-[11px] font-semibold text-slate-500 truncate group-hover:text-[#2e7c9e]">
+                              {selectedFile ? selectedFile.name : "Add Image Asset"}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {previewUrl && (
+                      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                        <img src={previewUrl} alt="Preview" className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
+                          className="absolute right-2 top-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 transition-all"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Slim Footer */}
+                  <div className="px-7 py-5 border-t border-slate-100 bg-white shrink-0 flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className="px-5 py-2.5 rounded-xl text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-all uppercase tracking-wider"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 flex items-center justify-center gap-3 rounded-xl bg-[#2e7c9e] py-3 text-[12px] font-bold text-white shadow-lg shadow-[#2e7c9e]/20 hover:bg-[#256380] active:scale-[0.98] transition-all uppercase tracking-wider"
+                    >
+                      <Send className="w-4 h-4" />
+                      Send Notification
+                    </button>
+                  </div>
                 </form>
               </div>
             </motion.div>
@@ -875,104 +895,135 @@ const NotificationPage = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowEditForm(false)}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="fixed inset-0 z-[2010] flex items-center justify-center p-2 sm:p-4"
             >
-              <div className="w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4 shrink-0">
-                  <h3 className="text-lg font-extrabold text-[#0F172A]">Edit Notification</h3>
-                  <button onClick={() => setShowEditForm(false)} className="text-slate-400 hover:text-slate-600">
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                <form onSubmit={handleEditNotification} className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Title</label>
-                    <input
-                      type="text"
-                      value={editingNotification.title}
-                      onChange={(e) => setEditingNotification({ ...editingNotification, title: e.target.value })}
-                      className="input-field"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Message</label>
-                    <textarea
-                      value={editingNotification.message}
-                      onChange={(e) => setEditingNotification({ ...editingNotification, message: e.target.value })}
-                      className="input-field"
-                      rows={4}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Type</label>
-                    <select
-                      value={editingNotification.type}
-                      onChange={(e) => setEditingNotification({ ...editingNotification, type: e.target.value })}
-                      className="input-field"
-                    >
-                      {notificationTypes.slice(1).map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-600">Attachment (Optional)</label>
-                    <div className="flex flex-col gap-3">
-                      <div className="relative">
-                        <input
-                          type="file"
-                          id="edit-image-upload"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                        />
-                        <label
-                          htmlFor="edit-image-upload"
-                          className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 transition-all hover:border-blue-300 hover:bg-blue-50/50"
-                        >
-                          <ImageIcon className="h-5 w-5 text-slate-400" />
-                          <span className="text-sm font-bold text-slate-500 text-center">
-                            {selectedFile ? selectedFile.name : (editingNotification.image ? "Change image..." : "Choose an image...")}
-                          </span>
-                        </label>
+              <div className="w-[98%] sm:w-[94%] md:w-full md:max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden border border-slate-200">
+                {/* Slim Header */}
+                <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#2e7c9e] rounded-xl flex items-center justify-center text-white shadow-sm">
+                        <Edit3 className="w-5 h-5" />
                       </div>
-                      {(previewUrl || editingNotification.image) && (
-                        <div className="relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-                          <img
-                            src={previewUrl || `${import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:5000'}${editingNotification.image}`}
-                            alt="Preview"
-                            className="h-40 w-full object-contain p-2"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedFile(null);
-                              setPreviewUrl(null);
-                              if (editingNotification.image) {
-                                setEditingNotification({ ...editingNotification, image: null });
-                              }
-                            }}
-                            className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white shadow-md hover:bg-red-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
+                      <div>
+                        <h3 className="text-base font-bold text-slate-800 tracking-tight">Edit Notification</h3>
+                        <p className="text-[10px] font-semibold text-[#2e7c9e] uppercase tracking-wider">Refine Broadcast</p>
+                      </div>
                     </div>
+                    <button 
+                      onClick={() => setShowEditForm(false)}
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-all text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    Save Changes
-                  </button>
+                </div>
+
+                {/* Compact Form */}
+                <form onSubmit={handleEditNotification} className="flex-1 flex flex-col overflow-hidden">
+                  <div className="flex-1 overflow-y-auto p-7 space-y-5 custom-scrollbar">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Subject Header
+                        </label>
+                        <input
+                          type="text"
+                          value={editingNotification.title}
+                          onChange={(e) => setEditingNotification({ ...editingNotification, title: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] focus:ring-2 focus:ring-[#2e7c9e]/10 outline-none text-[14px] font-medium transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Detailed Message
+                        </label>
+                        <textarea
+                          value={editingNotification.message}
+                          onChange={(e) => setEditingNotification({ ...editingNotification, message: e.target.value })}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] focus:ring-2 focus:ring-[#2e7c9e]/10 outline-none text-[14px] font-medium resize-none min-h-[100px] transition-all"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Category</label>
+                          <div className="relative group">
+                            <select
+                              value={editingNotification.type}
+                              onChange={(e) => setEditingNotification({ ...editingNotification, type: e.target.value })}
+                              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2e7c9e] bg-white outline-none text-[13px] font-semibold appearance-none cursor-pointer"
+                            >
+                              {notificationTypes.slice(1).map((t) => (
+                                <option key={t.value} value={t.value}>{t.label}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-hover:text-[#2e7c9e]" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Media</label>
+                          <input type="file" id="edit-image-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
+                          <label
+                            htmlFor="edit-image-upload"
+                            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:bg-white hover:border-[#2e7c9e] transition-all group"
+                          >
+                            <ImageIcon className="w-4 h-4 text-slate-400 group-hover:text-[#2e7c9e]" />
+                            <span className="text-[11px] font-semibold text-slate-500 truncate group-hover:text-[#2e7c9e]">
+                              {selectedFile ? selectedFile.name : (editingNotification.image ? "Change Asset" : "Add Asset")}
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {(previewUrl || editingNotification.image) && (
+                      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                        <img 
+                          src={previewUrl || `${import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:5000'}${editingNotification.image}`}
+                          alt="Preview" 
+                          className="w-full h-32 object-cover" 
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedFile(null);
+                            setPreviewUrl(null);
+                            if (!previewUrl) setEditingNotification({ ...editingNotification, image: null });
+                          }}
+                          className="absolute right-2 top-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 transition-all"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* Slim Footer */}
+                  <div className="px-7 py-5 border-t border-slate-100 bg-white shrink-0 flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditForm(false)}
+                      className="px-5 py-2.5 rounded-xl text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-all uppercase tracking-wider"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 flex items-center justify-center gap-3 rounded-xl bg-[#2e7c9e] py-3 text-[12px] font-bold text-white shadow-lg shadow-[#2e7c9e]/20 hover:bg-[#256380] active:scale-[0.98] transition-all uppercase tracking-wider"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Commit Changes
+                    </button>
+                  </div>
                 </form>
               </div>
             </motion.div>
