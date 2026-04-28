@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
 import { stockAPI } from "../../../services/api.js";
 
 const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) => {
   const navigate = useNavigate();
+  const { role } = useParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -20,7 +21,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
       console.error("Invalid diamond ID:", diamond.id);
       return;
     }
-    navigate(`/user/diamond/${type}/${diamond.id}`);
+    navigate(`/${role}/diamond/${type}/${diamond.id}`);
   };
 
   // Map backend data to frontend format
@@ -85,24 +86,38 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
         if (filters?.colors?.length > 0 && filters?.colorType === "White") {
           params.color = filters.colors.join(",");
         }
-        if (filters?.clarities?.length > 0) params.clarity = filters.clarities.join(",");
-        if (filters?.caratMin) params.minCarat = filters.caratMin;
-        if (filters?.caratMax) params.maxCarat = filters.caratMax;
+        if (filters?.clarity?.length > 0) params.clarity = filters.clarity.join(",");
+        if (filters?.caratMin) params.minWeight = filters.caratMin;
+        if (filters?.caratMax) params.maxWeight = filters.caratMax;
         if (filters?.priceMin) params.minPrice = filters.priceMin;
         if (filters?.priceMax) params.maxPrice = filters.priceMax;
+        if (filters?.pricePerCaratMin) params.minPricePerCarat = filters.pricePerCaratMin;
+        if (filters?.pricePerCaratMax) params.maxPricePerCarat = filters.pricePerCaratMax;
 
         // Detailed filters
         if (filters?.cuts?.length > 0) params.cut = filters.cuts.join(",");
         if (filters?.polish?.length > 0) params.polish = filters.polish.join(",");
         if (filters?.symmetry?.length > 0) params.symmetry = filters.symmetry.join(",");
         if (filters?.fluorescence?.length > 0) params.fluorescence = filters.fluorescence.join(",");
+        if (filters?.growthType?.length > 0) params.growthType = filters.growthType.join(",");
+        if (filters?.treatment?.length > 0) params.treatment = filters.treatment.join(",");
         if (filters?.certifications?.length > 0) params.lab = filters.certifications.join(",");
-        if (filters?.fancyColors?.length > 0) params.fancyColor = filters.fancyColors.join(",");
+        
+        // Color handling - backend handles both in color param
+        if (filters?.colorType === "White" && filters?.colors?.length > 0) {
+          params.color = filters.colors.join(",");
+        } else if (filters?.colorType === "Fancy" && filters?.fancyColors?.length > 0) {
+          params.color = filters.fancyColors.join(",");
+        }
         if (filters?.fancyIntensity) params.fancyIntensity = filters.fancyIntensity;
         if (filters?.fancyOvertone) params.fancyOvertone = filters.fancyOvertone;
         if (filters?.certificateType) params.certificateType = filters.certificateType;
-        if (filters?.available) params.availability = "AVAILABLE";
+        if (filters?.available) params.status = "AVAILABLE";
         if (filters?.showOnlyMedia) params.hasMedia = "true";
+        if (filters?.heartArrow) params.heartArrow = "true";
+        if (filters?.noBgm) params.noBgm = "true";
+        if (filters?.location) params.location = filters.location;
+        if (filters?.supplier) params.supplier = filters.supplier;
 
         // Measurement filters
         if (filters?.lengthMin) params.minLength = filters.lengthMin;
@@ -528,11 +543,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${
-                      currentPage === page
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${currentPage === page
                         ? "bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white shadow-md shadow-blue-900/20 scale-105"
                         : "text-[#475569] hover:bg-gray-100 hover:text-[#1E3A8A]"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>

@@ -79,8 +79,9 @@ export const authAPI = {
       // Silently fail
       console.error("Logout API error:", error);
     }
-    // Clear role from localStorage
+    // Clear role and filters from localStorage
     localStorage.removeItem("role");
+    localStorage.removeItem("diamondFilters");
   },
 
   checkAuth: async () => {
@@ -271,6 +272,10 @@ export const stockAPI = {
 
   getFieldMapping: async () => {
     const response = await api.get("/stock/fields/mapping");
+    return response.data;
+  },
+  getDiamondFilters: async () => {
+    const response = await api.get("/stock/filters");
     return response.data;
   },
 };

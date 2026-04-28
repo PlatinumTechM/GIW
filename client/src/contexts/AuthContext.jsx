@@ -43,6 +43,7 @@ function AuthProvider({ children }) {
       // Token is stored in httpOnly cookie by backend
       // Only store role in localStorage for UI purposes
       localStorage.setItem("role", userData.role || "Buyer");
+      localStorage.removeItem("diamondFilters"); // Clear old filters on login
       setUser(userData);
 
       return { success: true, user: userData, redirectUrl };
@@ -73,6 +74,7 @@ function AuthProvider({ children }) {
     setUser(null);
     setSessionExpired(false);
     localStorage.removeItem("role");
+    localStorage.removeItem("diamondFilters");
     notify.info("Logged Out", "You have been successfully logged out");
   };
 
@@ -81,6 +83,7 @@ function AuthProvider({ children }) {
     setUser(null);
     setSessionExpired(true);
     localStorage.removeItem("role");
+    localStorage.removeItem("diamondFilters");
   };
 
   // Clear session expired flag (call on login page mount)

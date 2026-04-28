@@ -86,9 +86,9 @@ const Pricing = () => {
   };
 
   const handleLoginFirst = () => {
-    notify.info("Login Required", "Please login first, then buy the plan");
+    notify.info("Registration Required", "Please register as a Seller to continue");
     setTimeout(() => {
-      window.location.href = "/login";
+      navigate("/register?role=Seller");
     }, 2000);
   };
 
@@ -112,9 +112,10 @@ const Pricing = () => {
           setUser(userData);
 
           // Redirect if subscription is active
-          if (userData?.subscriptionStatus === "active") {
-            notify.info("Active Subscription", "You already have an active subscription.");
-            navigate("/user/home");
+          // Redirect to role-based pricing if on public /pricing
+          if (window.location.pathname === "/pricing") {
+            const role = userData.role?.toLowerCase() || "buyer";
+            navigate(`/${role}/pricing`, { replace: true });
             return;
           }
         } catch (error) {
