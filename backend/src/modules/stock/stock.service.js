@@ -269,6 +269,8 @@ const FIELD_MAPPINGS = {
 
   heart_arrow: ["heart arrow", "hearts arrow", "h&a"],
 
+  no_bgm: ["no bgm", "no bg", "nobgm", "nobg"],
+
   star_length: ["star length"],
 
   laser_description: ["laser description", "laser inscription", "inscription"],
@@ -539,6 +541,7 @@ const VALUE_MAPPINGS = {
   // Cut, Polish, Symmetry mappings (short codes and full words to full names)
   grading: {
     // Full word variations → full name
+    "8X": "8X",
     EXCELLENT: "EXCELLENT",
     "VERY GOOD": "VERY GOOD",
     VERYGOOD: "VERY GOOD",
@@ -939,6 +942,8 @@ const convertToDbFormat = (mappedData, userId = null) => {
     // Special features
 
     heart_arrow: parseBoolean(mappedData.heart_arrow),
+
+    no_bgm: parseBoolean(mappedData.no_bgm),
 
     star_length: parseString(mappedData.star_length),
 
