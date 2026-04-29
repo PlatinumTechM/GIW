@@ -1335,6 +1335,46 @@ export const deleteStock = async (id) => {
   return result;
 };
 
+export const toggleHold = async (id, userId) => {
+  const result = await stockRepo.toggleHold(id, userId);
+  if (!result) {
+    throw new Error("Stock not found or you don't have permission");
+  }
+  return result;
+};
+
+export const sellStock = async (id, userId, ip) => {
+  const result = await stockRepo.sellStock(id, userId, ip);
+  if (!result) {
+    throw new Error("Stock not found or you don't have permission");
+  }
+  // Decrement subscription usage since stock is deleted from diamond_stock
+  if (userId) {
+    await updateSubscriptionUsage(pool, userId, -1);
+  }
+  return result;
+};
+
+export const bulkToggleHold = async (ids, userId) => {
+  const result = await stockRepo.bulkToggleHold(ids, userId);
+  if (!result || result.length === 0) {
+    throw new Error("No stocks found or you don't have permission");
+  }
+  return result;
+};
+
+export const bulkSellStock = async (ids, userId, ip) => {
+  const result = await stockRepo.bulkSellStock(ids, userId, ip);
+  if (result === 0) {
+    throw new Error("No stocks found or you don't have permission");
+  }
+  // Decrement subscription usage by the number of deleted items
+  if (userId) {
+    await updateSubscriptionUsage(pool, userId, -result);
+  }
+  return result;
+};
+
 export const getFieldMapping = () => {
   return {
     requiredForSave: REQUIRED_FOR_SAVE,

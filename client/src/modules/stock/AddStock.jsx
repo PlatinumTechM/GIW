@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
@@ -31,6 +31,9 @@ import {
   Edit,
   MessageCircle,
   Users,
+  Pause,
+  Play,
+  CheckCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "papaparse";
@@ -38,6 +41,191 @@ import notify from "@/utils/notifications";
 import api from "@/services/api";
 import AddStockManual from "./AddStockManual";
 import ShareAPI from "../share-api/ShareAPI";
+
+// All columns from the database
+const ALL_DB_FIELDS = [
+  "stock_id",
+  "certificate_number",
+  "weight",
+  "shape",
+  "color",
+  "party",
+  "fancy_color",
+  "fancy_color_intensity",
+  "fancy_color_overtone",
+  "clarity",
+  "cut",
+  "polish",
+  "symmetry",
+  "fluorescence",
+  "fluorescence_color",
+  "fluorescence_intensity",
+  "measurements",
+  "length",
+  "width",
+  "height",
+  "depth_percentage",
+  "table_percentage",
+  "crown_height",
+  "crown_angle",
+  "pavilion_depth",
+  "pavilion_angle",
+  "gridle_thin",
+  "gridle_thick",
+  "gridle_condition",
+  "gridle_per",
+  "culet_size",
+  "culet_condition",
+  "shade",
+  "milky",
+  "eye_clean",
+  "lab",
+  "certificate_comment",
+  "city",
+  "state",
+  "country",
+  "treatment",
+  "rap_per_carat",
+  "price_per_carat",
+  "final_price",
+  "discount",
+  "dollar_rate",
+  "rs_amount",
+  "heart_arrow",
+  "star_length",
+  "laser_description",
+  "growth_type",
+  "key_to_symbol",
+  "lw_ratio",
+  "diamond_type",
+  "type",
+  "status",
+  "diamond_image1",
+  "diamond_video",
+  "certificate_image",
+];
+
+// Helper to get value or "-"
+const getValue = (item, field) => {
+  if (item[field] === null || item[field] === undefined || item[field] === "")
+    return "-";
+  return item[field];
+};
+
+const StockRow = React.memo(({ item, index, page, isSelected, toggleRowSelection, handleHold, handleSell, handleEditStock }) => {
+  const rowNumber = (page - 1) * 50 + index + 1;
+  const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]";
+  const isHold = item.status === "HOLD";
+
+  return (
+    <tr
+      onClick={() => toggleRowSelection(item.id)}
+      className={`${rowBgClass} ${isSelected ? "bg-blue-50" : ""} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0] cursor-pointer`}
+    >
+      {/* Checkbox and Row Number */}
+      <td
+        className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-10 w-16 font-medium ${rowBgClass} ${isSelected ? "bg-blue-50" : ""}`}
+      >
+        <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleRowSelection(item.id)}
+            className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+          />
+          <span>{rowNumber}</span>
+        </div>
+      </td>
+
+      {/* All Database Fields */}
+      {ALL_DB_FIELDS.map((field) => {
+        const value = getValue(item, field);
+        const isEmpty = value === "-";
+
+        return (
+          <td
+            key={field}
+            className={`px-2 sm:px-3 py-2 sm:py-3 border-r border-[#E2E8F0] whitespace-nowrap text-xs sm:text-sm ${isEmpty ? "text-[#94A3B8]" : "text-[#374151]"
+              }`}
+          >
+            {field === "stock_id" && !isEmpty ? (
+              <span className="font-semibold text-[#1E3A8A]">{value}</span>
+            ) : field === "color" && !isEmpty ? (
+              <span className="px-2 py-0.5 bg-[#EFF6FF] text-[#1E3A8A] rounded text-xs font-semibold">
+                {value}
+              </span>
+            ) : field === "clarity" && !isEmpty ? (
+              <span className="px-2 py-0.5 bg-[#F0FDF4] text-[#059669] rounded text-xs font-semibold">
+                {value}
+              </span>
+            ) : field === "status" ? (
+              <span
+                className={`px-2 py-0.5 text-xs font-semibold rounded-full ${item.status === "AVAILABLE" || !item.status
+                  ? "bg-green-100 text-green-700 border border-green-200"
+                  : item.status === "SOLD"
+                    ? "bg-red-100 text-red-700 border border-red-200"
+                    : "bg-amber-100 text-amber-700 border border-amber-200"
+                  }`}
+              >
+                {value || "AVAILABLE"}
+              </span>
+            ) : field === "final_price" && !isEmpty ? (
+              <span className="font-semibold text-green-700">
+                ${parseFloat(value).toLocaleString()}
+              </span>
+            ) : field === "weight" && !isEmpty ? (
+              <span className="font-medium">{value} </span>
+            ) : (
+              value
+            )}
+          </td>
+        );
+      })}
+
+      {/* Actions Column */}
+      <td className="px-2 py-2 border-r border-[#E2E8F0] text-center sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 justify-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHold(item.id);
+            }}
+            className={`p-1.5 rounded-full transition-all ${isHold
+              ? "bg-green-100 text-green-600 hover:bg-green-200"
+              : "bg-amber-100 text-amber-600 hover:bg-amber-200"
+              }`}
+            title={isHold ? "Unhold (Make Available)" : "Put on Hold"}
+          >
+            {isHold ? <Play size={14} className="stroke-[2.5px]" /> : <Pause size={14} className="stroke-[2.5px]" />}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSell(item.id);
+            }}
+            className="p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-all"
+            title="Mark as Sold"
+          >
+            <CheckCircle size={14} className="stroke-[2.5px]" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditStock(item);
+            }}
+            className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-all"
+            title="Edit Stock Data"
+          >
+            <Edit size={14} className="stroke-[2.5px]" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
 
 const FIELD_MAPPINGS = {
   // Basic fields
@@ -322,6 +510,7 @@ const AddStock = () => {
   const [userStockLoading, setUserStockLoading] = useState(false);
   const [userStockPage, setUserStockPage] = useState(1);
   const [userStockTotalPages, setUserStockTotalPages] = useState(1);
+  const [userStockLimit, setUserStockLimit] = useState(50);
   const [userStockSearch, setUserStockSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [userStockTotal, setUserStockTotal] = useState(0);
@@ -392,23 +581,16 @@ const AddStock = () => {
   const [importType, setImportType] = useState("");
   const fileInputRef = useRef(null);
 
-  // Fetch user stock on mount and when page, filters, or sorting changes
-  useEffect(() => {
-    fetchUserStock();
-  }, [userStockPage, appliedFilters, sortConfig, debouncedSearch]);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
 
-  const handleEditStock = (item) => {
-    setEditingStock(item);
-    setViewMode("manual");
-  };
-
-  const fetchUserStock = async () => {
+  const fetchUserStock = useCallback(async () => {
     setUserStockLoading(true);
     try {
       // Build query params with filters and sorting
       const params = new URLSearchParams();
       params.append("page", userStockPage);
-      params.append("limit", 50);
+      params.append("limit", userStockLimit);
 
       // Add search
       if (debouncedSearch) {
@@ -461,7 +643,169 @@ const AddStock = () => {
     } finally {
       setUserStockLoading(false);
     }
+  }, [userStockPage, userStockLimit, debouncedSearch, appliedFilters, sortConfig]);
+
+  const toggleRowSelection = useCallback((id) => {
+    setSelectedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id],
+    );
+  }, []);
+
+  const getVisiblePages = useCallback(() => {
+    const pages = [];
+    if (userStockTotalPages <= 5) {
+      for (let i = 1; i <= userStockTotalPages; i++) pages.push(i);
+    } else if (userStockPage <= 3) {
+      pages.push(1, 2, 3, 4, "...", userStockTotalPages);
+    } else if (userStockPage >= userStockTotalPages - 2) {
+      pages.push(1, "...", userStockTotalPages - 3, userStockTotalPages - 2, userStockTotalPages - 1, userStockTotalPages);
+    } else {
+      pages.push(1, "...", userStockPage - 1, userStockPage, userStockPage + 1, "...", userStockTotalPages);
+    }
+    return pages;
+  }, [userStockPage, userStockTotalPages]);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedRows((prev) => {
+      if (prev.length === userStock.length && userStock.length > 0) {
+        return [];
+      } else {
+        return userStock.map((item) => item.id);
+      }
+    });
+  }, [userStock]);
+
+  const handleHold = useCallback(async (id) => {
+    try {
+      // Optimistic update
+      setUserStock((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, status: item.status === "HOLD" ? "AVAILABLE" : "HOLD" }
+            : item
+        )
+      );
+
+      const response = await api.patch(`/stock/${id}/hold`);
+      if (response.data.success) {
+        notify.success("Success", response.data.message);
+      }
+    } catch (error) {
+      // Revert if failed
+      fetchUserStock();
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to update hold status",
+      );
+    }
+  }, [fetchUserStock]);
+
+  const handleSell = useCallback(async (id) => {
+    const confirmed = await notify.confirm({
+      title: "Mark as Sold?",
+      message: "Are you sure you want to mark this as sold? It will be removed from your stock and added to sales history.",
+      confirmText: "Sell Now",
+      variant: "danger"
+    });
+    if (!confirmed) return;
+    try {
+      // Optimistic update
+      setUserStock((prev) => prev.filter((item) => item.id !== id));
+      setUserStockTotal((prev) => Math.max(0, prev - 1));
+
+      const response = await api.post(`/stock/${id}/sell`);
+      if (response.data.success) {
+        notify.success("Success", response.data.message);
+      }
+    } catch (error) {
+      // Revert if failed
+      fetchUserStock();
+      notify.error(
+        "Error",
+        error.response?.data?.message || "Failed to record sale",
+      );
+    }
+  }, [fetchUserStock]);
+
+  const handleBulkHold = async () => {
+    if (selectedRows.length === 0) return;
+
+    const selectedItems = userStock.filter((item) => selectedRows.includes(item.id));
+    const heldItems = selectedItems.filter((item) => item.status === "HOLD");
+    const availableItems = selectedItems.filter((item) => item.status !== "HOLD");
+
+    // Warning for mixed selection
+    if (heldItems.length > 0 && availableItems.length > 0) {
+      const confirmed = await notify.confirm({
+        title: "Mixed Selection Detected",
+        message: `You selected ${heldItems.length} records that are already on hold. Are you sure you want to proceed with updating all ${selectedRows.length} items?`,
+        confirmText: "Proceed Anyway",
+        variant: "warning"
+      });
+      if (!confirmed) return;
+    }
+
+    setIsBulkActionLoading(true);
+    try {
+      // Optimistic update
+      setUserStock((prev) =>
+        prev.map((item) =>
+          selectedRows.includes(item.id)
+            ? { ...item, status: item.status === "HOLD" ? "AVAILABLE" : "HOLD" }
+            : item
+        )
+      );
+
+      await api.patch("/stock/bulk-hold", { ids: selectedRows });
+      notify.success("Success", "Updated hold status for selected items");
+      setSelectedRows([]);
+    } catch (error) {
+      // Revert if failed
+      fetchUserStock();
+      notify.error("Error", "Failed to update some items");
+    } finally {
+      setIsBulkActionLoading(false);
+    }
   };
+
+  const handleBulkSell = async () => {
+    if (selectedRows.length === 0) return;
+    const confirmed = await notify.confirm({
+      title: `Sell ${selectedRows.length} Items?`,
+      message: `Are you sure you want to mark ${selectedRows.length} selected items as sold? They will be removed from your stock.`,
+      confirmText: "Bulk Sell",
+      variant: "info"
+    });
+    if (!confirmed) return;
+    setIsBulkActionLoading(true);
+    try {
+      // Optimistic update
+      const countToRemove = selectedRows.length;
+      setUserStock((prev) => prev.filter((item) => !selectedRows.includes(item.id)));
+      setUserStockTotal((prev) => Math.max(0, prev - countToRemove));
+
+      await api.post("/stock/bulk-sell", { ids: selectedRows });
+      notify.success("Success", "Selected items marked as sold");
+      setSelectedRows([]);
+    } catch (error) {
+      // Revert if failed
+      fetchUserStock();
+      notify.error("Error", "Failed to sell some items");
+    } finally {
+      setIsBulkActionLoading(false);
+    }
+  };
+
+  // Fetch user stock on mount and when page, filters, or sorting changes
+  useEffect(() => {
+    fetchUserStock();
+  }, [userStockPage, userStockLimit, appliedFilters, sortConfig, debouncedSearch]);
+
+  const handleEditStock = useCallback((item) => {
+    setEditingStock(item);
+    setViewMode("manual");
+  }, []);
+
 
   // Filter and Sorting Handlers
   const handlePendingFilterChange = (field, value) => {
@@ -1075,40 +1419,8 @@ const AddStock = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Filter user stock based on search and filters
-  const filteredUserStock = userStock.filter((item) => {
-    const matchesSearch =
-      !debouncedSearch ||
-      (item.stock_id &&
-        item.stock_id.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-      (item.shape &&
-        item.shape.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-      (item.certificate_number &&
-        item.certificate_number
-          .toLowerCase()
-          .includes(debouncedSearch.toLowerCase())) ||
-      (item.color &&
-        item.color.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-      (item.party &&
-        item.party.toLowerCase().includes(debouncedSearch.toLowerCase())) ||
-      (item.clarity &&
-        item.clarity.toLowerCase().includes(debouncedSearch.toLowerCase()));
-
-    const matchesShape = !filterShape || item.shape === filterShape;
-    const matchesColor = !filterColor || item.color === filterColor;
-    const matchesClarity = !filterClarity || item.clarity === filterClarity;
-    const matchesStatus = !filterStatus || item.status === filterStatus;
-    const matchesParty = !filterParty || item.party === filterParty;
-
-    return (
-      matchesSearch &&
-      matchesShape &&
-      matchesColor &&
-      matchesClarity &&
-      matchesStatus &&
-      matchesParty
-    );
-  });
+  // Data is already filtered and limited by the backend
+  const filteredUserStock = userStock;
 
   // Fetch filter options from DB (all available values)
   const [filterOptions, setFilterOptions] = useState({
@@ -1215,87 +1527,11 @@ const AddStock = () => {
   ];
 
   // Helper to get value or "-"
-  const getValue = (item, field) => {
+  const getValue = useCallback((item, field) => {
     if (item[field] === null || item[field] === undefined || item[field] === "")
       return "-";
     return item[field];
-  };
-
-  // Simple Table Row - All fields in one horizontal row
-  const SimpleTableRow = ({ item, index, page }) => {
-    // Calculate continuous row number: (page - 1) * 50 + index + 1
-    const rowNumber = (page - 1) * 50 + index + 1;
-    const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]";
-
-    return (
-      <tr
-        className={`${rowBgClass} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}
-      >
-        {/* Row Number - Continuous across pages */}
-        <td
-          className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-10 w-10 font-medium ${rowBgClass}`}
-        >
-          {rowNumber}
-        </td>
-
-        {/* All Database Fields */}
-        {ALL_DB_FIELDS.map((field) => {
-          const value = getValue(item, field);
-          const isEmpty = value === "-";
-
-          return (
-            <td
-              key={field}
-              className={`px-2 sm:px-3 py-2 sm:py-3 border-r border-[#E2E8F0] whitespace-nowrap text-xs sm:text-sm ${isEmpty ? "text-[#94A3B8]" : "text-[#374151]"
-                }`}
-            >
-              {field === "stock_id" && !isEmpty ? (
-                <span className="font-semibold text-[#1E3A8A]">{value}</span>
-              ) : field === "color" && !isEmpty ? (
-                <span className="px-2 py-0.5 bg-[#EFF6FF] text-[#1E3A8A] rounded text-xs font-semibold">
-                  {value}
-                </span>
-              ) : field === "clarity" && !isEmpty ? (
-                <span className="px-2 py-0.5 bg-[#F0FDF4] text-[#059669] rounded text-xs font-semibold">
-                  {value}
-                </span>
-              ) : field === "status" ? (
-                <span
-                  className={`px-2 py-0.5 text-xs font-semibold rounded-full ${item.status === "AVAILABLE" || !item.status
-                    ? "bg-green-100 text-green-700 border border-green-200"
-                    : item.status === "SOLD"
-                      ? "bg-red-100 text-red-700 border border-red-200"
-                      : "bg-amber-100 text-amber-700 border border-amber-200"
-                    }`}
-                >
-                  {value}
-                </span>
-              ) : field === "final_price" && !isEmpty ? (
-                <span className="font-semibold text-green-700">
-                  ${parseFloat(value).toLocaleString()}
-                </span>
-              ) : field === "weight" && !isEmpty ? (
-                <span className="font-medium">{value} </span>
-              ) : (
-                value
-              )}
-            </td>
-          );
-        })}
-
-        {/* Actions Column */}
-        <td className="px-2 py-2 border-r border-[#E2E8F0] text-center sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
-          <button
-            onClick={() => handleEditStock(item)}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Update Data"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-        </td>
-      </tr>
-    );
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -1729,6 +1965,7 @@ const AddStock = () => {
                         {["AVAILABLE", "HOLD", "SOLD", "MEMO"].map((status) => (
                           <button
                             key={status}
+                            type="button"
                             onClick={() => handleStatusToggle(status)}
                             className={`px-3 py-1.5 rounded-md text-sm transition-all ${pendingFilters.status.includes(status)
                               ? status === "AVAILABLE"
@@ -1793,6 +2030,7 @@ const AddStock = () => {
                   value={userStockSearch}
                   onChange={(e) => setUserStockSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-sm"
+                  title="Search by Stock ID, Certificate, Shape, etc."
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -1802,6 +2040,7 @@ const AddStock = () => {
                     ? "bg-blue-600 text-white"
                     : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"
                     }`}
+                  title="Advanced filtering options"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span className="hidden sm:inline">Filters</span>
@@ -1817,6 +2056,7 @@ const AddStock = () => {
                   onClick={handleShare}
                   disabled={userStockLoading || filteredUserStock.length === 0}
                   className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  title="Share current stock selection"
                 >
                   <Share2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Share</span>
@@ -1825,6 +2065,7 @@ const AddStock = () => {
                   onClick={fetchUserStock}
                   disabled={userStockLoading}
                   className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0] rounded-lg transition-colors disabled:opacity-50 text-sm"
+                  title="Refresh stock list"
                 >
                   <RefreshCw
                     className={`w-4 h-4 ${userStockLoading ? "animate-spin" : ""}`}
@@ -2034,6 +2275,7 @@ const AddStock = () => {
                 <button
                   onClick={clearAllFilters}
                   className="text-xs text-red-500 hover:text-red-600 hover:underline ml-2"
+                  title="Remove all active filters"
                 >
                   Clear All
                 </button>
@@ -2089,12 +2331,14 @@ const AddStock = () => {
                   <button
                     onClick={() => setViewMode("import")}
                     className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                    title="Import stock from Excel or CSV file"
                   >
                     Import Data
                   </button>
                   <button
                     onClick={() => setViewMode("manual")}
                     className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E40AF] transition-colors font-medium"
+                    title="Add a single diamond manually"
                   >
                     Manual Entry
                   </button>
@@ -2103,8 +2347,8 @@ const AddStock = () => {
             ) : (
               <div className="space-y-4">
                 {/* Results Summary */}
-                <div className="bg-white rounded-lg border border-[#E2E8F0] p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex flex-col lg:flex-row items-center justify-between gap-4 shadow-sm">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
                     <span className="text-sm text-[#64748B]">
                       Showing{" "}
                       <span className="font-semibold text-[#0F172A]">
@@ -2114,17 +2358,106 @@ const AddStock = () => {
                       <span className="font-semibold text-[#0F172A]">
                         {userStockTotal}
                       </span>{" "}
-                      total items (Page{" "}
-                      <span className="font-semibold text-[#0F172A]">
-                        {userStockPage}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-semibold text-[#0F172A]">
-                        {userStockTotalPages}
-                      </span>
-                      )
+                      total items
                     </span>
+                    <div className="hidden sm:block h-4 w-px bg-gray-200" />
+                    <div className="hidden xl:block h-4 w-px bg-gray-200" />
+                    <div className="flex items-center gap-3">
+                      <div className="bg-[#E0F2FE] px-2 py-0.5 rounded shadow-sm">
+                        <span className="text-[10px] font-bold text-[#1E3A8A] uppercase tracking-widest">
+                          STATUS :
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+
+                        {/* Hold - Yellow */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                          <span className="text-[11px] font-semibold text-yellow-600">Hold</span>
+                        </div>
+
+                        {/* Edit - Blue */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                          <span className="text-[11px] font-semibold text-blue-700">Edit</span>
+                        </div>
+
+                        {/* Unhold - Green */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                          <span className="text-[11px] font-semibold text-green-700">Unhold</span>
+                        </div>
+
+                        {/* Sold - Red */}
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                          <span className="text-[11px] font-semibold text-red-700">Sold</span>
+                        </div>
+
+                      </div>
+                    </div>
                   </div>
+
+                  {selectedRows.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2 w-full lg:w-auto border-t lg:border-t-0 pt-3 lg:pt-0">
+                      <div className="flex items-center gap-2 mr-2">
+                        <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-tight">
+                          {selectedRows.length} Selected
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const selectedItems = userStock.filter((item) => selectedRows.includes(item.id));
+                          const allHeld = selectedItems.length > 0 && selectedItems.every(item => item.status === "HOLD");
+                          return (
+                            <button
+                              type="button"
+                              onClick={handleBulkHold}
+                              disabled={isBulkActionLoading}
+                              className={`px-4 py-2 text-white text-[10px] sm:text-xs font-black rounded-xl transition-all flex items-center gap-2 shadow-lg uppercase tracking-wider ${allHeld
+                                ? "bg-green-600 hover:bg-green-700 shadow-green-100"
+                                : "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
+                                }`}
+                              title={allHeld ? "Release selected items from hold" : "Put selected items on hold"}
+                            >
+                              {isBulkActionLoading ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                              ) : allHeld ? (
+                                <Play className="w-3 h-3" />
+                              ) : (
+                                <Database className="w-3 h-3" />
+                              )}
+                              {allHeld ? "Unhold" : "Hold"}
+                            </button>
+                          );
+                        })()}
+                        <button
+                          type="button"
+                          onClick={handleBulkSell}
+                          disabled={isBulkActionLoading}
+                          className="px-4 py-2 bg-red-600 text-white text-[10px] sm:text-xs font-black rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 shadow-lg shadow-red-100 uppercase tracking-wider"
+                          title="Mark selected items as sold"
+                        >
+                          {isBulkActionLoading ? (
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-3 h-3" />
+                          )}
+                          Sold
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRows([])}
+                          className="px-3 py-2 text-[#64748B] hover:text-[#0F172A] text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-colors"
+                          title="Deselect all items"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Full Width Table */}
@@ -2132,8 +2465,19 @@ const AddStock = () => {
                   <table className="w-full text-sm border-collapse">
                     <thead className="sticky top-0 z-30 bg-gray-200">
                       <tr className="bg-gray-200 text-gray-900">
-                        <th className="px-2 py-3 text-center font-semibold border-r border-gray-300 sticky left-0 z-40 w-10 bg-gray-300">
-                          #
+                        <th className="px-2 py-3 text-center font-semibold border-r border-gray-300 sticky left-0 z-40 w-16 bg-gray-300">
+                          <div className="flex items-center gap-2 justify-center">
+                            <input
+                              type="checkbox"
+                              checked={
+                                userStock.length > 0 &&
+                                selectedRows.length === userStock.length
+                              }
+                              onChange={toggleSelectAll}
+                              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <span>#</span>
+                          </div>
                         </th>
                         {ALL_DB_FIELDS.map((field) => {
                           // Determine if this column is sortable
@@ -2175,18 +2519,26 @@ const AddStock = () => {
                             </th>
                           );
                         })}
-                        <th className="px-2 sm:px-3 py-2 sm:py-3 text-center font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm sticky right-0 z-10 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
+                        <th
+                          className="px-2 sm:px-3 py-2 sm:py-3 text-center font-semibold border-r border-gray-300 whitespace-nowrap bg-gray-200 text-xs sm:text-sm sticky right-0 z-10 shadow-[-2px_0_4px_rgba(0,0,0,0.05)]"
+                          title="Available actions for each stock item"
+                        >
                           ACTIONS
                         </th>
                       </tr>
                     </thead>
                     <tbody className="overflow-y-auto">
                       {filteredUserStock.map((item, index) => (
-                        <SimpleTableRow
+                        <StockRow
                           key={item.id}
                           item={item}
                           index={index}
                           page={userStockPage}
+                          isSelected={selectedRows.includes(item.id)}
+                          toggleRowSelection={toggleRowSelection}
+                          handleHold={handleHold}
+                          handleSell={handleSell}
+                          handleEditStock={handleEditStock}
                         />
                       ))}
                     </tbody>
@@ -2194,44 +2546,73 @@ const AddStock = () => {
                 </div>
 
                 {/* Pagination */}
-                {userStockTotalPages > 1 && (
-                  <div className="px-4 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <p className="text-sm text-[#64748B]">
-                      Page{" "}
-                      <span className="font-semibold text-[#0F172A]">
-                        {userStockPage}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-semibold text-[#0F172A]">
-                        {userStockTotalPages}
-                      </span>
-                    </p>
-                    <div className="flex items-center gap-2">
+                <div className="mt-8 flex flex-col items-center gap-6 pb-8">
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    {/* Limit Dropdown */}
+                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Rows:</span>
+                      <select
+                        value={userStockLimit}
+                        onChange={(e) => {
+                          setUserStockLimit(Number(e.target.value));
+                          setUserStockPage(1);
+                        }}
+                        className="bg-transparent text-sm font-bold text-blue-900 focus:outline-none cursor-pointer"
+                      >
+                        {[50, 100, 200, 500].map(limit => (
+                          <option key={limit} value={limit}>{limit}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Pagination Bar */}
+                    <div className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 shadow-xl shadow-gray-200/60 ring-1 ring-gray-100">
                       <button
-                        onClick={() =>
-                          setUserStockPage((p) => Math.max(1, p - 1))
-                        }
+                        onClick={() => setUserStockPage(prev => Math.max(1, prev - 1))}
                         disabled={userStockPage === 1}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-[#64748B] transition-all duration-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-25 disabled:cursor-not-allowed"
                       >
-                        <ChevronLeft className="w-4 h-4" />
-                        <span className="hidden sm:inline">Prev</span>
+                        <ChevronLeft className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() =>
-                          setUserStockPage((p) =>
-                            Math.min(userStockTotalPages, p + 1),
+
+                      <div className="flex items-center gap-1 px-2">
+                        {getVisiblePages().map((page, index) =>
+                          page === "..." ? (
+                            <span key={`ellipsis-${index}`} className="flex h-8 w-8 items-center justify-center text-sm text-[#94A3B8]">
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={page}
+                              onClick={() => setUserStockPage(page)}
+                              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${userStockPage === page
+                                ? "bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white shadow-md shadow-blue-900/20 scale-105"
+                                : "text-[#475569] hover:bg-gray-100 hover:text-[#1E3A8A]"
+                                }`}
+                            >
+                              {page}
+                            </button>
                           )
-                        }
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setUserStockPage(prev => Math.min(userStockTotalPages, prev + 1))}
                         disabled={userStockPage === userStockTotalPages}
-                        className="flex items-center gap-1 px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-[#64748B] transition-all duration-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-25 disabled:cursor-not-allowed"
                       >
-                        <span className="hidden sm:inline">Next</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-4 text-sm">
+                    <p className="text-[#64748B]">
+                      Page <span className="font-semibold text-[#1E3A8A]">{userStockPage}</span> of{" "}
+                      <span className="font-semibold text-[#1E3A8A]">{userStockTotalPages}</span>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
