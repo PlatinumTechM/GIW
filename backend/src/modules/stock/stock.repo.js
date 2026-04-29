@@ -812,6 +812,106 @@ export const deleteStock = async (id) => {
   return result.rows[0];
 };
 
+export const toggleHold = async (id, userId) => {
+  const checkQuery = "SELECT status FROM diamond_stock WHERE id = $1 AND user_id = $2";
+  const checkResult = await pool.query(checkQuery, [id, userId]);
+
+  if (checkResult.rows.length === 0) return null;
+
+  const currentStatus = checkResult.rows[0].status;
+  const newStatus = currentStatus === 'HOLD' ? 'AVAILABLE' : 'HOLD';
+
+  const updateQuery = "UPDATE diamond_stock SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND user_id = $3 RETURNING *";
+  const result = await pool.query(updateQuery, [newStatus, id, userId]);
+
+  return result.rows[0];
+};
+
+export const sellStock = async (id, userId, ip) => {
+  const selectQuery = "SELECT * FROM diamond_stock WHERE id = $1 AND user_id = $2";
+  const selectResult = await pool.query(selectQuery, [id, userId]);
+
+  if (selectResult.rows.length === 0) return null;
+
+  const stockData = selectResult.rows[0];
+
+  // Start transaction
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Insert into sell_data
+    const insertQuery = "INSERT INTO sell_data (user_id, metadata, ip) VALUES ($1, $2, $3) RETURNING *";
+    await client.query(insertQuery, [userId, JSON.stringify(stockData), ip]);
+
+    // Delete from diamond_stock
+    const deleteQuery = "DELETE FROM diamond_stock WHERE id = $1 AND user_id = $2";
+    await client.query(deleteQuery, [id, userId]);
+
+    await client.query('COMMIT');
+    return stockData;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+export const bulkToggleHold = async (ids, userId) => {
+  if (!ids || ids.length === 0) return [];
+
+  // This is a bulk toggle. For simplicity, we toggle all selected IDs.
+  // Note: If you want to ensure all become 'HOLD' or all become 'AVAILABLE', 
+  // you might want to pass the target status.
+  const query = `
+    UPDATE diamond_stock 
+    SET status = CASE WHEN status = 'HOLD' THEN 'AVAILABLE' ELSE 'HOLD' END,
+        updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ANY($1::int[]) AND user_id = $2 
+    RETURNING *
+  `;
+  const result = await pool.query(query, [ids, userId]);
+  return result.rows;
+};
+
+export const bulkSellStock = async (ids, userId, ip) => {
+  if (!ids || ids.length === 0) return 0;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Fetch all stocks to move to history
+    const selectQuery = "SELECT * FROM diamond_stock WHERE id = ANY($1::int[]) AND user_id = $2";
+    const selectResult = await client.query(selectQuery, [ids, userId]);
+
+    if (selectResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return 0;
+    }
+
+    // Bulk insert into sell_data
+    // We insert each record's metadata
+    for (const stock of selectResult.rows) {
+      const insertQuery = "INSERT INTO sell_data (user_id, metadata, ip) VALUES ($1, $2, $3)";
+      await client.query(insertQuery, [userId, JSON.stringify(stock), ip]);
+    }
+
+    // Bulk delete from diamond_stock
+    const deleteQuery = "DELETE FROM diamond_stock WHERE id = ANY($1::int[]) AND user_id = $2";
+    const deleteResult = await client.query(deleteQuery, [ids, userId]);
+
+    await client.query('COMMIT');
+    return deleteResult.rowCount;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 // Delete stocks by stock_id array (for bulk replace)
 
 export const deleteByStockIds = async (stockIds, userId, client = null) => {
@@ -962,6 +1062,12 @@ export const getByUserId = async (
     paramIndex++;
   }
 
+  if (filters.search) {
+    whereConditions.push(`(ds.stock_id ILIKE $${paramIndex} OR ds.certificate_number ILIKE $${paramIndex} OR ds.shape ILIKE $${paramIndex} OR ds.party ILIKE $${paramIndex})`);
+    values.push(`%${filters.search}%`);
+    paramIndex++;
+  }
+
   const whereClause = `WHERE ${whereConditions.join(" AND ")}`;
   const orderClause = "ds.created_at DESC, ds.id DESC";
 
@@ -970,7 +1076,10 @@ export const getByUserId = async (
   const countResult = await pool.query(countQuery, values);
   const totalCount = parseInt(countResult.rows[0].count);
 
-  // Data query
+  // Finalize data query with explicit LIMIT and OFFSET
+  const finalLimit = parseInt(limit) || 50;
+  const finalOffset = parseInt(offset) || 0;
+
   const dataQuery = `
     SELECT
       ds.id, ds.type, ds.user_id, ds.stock_id, ds.certificate_number, ds.weight, ds.shape, ds.color,
@@ -988,7 +1097,7 @@ export const getByUserId = async (
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
-  const dataValues = [...values, limit, offset];
+  const dataValues = [...values, finalLimit, finalOffset];
   const dataResult = await pool.query(dataQuery, dataValues);
 
   return {
