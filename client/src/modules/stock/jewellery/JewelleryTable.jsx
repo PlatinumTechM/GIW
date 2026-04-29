@@ -8,7 +8,11 @@ import {
   ExternalLink,
   Video,
   Image as ImageIcon,
-  Gem
+  Gem,
+  RefreshCw,
+  CheckCircle,
+  Play,
+  Pause
 } from "lucide-react";
 
 const JewelleryTable = ({ 
@@ -18,14 +22,27 @@ const JewelleryTable = ({
   onDelete, 
   pagination, 
   onPageChange,
-  onSearch,
-  searchQuery
+  selectedRows = [],
+  onSelectRow,
+  onSelectAll
 }) => {
   const fields = [
-    "stock_id", "category", "name", "material", "weight", 
-    "diamond_type", "diamond_shape", "diamond_weight", "total_diamond_weight", "diamond_color", 
-    "diamond_clarity", "diamond_cut", "diamond_growth", "description",
-    "status", "price"
+    "stock_id", "type", "name", "description", "design_number", "brand", 
+    "jewelry_style", "jewelry_sub_category", "status", "material", "metal_purity", 
+    "weight", "city", "country", "price",
+    "center_type", "center_gem_type", "center_gem_color", "center_shape", 
+    "center_weight_cts", "center_color_grade", "center_clarity", "center_cut", 
+    "center_polish", "center_symmetry", "center_fancy_color", "center_fancy_intensity", 
+    "center_fluorescence_intensity", "center_lab", "center_enhancement", "center_total_stones", 
+    "center_measurement_length", "center_measurement_width", "center_measurement_depth", 
+    "center_depth_percent", "center_table_percent",
+    "side_stone_type", "side_gem_type", "side_gem_color", "side_shape", 
+    "side_weight_cts", "side_color_grade", "side_clarity", "side_fancy_color", 
+    "side_fancy_intensity", "side_total_stones",
+    "mount", "setting_supported_carat_from", "setting_supported_carat_to", 
+    "supported_diamond_shapes", "total_number_of_stones",
+    "certificate_number", "certificate_url", "certificate_comment", "lab", 
+    "rank", "is_customizable", "is_featured"
   ];
 
   if (loading) {
@@ -47,14 +64,26 @@ const JewelleryTable = ({
   }
 
   const SimpleTableRow = ({ item, index, page }) => {
-    const rowNumber = (page - 1) * (pagination?.limit || 10) + index + 1;
+    const rowNumber = (page - 1) * (pagination?.limit || 50) + index + 1;
+    const isSelected = selectedRows.includes(item.id);
     const rowBgClass = index % 2 === 0 ? "bg-white" : "bg-[#F8FAFC]";
 
     return (
-      <tr className={`${rowBgClass} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0]`}>
-        {/* Row Number */}
-        <td className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-20 w-10 font-medium ${rowBgClass}`}>
-          {rowNumber}
+      <tr 
+        onClick={() => onSelectRow(item.id)}
+        className={`${rowBgClass} ${isSelected ? "bg-blue-50" : ""} hover:bg-[#EFF6FF] transition-colors text-sm border-b border-[#E2E8F0] cursor-pointer`}
+      >
+        {/* Checkbox and Row Number */}
+        <td className={`px-2 py-3 text-center text-xs text-[#64748B] border-r border-[#E2E8F0] sticky left-0 z-20 w-16 font-medium ${rowBgClass} ${isSelected ? "bg-blue-50" : ""}`}>
+          <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onSelectRow(item.id)}
+              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+            />
+            <span>{rowNumber}</span>
+          </div>
         </td>
 
         {/* Fields */}
@@ -67,18 +96,18 @@ const JewelleryTable = ({
               {field === "stock_id" && !isEmpty ? (
                 <span className="font-semibold text-[#1E3A8A]">{value}</span>
               ) : field === "status" ? (
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${
-                  item.status === "AVAILABLE" ? "bg-green-50 text-green-700 border-green-200" :
-                  item.status === "SOLD" ? "bg-red-50 text-red-700 border-red-200" :
-                  "bg-amber-50 text-amber-700 border-amber-200"
+                <span className={`px-2 py-0.5 text-[10px] font-black rounded-full border shadow-sm uppercase tracking-wider ${
+                  item.status === "AVAILABLE" ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
+                  item.status === "SOLD" ? "bg-rose-100 text-rose-700 border-rose-200" :
+                  "bg-amber-100 text-amber-700 border-amber-200"
                 }`}>
                   {value}
                 </span>
               ) : field === "price" && !isEmpty ? (
-                <span className="font-semibold text-green-700">₹{Number(value).toLocaleString()}</span>
+                <span className="font-semibold text-emerald-700">₹{Number(value).toLocaleString()}</span>
               ) : field === "weight" && !isEmpty ? (
                 <span className="font-medium">{value} G</span>
-              ) : (field === "diamond_weight" || field === "total_diamond_weight") && !isEmpty ? (
+              ) : (field.includes("weight") || field.includes("carat")) && !isEmpty ? (
                 <span className="font-medium">{value} CT</span>
               ) : field === "name" && !isEmpty ? (
                 <span className="font-medium text-[#0F172A]">{value}</span>
@@ -90,15 +119,15 @@ const JewelleryTable = ({
         })}
 
         {/* Media Icons */}
-        <td className="px-2 py-3 border-r border-[#E2E8F0] whitespace-nowrap text-center">
+        <td className="px-2 py-3 border-r border-[#E2E8F0] whitespace-nowrap text-center bg-inherit">
             <div className="flex items-center justify-center gap-2">
                 {item.jewellery_image1 && (
-                    <a href={item.jewellery_image1} target="_blank" rel="noreferrer" title="View Image">
+                    <a href={item.jewellery_image1} target="_blank" rel="noreferrer" title="View Image" onClick={e => e.stopPropagation()}>
                         <ImageIcon className="w-4 h-4 text-blue-500 hover:text-blue-700" />
                     </a>
                 )}
                 {item.jewellery_video && (
-                    <a href={item.jewellery_video} target="_blank" rel="noreferrer" title="View Video">
+                    <a href={item.jewellery_video} target="_blank" rel="noreferrer" title="View Video" onClick={e => e.stopPropagation()}>
                         <Video className="w-4 h-4 text-purple-500 hover:text-purple-700" />
                     </a>
                 )}
@@ -106,13 +135,13 @@ const JewelleryTable = ({
         </td>
 
         {/* Actions */}
-        <td className="px-3 py-2 whitespace-nowrap text-right sticky right-0 z-20 bg-inherit border-l border-[#E2E8F0]">
-          <div className="flex items-center justify-end gap-2">
-            <button onClick={() => onEdit(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-              <Edit className="w-4 h-4" />
+        <td className="px-2 py-2 border-r border-[#E2E8F0] text-center sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)] z-20" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-1">
+            <button onClick={() => onEdit(item)} className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition-all" title="Edit">
+              <Edit className="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
-            <button onClick={() => onDelete(item.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-              <Trash2 className="w-4 h-4" />
+            <button onClick={() => onDelete(item.id)} className="p-1.5 bg-rose-100 text-rose-600 rounded-full hover:bg-rose-200 transition-all" title="Delete">
+              <Trash2 className="w-3.5 h-3.5 stroke-[2.5]" />
             </button>
           </div>
         </td>
@@ -123,16 +152,25 @@ const JewelleryTable = ({
   return (
     <div className="space-y-4">
       {/* Search Result Summary Bar */}
-      <div className="bg-white rounded-lg border border-[#E2E8F0] p-3 flex items-center justify-between">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] p-4 flex items-center justify-between shadow-sm">
         <span className="text-sm text-[#64748B] font-medium">
           Showing <span className="font-bold text-[#0F172A]">{data.length}</span> items
           {pagination && (
             <>
               {" "}of <span className="font-bold text-[#0F172A]">{pagination.totalCount}</span> total pieces
-              (Page <span className="font-bold text-[#0F172A]">{pagination.page}</span> of {pagination.totalPages})
             </>
           )}
         </span>
+        <div className="flex items-center gap-3">
+           <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Available</span>
+           </div>
+           <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-rose-500" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sold</span>
+           </div>
+        </div>
       </div>
 
       {/* Wide Table Container */}
@@ -140,20 +178,30 @@ const JewelleryTable = ({
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-40 bg-gray-200">
             <tr className="bg-gray-200 text-gray-900">
-              <th className="px-2 py-3 text-center border-r border-gray-300 sticky left-0 z-50 w-10 bg-gray-300 font-semibold text-xs uppercase">#</th>
+              <th className="px-2 py-3 text-center border-r border-gray-300 sticky left-0 z-50 w-16 bg-gray-300 font-semibold text-xs uppercase">
+                 <div className="flex items-center gap-2 justify-center">
+                    <input
+                      type="checkbox"
+                      checked={data.length > 0 && selectedRows.length === data.length}
+                      onChange={onSelectAll}
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span>#</span>
+                 </div>
+              </th>
               {fields.map((field) => (
-                <th key={field} className="px-3 py-3 text-left border-r border-gray-300 whitespace-nowrap text-xs font-semibold uppercase bg-gray-200">
-                  {field.replace(/_/g, " ").toUpperCase()}
+                <th key={field} className="px-3 py-3 text-left border-r border-gray-300 whitespace-nowrap text-xs font-black uppercase bg-gray-200 text-slate-700 tracking-wider">
+                  {field.replace(/_/g, " ")}
                 </th>
               ))}
-              <th className="px-3 py-3 text-center border-r border-gray-300 bg-gray-200 text-xs font-semibold uppercase">Media</th>
-              <th className="px-3 py-3 text-right sticky right-0 z-50 bg-gray-300 border-l border-gray-300 text-xs font-semibold uppercase w-24">Actions</th>
+              <th className="px-3 py-3 text-center border-r border-gray-300 bg-gray-200 text-xs font-black uppercase text-slate-700 tracking-wider">Media</th>
+              <th className="px-3 py-3 text-center sticky right-0 z-50 bg-gray-300 border-l border-gray-300 text-xs font-black uppercase text-slate-700 tracking-wider w-24">Actions</th>
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={fields.length + 3} className="px-6 py-20 text-center text-[#64748B] font-medium">
+                <td colSpan={fields.length + 3} className="px-6 py-20 text-center text-[#64748B] font-bold uppercase tracking-[0.2em] text-xs">
                   No jewellery stock found matching your criteria.
                 </td>
               </tr>
@@ -171,32 +219,6 @@ const JewelleryTable = ({
         </table>
       </div>
 
-      {/* Pagination Footer */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="px-4 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex flex-col sm:flex-row items-center justify-between gap-3 rounded-b-xl">
-          <p className="text-sm text-[#64748B] font-medium uppercase tracking-wider">
-            Page <span className="font-bold text-[#0F172A]">{pagination.page}</span> of {pagination.totalPages}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onPageChange(pagination.page - 1)}
-              disabled={pagination.page === 1}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors uppercase tracking-widest"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Prev
-            </button>
-            <button
-              onClick={() => onPageChange(pagination.page + 1)}
-              disabled={pagination.page === pagination.totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors uppercase tracking-widest"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

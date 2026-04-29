@@ -12,12 +12,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Share2,
+  Pause,
+  CheckCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import JewelleryTable from "./JewelleryTable";
 import AddJewelleryManual from "./AddJewelleryManual";
 import JewelleryFilters from "./JewelleryFilters";
 import JewelleryGrid from "./JewelleryGrid";
+import JewelleryImport from "./JewelleryImport";
 import api from "../../../services/api";
 import notify from "../../../utils/notifications";
 
@@ -27,11 +30,14 @@ const JewelleryStock = () => {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editData, setEditData] = useState(null);
   const [viewMode, setViewMode] = useState("grid"); // "table" or "grid"
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
   const [filterOptions, setFilterOptions] = useState({
     categories: [],
     materials: [],
@@ -56,6 +62,34 @@ const JewelleryStock = () => {
     priceTo: "",
     stock_id: "",
   });
+
+  const getVisiblePages = () => {
+    if (!pagination) return [];
+    const total = pagination.totalPages;
+    const current = pagination.page;
+    const pages = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      } else if (current >= total - 3) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push("...");
+        pages.push(total);
+      }
+    }
+    return pages;
+  };
 
   const fetchFilterOptions = async () => {
     try {
@@ -85,7 +119,7 @@ const JewelleryStock = () => {
         params: {
           page,
           search: query,
-          limit: 10, // Set limit to 10 as per user request
+          limit,
           ...filters,
         },
       });
@@ -98,6 +132,48 @@ const JewelleryStock = () => {
     }
   };
 
+  useEffect(() => {
+    fetchStock(currentPage, debouncedSearch, selectedFilters);
+  }, [currentPage, debouncedSearch, limit]);
+
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedRows(prev => 
+      prev.length === stockData.length ? [] : stockData.map(item => item.id)
+    );
+  };
+
+  const handleBulkStatusUpdate = async (status) => {
+    if (selectedRows.length === 0) return;
+    
+    const confirmed = await notify.confirm({
+      title: `Update ${selectedRows.length} Items?`,
+      message: `Are you sure you want to mark selected items as ${status.toLowerCase()}?`,
+      confirmText: "Yes, Update",
+      variant: status === "SOLD" ? "danger" : "info"
+    });
+
+    if (!confirmed) return;
+
+    setIsBulkLoading(true);
+    try {
+      await Promise.all(selectedRows.map(id => api.put(`/jewellry-stock/${id}`, { status })));
+      notify.success("Success", `Updated ${selectedRows.length} items to ${status}`);
+      setSelectedRows([]);
+      fetchStock(pagination?.page || 1, searchQuery);
+    } catch (error) {
+      console.error("Bulk update error:", error);
+      notify.error("Error", "Failed to update some items");
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -107,10 +183,6 @@ const JewelleryStock = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  useEffect(() => {
-    fetchStock(currentPage, debouncedSearch, selectedFilters);
-  }, [currentPage, debouncedSearch, selectedFilters]);
 
   useEffect(() => {
     fetchFilterOptions();
@@ -236,14 +308,18 @@ const JewelleryStock = () => {
                   <span className="hidden xs:inline">Manual Entry</span>
                   <span className="xs:hidden">Add</span>
                 </button>
-                {/* <button
-                  onClick={() => notify.info("Coming Soon", "Import feature is under development.")}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold text-[#64748B] hover:text-[#0F172A] hover:bg-white/50 transition-all whitespace-nowrap"
+                <button
+                  onClick={() => setActiveTab("import")}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                    activeTab === "import"
+                      ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
+                      : "text-[#64748B] hover:text-[#0F172A] hover:bg-white/50"
+                  }`}
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span className="hidden xs:inline">Imports</span>
                   <span className="xs:hidden">Import</span>
-                </button> */}
+                </button>
               </div>
             </div>
           </div>
@@ -350,6 +426,41 @@ const JewelleryStock = () => {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
+              {selectedRows.length > 0 && (
+                <div className="bg-white rounded-xl border border-blue-100 p-3 mb-4 flex items-center justify-between shadow-sm shadow-blue-50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <span className="text-xs font-black text-blue-600 uppercase tracking-wider">
+                      {selectedRows.length} Items Selected
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleBulkStatusUpdate("HOLD")}
+                      disabled={isBulkLoading}
+                      className="px-4 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-lg hover:bg-amber-600 transition-all flex items-center gap-2 uppercase tracking-widest disabled:opacity-50"
+                    >
+                      <Pause className="w-3 h-3" />
+                      Hold
+                    </button>
+                    <button
+                      onClick={() => handleBulkStatusUpdate("SOLD")}
+                      disabled={isBulkLoading}
+                      className="px-4 py-1.5 bg-rose-500 text-white text-[10px] font-black rounded-lg hover:bg-rose-600 transition-all flex items-center gap-2 uppercase tracking-widest disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-3 h-3" />
+                      Sold
+                    </button>
+                    <button
+                      onClick={() => setSelectedRows([])}
+                      className="px-3 py-1.5 text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {viewMode === "table" ? (
                 <JewelleryTable
                   data={stockData}
@@ -358,8 +469,9 @@ const JewelleryStock = () => {
                   onDelete={handleDelete}
                   pagination={pagination}
                   onPageChange={setCurrentPage}
-                  onSearch={setSearchQuery}
-                  searchQuery={searchQuery}
+                  selectedRows={selectedRows}
+                  onSelectRow={toggleRowSelection}
+                  onSelectAll={toggleSelectAll}
                 />
               ) : (
                 <JewelleryGrid
@@ -370,7 +482,7 @@ const JewelleryStock = () => {
                 />
               )}
             </motion.div>
-          ) : (
+          ) : activeTab === "add" ? (
             <motion.div
               key="add"
               initial={{ opacity: 0, y: 10 }}
@@ -387,46 +499,92 @@ const JewelleryStock = () => {
                 setEditData={setEditData}
               />
             </motion.div>
-          )}
+          ) : activeTab === "import" ? (
+            <motion.div
+              key="import"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <JewelleryImport
+                onComplete={() => {
+                  fetchStock(1, searchQuery);
+                  setActiveTab("view");
+                }}
+                onCancel={() => setActiveTab("view")}
+              />
+            </motion.div>
+          ) : null}
         </AnimatePresence>
 
-        {/* Unified Pagination Footer */}
+        {/* Unified Premium Pagination Footer */}
         {activeTab === "view" && pagination && pagination.totalPages > 1 && (
-          <div className="mt-8 px-4 sm:px-6 py-4 bg-white border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {[...Array(Math.min(5, pagination.totalPages))].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400"
-                  >
-                    {i + 1}
-                  </div>
-                ))}
+          <div className="mt-8 flex flex-col items-center gap-6 pb-8">
+            <div className="flex flex-col sm:flex-row items-center gap-6 w-full sm:w-auto">
+              {/* Rows Per Page Dropdown */}
+              <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-[#E2E8F0] shadow-sm">
+                <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest whitespace-nowrap">Rows:</span>
+                <select
+                  value={limit}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-transparent text-sm font-bold text-[#1E3A8A] focus:outline-none cursor-pointer"
+                >
+                  {[50, 100, 200, 500].map(l => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
               </div>
-              <p className="text-xs sm:text-sm text-[#64748B] font-bold uppercase tracking-widest">
-                Page <span className="text-[#1E3A8A]">{pagination.page}</span>{" "}
-                of {pagination.totalPages}
-              </p>
+
+              {/* Pagination Bar */}
+              <div className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 shadow-xl shadow-[#1E3A8A]/5 border border-[#E2E8F0]">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={pagination.page === 1}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] transition-all duration-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-25"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                <div className="flex items-center gap-1 px-2">
+                  {getVisiblePages().map((page, index) =>
+                    page === "..." ? (
+                      <span key={`ellipsis-${index}`} className="flex h-8 w-8 items-center justify-center text-sm text-[#94A3B8]">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black transition-all duration-200 ${pagination.page === page
+                          ? "bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white shadow-md shadow-blue-900/20 scale-105"
+                          : "text-[#475569] hover:bg-slate-50 hover:text-[#1E3A8A]"
+                          }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] transition-all duration-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A] disabled:opacity-25"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setCurrentPage(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 text-[10px] font-black text-[#1E3A8A] bg-white border-2 border-[#1E3A8A]/10 rounded-xl hover:bg-[#1E3A8A] hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-[#1E3A8A] transition-all uppercase tracking-widest shadow-sm"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Prev
-              </button>
-              <button
-                onClick={() => setCurrentPage(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 text-[10px] font-black text-white bg-[#1E3A8A] border-2 border-[#1E3A8A] rounded-xl hover:bg-[#1E40AF] disabled:opacity-30 transition-all uppercase tracking-widest shadow-xl shadow-blue-100"
-              >
-                Next
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-[#64748B]">
+              <p>
+                Page <span className="text-[#1E3A8A]">{pagination.page}</span> of{" "}
+                <span className="text-[#1E3A8A]">{pagination.totalPages}</span>
+              </p>
             </div>
           </div>
         )}

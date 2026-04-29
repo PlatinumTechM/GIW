@@ -13,6 +13,7 @@ router.get("/public/:id", jewellryController.getByIdPublic);
 // Admin/Manufacturer authenticated routes
 router.get("/", authenticate, jewellryController.getAll);
 router.get("/filters", authenticate, jewellryController.getFilters);
+router.post("/bulk-upload", authenticate, jewellryController.bulkUpload);
 router.get("/:id", authenticate, jewellryController.getById);
 router.post("/", authenticate, jewellryController.create);
 router.put("/:id", authenticate, jewellryController.update);
