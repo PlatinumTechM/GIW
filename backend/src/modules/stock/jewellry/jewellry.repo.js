@@ -63,7 +63,7 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   if (filters.materials && Array.isArray(filters.materials) && filters.materials.length > 0) {
     // Handle OTHER material - items not in listed predefined materials
     const predefinedMaterials = ["WHITE GOLD", "YELLOW GOLD", "ROSE GOLD", "PLATINUM", "SILVER", "TWO TONE"];
-    
+
     if (filters.materials.includes("other")) {
       const listedMaterials = filters.materials.map(m => m.toUpperCase()).filter(m => m !== "OTHER");
       if (listedMaterials.length > 0) {
@@ -88,7 +88,7 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   if (filters.shapes && Array.isArray(filters.shapes) && filters.shapes.length > 0) {
     // Handle OTHER shape - items not in listed predefined shapes
     const predefinedShapes = ["ROUND", "PEAR", "OVAL", "PRINCESS", "EMERALD", "CUSHION", "MARQUISE", "HEART", "RADIANT", "BAGUETTE", "HEXAGONAL", "SQUARE EMERALD", "BRIOLETTE", "TRILLIANT", "HALF MOON", "ROSE CUT", "KITE"];
-    
+
     if (filters.shapes.includes("other")) {
       const listedShapes = filters.shapes.filter(s => s !== "other");
       if (listedShapes.length > 0) {
@@ -184,7 +184,7 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
-  
+
   const countQuery = `SELECT COUNT(*) FROM jewellery_stock ${whereClause}`;
   const countResult = await pool.query(countQuery, values);
   const totalCount = parseInt(countResult.rows[0].count);
@@ -210,7 +210,21 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
 };
 
 export const getById = async (id) => {
-  const query = "SELECT * FROM jewellery_stock WHERE id = $1";
+  const query = `
+    SELECT j.*, 
+           json_build_object(
+             'id', u.id,
+             'name', u.name,
+             'company', u.company,
+             'email', u.email,
+             'phone', u.phone,
+             'address', u.address,
+             'gst', u.gst
+           ) as supplier
+    FROM jewellery_stock j
+    LEFT JOIN users u ON j.user_id = u.id
+    WHERE j.id = $1
+  `;
   const result = await pool.query(query, [id]);
   return result.rows[0];
 };
@@ -233,7 +247,7 @@ export const create = async (data) => {
 export const update = async (id, data) => {
   const columns = Object.keys(data).filter(col => ALL_COLUMNS.includes(col));
   const values = columns.map(col => data[col]);
-  
+
   if (columns.length === 0) return null;
 
   const setClause = columns.map((col, i) => `${col} = $${i + 1}`).join(", ");

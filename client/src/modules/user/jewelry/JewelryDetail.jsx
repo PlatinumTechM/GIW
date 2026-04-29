@@ -319,7 +319,7 @@ const JewelryDetail = () => {
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsLiked(!isLiked)}
             className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
-            style={{ 
+            style={{
               background: isLiked ? theme.danger : theme.surface,
               color: isLiked ? "#fff" : theme.textMuted,
               boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
@@ -365,9 +365,9 @@ const JewelryDetail = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * i }}
                   className="capitalize truncate max-w-[120px] sm:max-w-none"
-                  style={{ 
+                  style={{
                     color: i === arr.length - 1 ? theme.primary : theme.textMuted,
-                    fontWeight: i === arr.length - 1 ? 600 : 400 
+                    fontWeight: i === arr.length - 1 ? 600 : 400
                   }}
                 >
                   {item}
@@ -397,9 +397,9 @@ const JewelryDetail = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="relative overflow-hidden px-8 py-6"
-            style={{ 
+            style={{
               background: "transparent",
-              borderBottom: `1px solid ${theme.border}` 
+              borderBottom: `1px solid ${theme.border}`
             }}
           >
             <motion.div
@@ -456,7 +456,7 @@ const JewelryDetail = () => {
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsLiked(!isLiked)}
                   className="hidden sm:flex h-11 w-11 items-center justify-center rounded-full transition-all"
-                  style={{ 
+                  style={{
                     background: isLiked ? theme.danger : theme.surface,
                     color: isLiked ? "#fff" : theme.textMuted,
                     boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
@@ -578,7 +578,7 @@ const JewelryDetail = () => {
               {/* Thumbnails */}
               <motion.div
                 variants={itemVariants}
-                className="flex justify-center gap-3 overflow-x-auto pb-2"
+                className="flex justify-start md:justify-center gap-2 sm:gap-3 overflow-x-auto pb-4 px-2 snap-x"
               >
                 {images.map((img, idx) => (
                   <button
@@ -587,7 +587,7 @@ const JewelryDetail = () => {
                       setActiveImageIndex(idx);
                       setIsVideoActive(false);
                     }}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
+                    className="relative h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
                     style={{
                       opacity: !isVideoActive && activeImageIndex === idx ? 1 : 0.6,
                       boxShadow: !isVideoActive && activeImageIndex === idx ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none"
@@ -615,7 +615,7 @@ const JewelryDetail = () => {
                       setActiveImageIndex(0);
                       setIsVideoActive(true);
                     }}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
+                    className="relative h-12 w-12 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-xl transition-all flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 hover:-translate-y-0.5"
                     style={{
                       opacity: isVideoActive ? 1 : 0.6,
                       boxShadow: isVideoActive ? `0 0 0 2px ${theme.primary}, 0 4px 12px rgba(0,0,0,0.1)` : "none",
@@ -636,7 +636,57 @@ const JewelryDetail = () => {
                   </button>
                 )}
               </motion.div>
-
+              {/* Supplier Details */}
+              {jewelry.supplier && jewelry.supplier.id && (
+                <motion.div
+                  initial="rest"
+                  whileHover="hover"
+                  animate="rest"
+                  variants={cardHoverVariants}
+                  className="rounded-xl p-5 transition-all"
+                  style={{
+                    background: "transparent",
+                    border: `1px solid ${theme.border}`
+                  }}
+                >
+                  <h3 className="mb-4 flex items-center gap-2 font-semibold" style={{ color: theme.secondary }}>
+                    <Box className="h-5 w-5" style={{ color: theme.primary }} />
+                    Supplier Details
+                  </h3>
+                  <div className="space-y-3">
+                    {jewelry.supplier.company && (
+                      <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.textMuted }}>Company Name</span>
+                        <span className="font-semibold text-right" style={{ color: theme.secondary }}>{jewelry.supplier.company}</span>
+                      </div>
+                    )}
+                    {jewelry.supplier.email && (
+                      <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.textMuted }}>Email</span>
+                        <span className="font-semibold text-right truncate" style={{ color: theme.secondary }}>{jewelry.supplier.email}</span>
+                      </div>
+                    )}
+                    {jewelry.supplier.gst && (
+                      <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.textMuted }}>GST Number</span>
+                        <span className="font-semibold text-right" style={{ color: theme.secondary }}>{jewelry.supplier.gst}</span>
+                      </div>
+                    )}
+                    {jewelry.supplier.address && (
+                      <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.textMuted }}>Address</span>
+                        <span className="font-semibold text-right max-w-xs" style={{ color: theme.secondary }}>{jewelry.supplier.address}</span>
+                      </div>
+                    )}
+                    {jewelry.supplier.phone && (
+                      <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                        <span style={{ color: theme.textMuted }}>Phone</span>
+                        <span className="font-semibold text-right" style={{ color: theme.secondary }}>{jewelry.supplier.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Right - Details */}
@@ -833,6 +883,8 @@ const JewelryDetail = () => {
                   )}
                 </motion.div>
               )}
+
+
             </motion.div>
           </div>
         </motion.div>
