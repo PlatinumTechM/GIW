@@ -49,7 +49,11 @@ const Register = () => {
       return;
     }
 
-    const formattedValue = formatFieldValue(name, value);
+    let formattedValue = formatFieldValue(name, value);
+
+    if (["email", "city", "country"].includes(name)) {
+      formattedValue = value.toLowerCase();
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -91,12 +95,12 @@ const Register = () => {
       const submitData = new FormData();
       // Trim name and company, others are already handled in handleChange
       submitData.append("name", formData.name.trim());
-      submitData.append("email", formData.email);
+      submitData.append("email", formData.email.toLowerCase());
       submitData.append("company", formData.company.trim());
       submitData.append("phone", formData.phone);
       submitData.append("address", formData.address);
-      submitData.append("city", formData.city);
-      submitData.append("country", formData.country);
+      submitData.append("city", formData.city.toLowerCase());
+      submitData.append("country", formData.country.toLowerCase());
       submitData.append("gst", formData.gst);
       submitData.append("password", formData.password);
       submitData.append("confirmPassword", formData.confirmPassword);

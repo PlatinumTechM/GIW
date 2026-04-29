@@ -6,8 +6,11 @@ export const login = async (identifier, password) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   let user;
 
-  if (emailRegex.test(identifier)) {
-    user = await authRepo.findUserByEmail(identifier);
+  // Normalize identifier to lowercase before checking regex
+  const normalizedIdentifier = identifier.toLowerCase().trim();
+
+  if (emailRegex.test(normalizedIdentifier)) {
+    user = await authRepo.findUserByEmail(normalizedIdentifier);
   } else {
     // Treat as phone number
     user = await authRepo.findUserByPhone(identifier);
@@ -87,6 +90,8 @@ export const register = async (userData) => {
     company,
     phone,
     address,
+    city,
+    country,
     gst,
     password,
     confirmPassword,
@@ -124,6 +129,8 @@ export const register = async (userData) => {
     company: company.toUpperCase(),
     phone,
     address: address.toUpperCase(),
+    city: city ? city.toLowerCase() : "",
+    country: country ? country.toLowerCase() : "",
     gst: gst.toUpperCase(),
     password,
     document,

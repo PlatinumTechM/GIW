@@ -59,6 +59,8 @@ export const register = async (req, res) => {
       company,
       phone,
       address,
+      city: req.body.city,
+      country: req.body.country,
       gst,
       password,
       confirmPassword,
