@@ -18,7 +18,7 @@ export const login = async (req, res) => {
       path: "/",
     });
 
-    res.status(200).json({ token: result.token, user: result.user });
+    res.status(200).json({ token: result.token, user: result.user, redirectUrl: result.redirectUrl });
   } catch (error) {
     console.error("Error at login = ", error);
     res.status(401).json({ error: error.message });
@@ -36,7 +36,8 @@ export const register = async (req, res) => {
       gst,
       password,
       confirmPassword,
-      type
+      type,
+      role
     } = req.body;
     
     // Parse type if it's a string (from multipart form)
@@ -62,7 +63,8 @@ export const register = async (req, res) => {
       password,
       confirmPassword,
       document,
-      type: parsedType
+      type: parsedType,
+      role
     });
 
     res.status(201).json({
@@ -120,6 +122,33 @@ export const updateProfile = async (req, res) => {
     res.status(400).json({
       success: false,
       error: error.message,
+    });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current and new passwords are required",
+      });
+    }
+
+    await authService.changePassword(userId, currentPassword, newPassword);
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Error at changePassword = ", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
     });
   }
 };

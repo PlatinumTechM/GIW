@@ -13,13 +13,23 @@ export const validateLogin = (req, res, next) => {
 };
 
 export const validateRegister = (req, res, next) => {
-  const { name, email, company, phone, address, gst, password, confirmPassword } = req.body;
+  const { name, email, company, phone, address, gst, password, confirmPassword, role } = req.body;
   
   // Check all required fields
-  const requiredFields = { name, email, company, phone, address, gst, password, confirmPassword };
+  // company, address, gst are optional for Buyer
+  const requiredFields = { name, email, phone, password, confirmPassword };
   const missingFields = Object.entries(requiredFields)
     .filter(([_, value]) => !value)
     .map(([key]) => key);
+  
+  // For Seller, company, address, and gst are required
+  if (role === "Seller") {
+    const sellerRequiredFields = { company, address, gst };
+    const missingSellerFields = Object.entries(sellerRequiredFields)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+    missingFields.push(...missingSellerFields);
+  }
   
   if (missingFields.length > 0) {
     return res.status(400).json({ 

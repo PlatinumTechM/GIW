@@ -1,5 +1,5 @@
-// 3.The Royal Blue (Classic & Trustworthy)
 import { Link } from "react-router-dom";
+import "./Home.css"
 import {
   Diamond,
   Shield,
@@ -88,25 +88,25 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F8FAFC] text-[#0F172A]">
+    <div className="home-page min-h-screen overflow-x-hidden bg-[var(--bg-primary)] text-black">
       {/* Hero Section */}
-      <section className="relative flex py-10 items-center overflow-hidden">
+      <section className="relative flex py-16 items-center overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#DBEAFE]/30 via-[#F8FAFC] to-[#F1F5F9]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#b8e2f2] via-[#f8fafc] to-[#ffffff]" />
 
         {/* Pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.01]"
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='90' height='90' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30 30 0z' fill='%231E3A8A' fill-opacity='1'/%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg width='90' height='90' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30 30 0z' fill='%2394A3B8' fill-opacity='1'/%3E%3C/svg%3E\")",
             backgroundSize: "90px 90px",
           }}
         />
 
         {/* Glow Orbs - Static */}
-        <div className="absolute right-16 top-20 h-80 w-80 rounded-full bg-[#3B82F6]/10 blur-3xl" />
-        <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-[#1E3A8A]/10 blur-3xl" />
+        <div className="absolute right-16 top-20 h-80 w-80 rounded-full bg-[#2e7c9e]/10 blur-3xl" />
+        <div className="absolute bottom-10 left-10 h-72 w-72 rounded-full bg-[#4aa3c7]/10 blur-3xl" />
 
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-4 pb-8 sm:px-6 lg:grid-cols-2 lg:px-8">
           {/* Left */}
@@ -114,7 +114,7 @@ const Home = () => {
             <h1 className="mb-6 text-4xl font-bold leading-tight text-[#0F172A] sm:text-5xl lg:text-6xl">
               Trust & Clarity in
               <br />
-              <span className="bg-gradient-to-r from-[#1E3A8A] via-[#3B82F6] to-[#1E3A8A] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#2e7c9e] via-[#4aa3c7] to-[#2e7c9e] bg-clip-text text-transparent">
                 Diamond Trading
               </span>
             </h1>
@@ -128,7 +128,7 @@ const Home = () => {
             <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
               <Link
                 to="/register"
-                className="group inline-flex items-center gap-2 rounded-xl bg-[#1E3A8A] px-8 py-4 font-semibold text-white shadow-lg shadow-[#1E3A8A]/25 transition-all duration-300 hover:-translate-y-1 hover:bg-[#1E40AF] hover:shadow-xl hover:shadow-[#1E3A8A]/30"
+                className="btn-primary"
               >
                 Start Trading
                 <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -136,7 +136,7 @@ const Home = () => {
 
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-[#E2E8F0] bg-white px-8 py-4 font-semibold text-[#1E3A8A] transition-all duration-300 hover:border-[#1E3A8A] hover:bg-[#F8FAFC]"
+                className="btn-secondary"
               >
                 <Users className="h-5 w-5" />
                 Dealer Login
@@ -149,15 +149,15 @@ const Home = () => {
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.08)] transition-all duration-300 hover:border-[#3B82F6]/30 hover:shadow-[0_8px_30px_rgba(30,58,138,0.12)]"
+                className="card-turquoise-3d p-6"
               >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] text-[#1E3A8A]">
+                <div className="mb-4 flex h-10 w-14 items-center justify-center icon-rectangle-3d">
                   <stat.Icon className="h-6 w-6" />
                 </div>
-                <div className="mb-1 text-3xl font-bold text-[#0F172A]">
+                <div className="mb-1 text-3xl font-bold text-black">
                   {stat.value}
                 </div>
-                <div className="text-sm text-[#64748B]">{stat.label}</div>
+                <div className="text-sm text-[#475569]">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -166,21 +166,21 @@ const Home = () => {
         {/* Scroll - Static */}
         <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 sm:block">
           <div className="flex h-10 w-6 justify-center rounded-full border-2 border-[#CBD5E1] pt-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-[#3B82F6]" />
+            <div className="h-1.5 w-1.5 rounded-full bg-[#2e7c9e]" />
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="bg-[#F1F5F9]/70 px-4 py-24">
+      <section className="bg-[var(--bg-primary)] px-4 py-28">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-1.5 text-sm font-medium text-[#1E3A8A] shadow-sm">
-              <Sparkles className="h-4 w-4 text-[#3B82F6]" />
+          <div className="mb-20 text-center">
+            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#2e7c9e]/20 bg-white px-5 py-2 text-sm font-semibold text-[#2e7c9e]">
+              <Sparkles className="h-4 w-4 animate-icon-pulse" />
               Platform Features
             </span>
 
-            <h2 className="mb-4 text-3xl font-bold text-[#0F172A] md:text-4xl">
+            <h2 className="mb-4 text-3xl font-bold text-black md:text-4xl">
               Designed for Premium Diamond Businesses
             </h2>
 
@@ -194,19 +194,17 @@ const Home = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group relative overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-[0_4px_20px_rgba(15,23,42,0.05)] transition-all duration-300 hover:border-[#3B82F6]/30 hover:shadow-[0_12px_40px_rgba(30,58,138,0.1)]"
+                className="group relative overflow-hidden card-turquoise-3d p-8"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#DBEAFE]/0 via-[#DBEAFE]/0 to-[#EFF6FF]/80 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
                 <div className="relative z-10">
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] text-[#1E3A8A] transition-all duration-300 group-hover:from-[#1E3A8A] group-hover:to-[#3B82F6] group-hover:text-white">
+                  <div className="mb-6 flex h-12 w-16 items-center justify-center icon-rectangle-3d group-hover:bg-[var(--bg-primary)]">
                     <feature.Icon className="h-7 w-7" />
                   </div>
 
-                  <h3 className="mb-3 text-lg font-semibold text-[#0F172A]">
+                  <h3 className="mb-3 text-lg font-bold text-black">
                     {feature.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-[#64748B]">
+                  <p className="text-sm leading-relaxed text-[#475569]">
                     {feature.desc}
                   </p>
                 </div>
@@ -217,15 +215,15 @@ const Home = () => {
       </section>
 
       {/* Process */}
-      <section className="bg-white px-4 py-24 border-y border-[#E2E8F0]">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 text-center">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-[#F1F5F9] px-4 py-1.5 text-sm font-medium text-[#1E3A8A]">
-              <Clock className="h-4 w-4 text-[#3B82F6]" />
-              Process
+      <section className="bg-[var(--bg-primary)] px-4 py-28 border-y border-[#2e7c9e]/10 relative overflow-hidden">
+        <div className="mx-auto max-w-7xl relative z-10">
+          <div className="mb-20 text-center">
+            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#2e7c9e]/20 bg-white px-5 py-2 text-sm font-semibold text-[#2e7c9e]">
+              <Clock className="h-4 w-4 animate-spin-slow" />
+              How the Platform Works
             </span>
 
-            <h2 className="mb-4 text-3xl font-bold text-[#0F172A] md:text-4xl">
+            <h2 className="mb-4 text-3xl font-bold text-black md:text-4xl">
               How the Platform Works
             </h2>
 
@@ -235,26 +233,24 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="relative grid gap-8 md:grid-cols-3">
-            <div className="absolute left-1/4 right-1/4 top-24 hidden h-px bg-gradient-to-r from-transparent via-[#CBD5E1] to-transparent md:block" />
-
+          <div className="relative grid gap-8 md:grid-cols-3 pt-10">
             {steps.map((item, index) => (
-              <div key={index} className="group relative">
-                <div className="absolute -top-3 left-0 text-7xl font-bold text-[#DBEAFE]/60 transition-colors duration-300 group-hover:text-[#DBEAFE]">
+              <div key={index} className="group relative card-turquoise-3d p-8 pt-16">
+                <div className="absolute top-4 right-6 text-6xl font-black text-[#2e7c9e]/10 transition-colors duration-300 group-hover:text-[#2e7c9e]/20">
                   {item.step}
                 </div>
 
-                <div className="relative pt-16">
-                  <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white shadow-lg shadow-[#1E3A8A]/25">
+                <div className="relative">
+                  <div className="mb-6 flex h-14 w-18 items-center justify-center icon-rectangle-3d">
                     <item.Icon className="h-8 w-8" />
                   </div>
 
-                  <h3 className="mb-3 text-xl font-bold text-[#0F172A]">
+                  <h3 className="mb-3 text-xl font-bold text-black">
                     {item.title}
                   </h3>
-                  <p className="leading-relaxed text-[#64748B]">{item.desc}</p>
+                  <p className="leading-relaxed text-[#475569]">{item.desc}</p>
 
-                  <div className="mt-6 h-1 w-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#DBEAFE]" />
+                  <div className="mt-6 h-1 w-full rounded-full bg-[#2e7c9e] opacity-20 group-hover:opacity-50" />
                 </div>
               </div>
             ))}
@@ -263,11 +259,11 @@ const Home = () => {
       </section>
 
       {/* Security */}
-      <section className="overflow-hidden bg-[#F1F5F9]/70 px-4 py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
+      <section className="bg-[var(--bg-primary)] px-4 py-28 border-y border-[#2e7c9e]/10">
+        <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-2">
           <div>
-            <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-1.5 text-sm font-medium text-[#1E3A8A] shadow-sm">
-              <Shield className="h-4 w-4 text-[#3B82F6]" />
+            <span className="mb-8 inline-flex items-center gap-2 rounded-full glass-morphism px-5 py-2 text-sm font-semibold text-[#2e7c9e]">
+              <Shield className="h-4 w-4 animate-bounce-subtle" />
               Security First
             </span>
 
@@ -284,12 +280,12 @@ const Home = () => {
               {securityFeatures.map((security, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-sm transition-all duration-300 hover:border-[#3B82F6]/30 hover:shadow-md"
+                  className="flex items-center gap-3 card-turquoise-3d p-4 bg-white/50"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] text-[#1E3A8A]">
+                  <div className="flex h-9 w-13 items-center justify-center icon-rectangle-3d">
                     <security.Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-medium text-[#0F172A]">
+                  <span className="text-sm font-bold text-black">
                     {security.label}
                   </span>
                 </div>
@@ -300,10 +296,10 @@ const Home = () => {
           {/* Shield Visual */}
           <div className="hidden justify-center lg:flex">
             <div className="relative">
-              <div className="absolute inset-0 h-80 w-80 rounded-full bg-[#1E3A8A]/10 blur-3xl" />
-              <div className="relative flex h-80 w-80 items-center justify-center rounded-full border border-[#E2E8F0] bg-gradient-to-br from-[#DBEAFE] to-white shadow-[0_20px_60px_rgba(30,58,138,0.12)]">
-                <div className="absolute inset-5 rounded-full border border-dashed border-[#3B82F6]/30" />
-                <div className="flex h-56 w-56 items-center justify-center rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] shadow-[0_10px_40px_rgba(30,58,138,0.25)]">
+              <div className="absolute inset-0 h-80 w-80 rounded-full bg-[#2e7c9e]/10 blur-3xl" />
+              <div className="relative flex h-80 w-80 items-center justify-center rounded-full border border-[#2e7c9e] bg-gradient-to-br from-[#b8e2f2] to-white shadow-[0_20px_60px_rgba(46,124,158,0.12)]">
+                <div className="absolute inset-5 rounded-full border border-dashed border-[#2e7c9e]/30" />
+                <div className="flex h-56 w-56 items-center justify-center rounded-full bg-gradient-to-br from-[#2e7c9e] to-[#4aa3c7] shadow-[0_10px_40px_rgba(46,124,158,0.25)]">
                   <Shield className="h-24 w-24 text-white" />
                 </div>
               </div>
@@ -313,19 +309,19 @@ const Home = () => {
       </section>
 
       {/* CTA */}
-      <section className="bg-[#F8FAFC] px-4 py-24 border-t border-[#E2E8F0]">
+      <section className="bg-[var(--bg-primary)] px-4 py-24 border-t border-[#2e7c9e]/10">
         <div className="mx-auto max-w-5xl">
-          <div className="relative overflow-hidden rounded-3xl border border-[#E2E8F0] bg-gradient-to-br from-[#EFF6FF] to-white p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,0.08)] md:p-16">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_20%),radial-gradient(circle_at_bottom_left,rgba(30,58,138,0.05),transparent_20%)]" />
+          <div className="relative overflow-hidden rounded-3xl border-2 border-[#2e7c9e] card-turquoise-3d p-10 text-center md:p-16">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(46,124,158,0.08),transparent_20%),radial-gradient(circle_at_bottom_left,rgba(46,124,158,0.05),transparent_20%)]" />
 
             <div className="relative z-10">
               <div className="mb-4 flex justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#DBEAFE] to-[#EFF6FF] text-[#1E3A8A]">
+                <div className="flex h-14 w-18 items-center justify-center icon-rectangle-3d">
                   <Diamond className="h-8 w-8" />
                 </div>
               </div>
 
-              <h2 className="mb-4 text-3xl font-bold text-[#0F172A] md:text-4xl">
+              <h2 className="mb-4 text-3xl font-bold text-black md:text-4xl">
                 Ready to Elevate Your Diamond Business?
               </h2>
 
@@ -337,7 +333,7 @@ const Home = () => {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link
                   to="/register"
-                  className="group inline-flex items-center gap-2 rounded-xl bg-[#1E3A8A] px-8 py-4 font-semibold text-white shadow-lg shadow-[#1E3A8A]/25 transition-all duration-300 hover:-translate-y-1 hover:bg-[#1E40AF] hover:shadow-xl hover:shadow-[#1E3A8A]/30"
+                  className="btn-primary"
                 >
                   Apply for Membership
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -345,7 +341,7 @@ const Home = () => {
 
                 <a
                   href="#"
-                  className="rounded-xl border-2 border-[#E2E8F0] bg-white px-8 py-4 font-semibold text-[#1E3A8A] transition-all duration-300 hover:border-[#1E3A8A] hover:bg-[#F8FAFC]"
+                  className="btn-secondary"
                 >
                   Learn More
                 </a>

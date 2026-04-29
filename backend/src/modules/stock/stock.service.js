@@ -31,6 +31,8 @@ const FIELD_MAPPINGS = {
     "reference",
   ],
 
+  party: ["party", "supplier", "vendor", "source", "party name", "party_name"],
+
   certificate_number: [
     "certificate number",
     "cert no",
@@ -268,6 +270,8 @@ const FIELD_MAPPINGS = {
   // Special features
 
   heart_arrow: ["heart arrow", "hearts arrow", "h&a"],
+
+  no_bgm: ["no bgm", "no bg", "nobgm", "nobg"],
 
   star_length: ["star length"],
 
@@ -539,6 +543,7 @@ const VALUE_MAPPINGS = {
   // Cut, Polish, Symmetry mappings (short codes and full words to full names)
   grading: {
     // Full word variations → full name
+    "8X": "8X",
     EXCELLENT: "EXCELLENT",
     "VERY GOOD": "VERY GOOD",
     VERYGOOD: "VERY GOOD",
@@ -703,6 +708,8 @@ const convertToDbFormat = (mappedData, userId = null) => {
     user_id: userId,
 
     stock_id: parseString(mappedData.stock_id)?.toUpperCase(),
+
+    party: parseString(mappedData.party),
 
     certificate_number: parseString(mappedData.certificate_number),
 
@@ -940,6 +947,8 @@ const convertToDbFormat = (mappedData, userId = null) => {
 
     heart_arrow: parseBoolean(mappedData.heart_arrow),
 
+    no_bgm: parseBoolean(mappedData.no_bgm),
+
     star_length: parseString(mappedData.star_length),
 
     laser_description: parseString(mappedData.laser_description),
@@ -1155,22 +1164,22 @@ export const bulkUpload = async (stockDataArray, userId = null, importType = nul
       if (userId) {
         const quota = await getSubscriptionRemaining(client, userId);
         if (quota.noSubscription) {
-          throw new Error("No active subscription found. Cannot add stock.");
-        }
+          throw new Error("No active subscription found. Please subscribe to a plan to add stock.");
+        } else {
+          const newRows = uniqueRows.filter(
+            (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
+          );
+          const existingRows = uniqueRows.filter((r) =>
+            existingStockIds.has(r.stock_id.toUpperCase()),
+          );
 
-        const newRows = uniqueRows.filter(
-          (r) => !existingStockIds.has(r.stock_id.toUpperCase()),
-        );
-        const existingRows = uniqueRows.filter((r) =>
-          existingStockIds.has(r.stock_id.toUpperCase()),
-        );
-
-        if (newRows.length > quota.remaining) {
-          const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
-          skippedDueToLimitCount = newRows.length - allowedNewRows.length;
-          uniqueRows = [...existingRows, ...allowedNewRows];
-          limitReached = true;
-          limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
+          if (newRows.length > quota.remaining) {
+            const allowedNewRows = newRows.slice(0, Math.max(0, quota.remaining));
+            skippedDueToLimitCount = newRows.length - allowedNewRows.length;
+            uniqueRows = [...existingRows, ...allowedNewRows];
+            limitReached = true;
+            limitMessage = `Subscription limit reached. Only ${allowedNewRows.length} out of ${newRows.length} new stocks were added. ${skippedDueToLimitCount} stocks were skipped. Please upgrade your subscription plan to add more.`;
+          }
         }
       }
 
@@ -1257,7 +1266,7 @@ export const createStock = async (stockData, userId = null) => {
     if (userId) {
       const quota = await getSubscriptionRemaining(pool, userId);
       if (quota.noSubscription) {
-        throw new Error("No active subscription found. Cannot add stock.");
+        throw new Error("No active subscription found. Please subscribe to a plan to add stock.");
       }
       if (quota.remaining <= 0) {
         throw new Error(`Subscription limit reached. Your stock limit of ${quota.totalLimit} is fully used. Please upgrade your subscription plan.`);
@@ -1318,11 +1327,51 @@ export const deleteStock = async (id) => {
   }
 
   const result = await stockRepo.deleteStock(id);
-  
+
   if (existingStock.user_id) {
     await updateSubscriptionUsage(pool, existingStock.user_id, -1);
   }
-  
+
+  return result;
+};
+
+export const toggleHold = async (id, userId) => {
+  const result = await stockRepo.toggleHold(id, userId);
+  if (!result) {
+    throw new Error("Stock not found or you don't have permission");
+  }
+  return result;
+};
+
+export const sellStock = async (id, userId, ip) => {
+  const result = await stockRepo.sellStock(id, userId, ip);
+  if (!result) {
+    throw new Error("Stock not found or you don't have permission");
+  }
+  // Decrement subscription usage since stock is deleted from diamond_stock
+  if (userId) {
+    await updateSubscriptionUsage(pool, userId, -1);
+  }
+  return result;
+};
+
+export const bulkToggleHold = async (ids, userId) => {
+  const result = await stockRepo.bulkToggleHold(ids, userId);
+  if (!result || result.length === 0) {
+    throw new Error("No stocks found or you don't have permission");
+  }
+  return result;
+};
+
+export const bulkSellStock = async (ids, userId, ip) => {
+  const result = await stockRepo.bulkSellStock(ids, userId, ip);
+  if (result === 0) {
+    throw new Error("No stocks found or you don't have permission");
+  }
+  // Decrement subscription usage by the number of deleted items
+  if (userId) {
+    await updateSubscriptionUsage(pool, userId, -result);
+  }
   return result;
 };
 
@@ -1338,6 +1387,6 @@ export const getFieldMapping = () => {
   };
 };
 
-export const getFilterOptions = async () => {
-  return await stockRepo.getFilterOptions();
+export const getFilterOptions = async (userId = null) => {
+  return await stockRepo.getFilterOptions(userId);
 };

@@ -36,7 +36,16 @@ const UserManagement = () => {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchValue, setSearchValue] = useState("");
+
+  // Debounce search term to improve performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -64,20 +73,10 @@ const UserManagement = () => {
     return 0;
   });
 
-  // Filter users
-  const filteredUsers = sortedUsers.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || user.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
   // Pagination logic
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(
+  const paginatedUsers = sortedUsers.slice(
     startIndex,
     startIndex + itemsPerPage,
   );
@@ -220,7 +219,7 @@ const UserManagement = () => {
         setPlanUser(null);
         setSelectedPlanId("");
         // Refresh users list
-        await fetchUsers();
+        await fetchUsers(searchTerm);
         // Update selectedUser to reflect new plan data immediately
         const updatedUserData = response.user;
         if (updatedUserData && selectedUser && selectedUser.id === updatedUserId) {
@@ -229,10 +228,10 @@ const UserManagement = () => {
             planName: updatedUserData.planName || null,
             planExpiry: updatedUserData.planExpiry
               ? new Date(updatedUserData.planExpiry).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
               : null,
             hasActivePlan: !!updatedUserData.planName && !!updatedUserData.planExpiry && new Date(updatedUserData.planExpiry) > new Date(),
           });
@@ -254,17 +253,17 @@ const UserManagement = () => {
 
   // Fetch users from database
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    fetchUsers(searchTerm);
+  }, [searchTerm]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (search = "") => {
     try {
       setLoading(true);
-      const response = await authAPI.getAllUsers();
+      const params = search ? { search } : {};
+      const response = await authAPI.getAllUsers(params);
       if (response.success) {
         // Format users for display - filter out admin users (only show users with role 'user')
         const formattedUsers = response.users
-          .filter((user) => user.role === "user")
           .map((user) => ({
             id: user.id,
             name: user.name,
@@ -276,6 +275,7 @@ const UserManagement = () => {
             gst: user.gst,
             document: user.document,
             type: user.type || [],
+            role: user.role,
             status: user.isActive ? "active" : "inactive",
             joined: new Date(user.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -316,7 +316,7 @@ const UserManagement = () => {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus]);
+  }, [searchTerm]);
 
   const toggleUserStatus = async (userId) => {
     const user = users.find((u) => u.id === userId);
@@ -331,9 +331,9 @@ const UserManagement = () => {
         setUsers((prev) =>
           prev.map((u) => {
             if (u.id === userId) {
-              return { 
-                ...u, 
-                status: newIsActive ? "active" : "inactive" 
+              return {
+                ...u,
+                status: newIsActive ? "active" : "inactive"
               };
             }
             return u;
@@ -383,27 +383,20 @@ const UserManagement = () => {
       >
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              autoComplete="off"
-              icon={<Search className="w-5 h-5 text-[#1E3A8A]" />}
-            />
-          </div>
+          <form autoComplete="off" className="w-full">
+            <div className="input-with-icon w-full">
+              <Search className="icon w-5 h-5 text-[#1E3A8A]" />
+              <input
+                type="text"
+                placeholder="Search by Name, Email or Company..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full input-field"
+              />
+            </div>
+          </form>
 
-          {/* Status Filter */}
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-[#E2E8F0] focus:border-[#3B82F6] focus:ring-2 focus:ring-[#DBEAFE] outline-none transition-all bg-white text-[#0F172A]"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+
         </div>
       </motion.div>
 
@@ -428,16 +421,30 @@ const UserManagement = () => {
                     <SortIcon columnKey="name" />
                   </div>
                 </th>
+                <th
+                  onClick={() => handleSort("role")}
+                  className="px-4 py-4 text-left text-xs font-bold text-[#1E3A8A] uppercase tracking-wider cursor-pointer hover:bg-[#DBEAFE] transition-colors sticky top-0 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-[#1E3A8A]" />
+                    <span>Role</span>
+                    <SortIcon columnKey="role" />
+                  </div>
+                </th>
                 <th className="px-4 py-4 text-left text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-[#F59E0B]" />
                     <span>Phone</span>
                   </div>
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
+                <th
+                  onClick={() => handleSort("stockCount")}
+                  className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider cursor-pointer hover:bg-[#DBEAFE] transition-colors sticky top-0 group"
+                >
                   <div className="flex items-center justify-center gap-2">
                     <Package className="w-4 h-4 text-[#1E3A8A]" />
                     <span>Stock</span>
+                    <SortIcon columnKey="stockCount" />
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
@@ -446,10 +453,14 @@ const UserManagement = () => {
                     <span>Password</span>
                   </div>
                 </th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
+                <th
+                  onClick={() => handleSort("status")}
+                  className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider cursor-pointer hover:bg-[#DBEAFE] transition-colors sticky top-0 group"
+                >
                   <div className="flex items-center justify-center gap-2">
-                    <Edit2 className="w-4 h-4 text-[#F59E0B]" />
-                    <span>Actions</span>
+                    <CheckCircle className="w-4 h-4 text-[#F59E0B]" />
+                    <span>Status</span>
+                    <SortIcon columnKey="status" />
                   </div>
                 </th>
                 <th className="px-4 py-4 text-center text-xs font-bold text-[#1E3A8A] uppercase tracking-wider sticky top-0">
@@ -463,192 +474,136 @@ const UserManagement = () => {
             <tbody className="divide-y divide-[#E2E8F0]">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-16 text-center">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center gap-4"
-                    >
-                      <div className="relative">
-                        <Loader2 className="w-10 h-10 text-[#1E3A8A] animate-spin" />
-                      </div>
+                  <td colSpan="7" className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <Loader2 className="w-10 h-10 text-[#1E3A8A] animate-spin" />
                       <p className="text-[#64748B] font-medium">Loading users...</p>
-                    </motion.div>
+                    </div>
                   </td>
                 </tr>
-              ) : paginatedUsers.length === 0 ? (
+              ) : sortedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-16 text-center">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center gap-3"
-                    >
+                  <td colSpan="7" className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
                       <div className="w-16 h-16 rounded-full bg-[#DBEAFE] flex items-center justify-center">
                         <Search className="w-8 h-8 text-[#1E3A8A]" />
                       </div>
                       <p className="text-[#64748B] font-medium">No users found</p>
-                    </motion.div>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                <AnimatePresence mode="popLayout">
-                  {paginatedUsers.map((user, index) => (
-                    <motion.tr
-                      key={user.id}
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit={{ opacity: 0, x: -100 }}
-                      layout
-                      className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
-                    >
-                      {/* Name */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <motion.div
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#1E3A8A]/70 flex items-center justify-center text-white text-sm font-semibold shadow-md shadow-[#DBEAFE] flex-shrink-0"
-                          >
-                            {user.avatar}
-                          </motion.div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-[#1E3A8A] truncate">
-                              {user.name}
-                            </p>
-                            <p className="text-xs text-[#64748B] truncate">
-                              {user.email}
-                            </p>
-                          </div>
+                paginatedUsers.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
+                  >
+                    {/* Name */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1E3A8A] to-[#1E3A8A]/70 flex items-center justify-center text-white text-sm font-semibold shadow-md shadow-[#DBEAFE] flex-shrink-0">
+                          {user.avatar}
                         </div>
-                      </td>
-                      {/* Phone */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-[#F59E0B]" />
-                          <p className="text-sm text-[#64748B]">
-                            {user.phone || "N/A"}
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#1E3A8A] truncate">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-[#64748B] truncate">
+                            {user.email}
                           </p>
                         </div>
-                      </td>
-                      {/* Stock Count */}
-                      <td className="px-4 py-4">
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] rounded-lg border border-[#E2E8F0]">
-                            <Package className="w-3.5 h-3.5 text-[#1E3A8A]" />
-                            <span className="text-sm font-semibold text-[#1E3A8A]">
-                              {user.stockCount}
-                            </span>
-                            <span className="text-xs text-[#64748B]">
-                              / {user.stockLimit || 0}
-                            </span>
-                          </div>
-                          {user.stockLimit > 0 && (
-                            <div className="w-16 h-1 mt-1 bg-[#E2E8F0] rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full ${user.stockCount >= user.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
-                                style={{ width: `${Math.min((user.stockCount / user.stockLimit) * 100, 100)}%` }}
-                              />
-                            </div>
-                          )}
+                      </div>
+                    </td>
+                    {/* Role */}
+                    <td className="px-4 py-4">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${user.role === 'Seller' ? 'bg-[#DBEAFE] text-[#1E3A8A]' : 'bg-[#FEF3C7] text-[#92400E]'}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    {/* Phone */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-[#F59E0B]" />
+                        <p className="text-sm text-[#64748B]">
+                          {user.phone || "N/A"}
+                        </p>
+                      </div>
+                    </td>
+                    {/* Stock Count */}
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#F1F5F9] rounded-lg border border-[#E2E8F0]">
+                          <Package className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                          <span className="text-sm font-semibold text-[#1E3A8A]">
+                            {user.stockCount}
+                          </span>
+                          <span className="text-xs text-[#64748B]">
+                            / {user.stockLimit || 0}
+                          </span>
                         </div>
-                      </td>
-                      {/* Password */}
-                      <td className="px-4 py-4 text-center">
-                        {revealedPassword === user.id ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <code className="px-2 py-1 bg-[#FBBF24]/20 text-[#1E3A8A] rounded text-xs font-mono border border-[#FBBF24]/30">
-                              {user.password || "N/A"}
-                            </code>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => setRevealedPassword(null)}
-                              className="p-1 text-[#94A3B8] hover:text-[#1E3A8A]"
-                            >
-                              <EyeOff className="w-4 h-4" />
-                            </motion.button>
+                        {user.stockLimit > 0 && (
+                          <div className="w-16 h-1 mt-1 bg-[#E2E8F0] rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${user.stockCount >= user.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
+                              style={{ width: `${Math.min((user.stockCount / user.stockLimit) * 100, 100)}%` }}
+                            />
                           </div>
-                        ) : (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewPassword(user)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/80 text-white text-xs font-medium rounded-lg hover:from-[#1E3A8A]/90 hover:to-[#1E3A8A]/70 transition-all shadow-sm shadow-[#DBEAFE]"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            View
-                          </motion.button>
                         )}
-                      </td>
-                      {/* Actions */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center justify-center">
-                          {/* Toggle Status Button */}
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => toggleUserStatus(user.id)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all shadow-sm ${
-                              user.status === "active"
-                                ? "bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/80 text-white hover:from-[#1E3A8A]/90 hover:to-[#1E3A8A]/70 shadow-[#DBEAFE]"
-                                : "bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white hover:from-[#D97706] hover:to-[#B45309] shadow-[#FBBF24]/30"
-                            }`}
-                            title={user.status === "active" ? "Deactivate User" : "Activate User"}
+                      </div>
+                    </td>
+                    {/* Password */}
+                    <td className="px-4 py-4 text-center">
+                      {revealedPassword === user.id ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <code className="px-2 py-1 bg-[#FBBF24]/20 text-[#1E3A8A] rounded text-xs font-mono border border-[#FBBF24]/30">
+                            {user.password || "N/A"}
+                          </code>
+                          <button
+                            onClick={() => setRevealedPassword(null)}
+                            className="p-1 text-[#94A3B8] hover:text-[#1E3A8A]"
                           >
-                            {user.status === "active" ? (
-                              <>
-                                <XCircle className="w-3.5 h-3.5" />
-                                Deactivate
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Activate
-                              </>
-                            )}
-                          </motion.button>
+                            <EyeOff className="w-4 h-4" />
+                          </button>
                         </div>
-                      </td>
-                      {/* Details */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center justify-center">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setShowUserModal(true);
-                            }}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white text-sm font-medium rounded-lg hover:from-[#F59E0B] hover:to-[#D97706] transition-all shadow-md shadow-[#FBBF24]/30"
-                          >
-                            <Info className="w-4 h-4" />
-                            Details
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
+                      ) : (
+                        <button
+                          onClick={() => handleViewPassword(user)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/80 text-white text-xs font-medium rounded-lg hover:from-[#1E3A8A]/90 hover:to-[#1E3A8A]/70 transition-all shadow-sm shadow-[#DBEAFE]"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                      )}
+                    </td>
+                    {/* Status */}
+                    <td className="px-4 py-4">
+                      <div className="flex justify-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {user.status}
+                        </span>
+                      </div>
+                    </td>
+                    {/* Details */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center">
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowUserModal(true);
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white text-sm font-medium rounded-lg hover:from-[#F59E0B] hover:to-[#D97706] transition-all shadow-md shadow-[#FBBF24]/30"
+                        >
+                          <Info className="w-4 h-4" />
+                          Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
-
-        {filteredUsers.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-12 text-center"
-          >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#DBEAFE] flex items-center justify-center">
-              <Search className="w-8 h-8 text-[#1E3A8A]" />
-            </div>
-            <p className="text-[#64748B] font-medium">
-              No users found matching your criteria
-            </p>
-          </motion.div>
-        )}
 
         {/* Stats & Pagination */}
         <div className="px-4 sm:px-6 py-4 border-t border-[#E2E8F0] bg-gradient-to-r from-[#DBEAFE]/30 to-transparent">
@@ -665,9 +620,9 @@ const UserManagement = () => {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[#1E3A8A]/60">
-              Showing {filteredUsers.length > 0 ? startIndex + 1 : 0} -{" "}
-              {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of{" "}
-              {filteredUsers.length} users
+              Showing {sortedUsers.length > 0 ? startIndex + 1 : 0} -{" "}
+              {Math.min(startIndex + itemsPerPage, sortedUsers.length)} of{" "}
+              {sortedUsers.length} users
             </p>
           </div>
 
@@ -719,11 +674,10 @@ const UserManagement = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                          currentPage === page
-                            ? "bg-[#1E3A8A] text-white"
-                            : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                        }`}
+                        className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${currentPage === page
+                          ? "bg-[#1E3A8A] text-white"
+                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                          }`}
                       >
                         {page}
                       </motion.button>
@@ -737,11 +691,10 @@ const UserManagement = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(1)}
-                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === 1
-                          ? "bg-[#1E3A8A] text-white"
-                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                      }`}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${currentPage === 1
+                        ? "bg-[#1E3A8A] text-white"
+                        : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                        }`}
                     >
                       1
                     </motion.button>
@@ -764,11 +717,10 @@ const UserManagement = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => setCurrentPage(page)}
-                          className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                            currentPage === page
-                              ? "bg-[#1E3A8A] text-white"
-                              : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                          }`}
+                          className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${currentPage === page
+                            ? "bg-[#1E3A8A] text-white"
+                            : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                            }`}
                         >
                           {page}
                         </motion.button>
@@ -782,11 +734,10 @@ const UserManagement = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setCurrentPage(totalPages)}
-                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
-                        currentPage === totalPages
-                          ? "bg-[#1E3A8A] text-white"
-                          : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
-                      }`}
+                      className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${currentPage === totalPages
+                        ? "bg-[#1E3A8A] text-white"
+                        : "text-[#1E3A8A]/70 hover:bg-[#DBEAFE]/50"
+                        }`}
                     >
                       {totalPages}
                     </motion.button>
@@ -864,11 +815,10 @@ const UserManagement = () => {
                             : "active",
                       });
                     }}
-                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg ${
-                      selectedUser.status === "active"
-                        ? "bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white shadow-[#FBBF24]/30 hover:from-[#F59E0B] hover:to-[#D97706]"
-                        : "bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/80 text-white shadow-[#DBEAFE] hover:from-[#1E3A8A]/90 hover:to-[#1E3A8A]/70"
-                    }`}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-lg ${selectedUser.status === "active"
+                      ? "bg-gradient-to-r from-[#FBBF24] to-[#F59E0B] text-white shadow-[#FBBF24]/30 hover:from-[#F59E0B] hover:to-[#D97706]"
+                      : "bg-gradient-to-r from-[#1E3A8A] to-[#1E3A8A]/80 text-white shadow-[#DBEAFE] hover:from-[#1E3A8A]/90 hover:to-[#1E3A8A]/70"
+                      }`}
                   >
                     {selectedUser.status === "active"
                       ? "Deactivate"
@@ -952,6 +902,20 @@ const UserManagement = () => {
                     </div>
                     <p className="font-semibold text-[#1E3A8A]">
                       {selectedUser.joined}
+                    </p>
+                  </div>
+                  {/* Status */}
+                  <div className="bg-[#DBEAFE]/30 rounded-xl p-4 border border-[#E2E8F0]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-8 h-8 rounded-lg ${selectedUser.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} flex items-center justify-center`}>
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-medium text-[#64748B] uppercase">
+                        Account Status
+                      </p>
+                    </div>
+                    <p className={`font-semibold uppercase ${selectedUser.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+                      {selectedUser.status}
                     </p>
                   </div>
 
@@ -1076,8 +1040,8 @@ const UserManagement = () => {
                     <div className="mt-2 h-2 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ 
-                          width: `${Math.min((selectedUser.stockCount / (selectedUser.stockLimit || 1)) * 100, 100)}%` 
+                        animate={{
+                          width: `${Math.min((selectedUser.stockCount / (selectedUser.stockLimit || 1)) * 100, 100)}%`
                         }}
                         className={`h-full rounded-full ${selectedUser.stockCount >= selectedUser.stockLimit ? 'bg-[#EF4444]' : 'bg-[#3B82F6]'}`}
                       />
@@ -1153,8 +1117,8 @@ const UserManagement = () => {
                 <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
                   Admin Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
+                <div className="relative input-with-icon">
+                  <Lock className="icon absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#94A3B8]" />
                   <input
                     type="password"
                     value={adminPassword}
@@ -1163,7 +1127,7 @@ const UserManagement = () => {
                       e.key === "Enter" && verifyAndShowPassword()
                     }
                     placeholder="Enter your admin password"
-                    className="w-full pl-10 pr-4 py-3 border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/20 focus:border-[#1E3A8A] text-[#1E3A8A] placeholder:text-[#94A3B8]"
+                    className="input-field"
                     autoFocus
                     autoComplete="off"
                   />

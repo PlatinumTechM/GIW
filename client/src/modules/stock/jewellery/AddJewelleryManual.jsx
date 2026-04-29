@@ -145,7 +145,14 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+        const updatedData = { ...prev, [name]: value };
+        // Sync type with diamond_type
+        if (name === 'diamond_type') {
+            updatedData.type = value;
+        }
+        return updatedData;
+    });
   }, []);
 
   const handleSubmit = async (e) => {
@@ -246,7 +253,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
       </div>
 
       {/* Tabs Sticky - Sticky for quick navigation during scroll */}
-      <div className="max-w-7xl mx-auto px-4 mb-8 sticky top-[64px] z-20 bg-[#F8FAFC]/80 backdrop-blur-md py-2">
+      <div className="max-w-7xl mx-auto px-4 mb-8 py-2">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -359,7 +366,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
                     name="diamond_type"
                     value={formData.diamond_type}
                     onChange={handleInputChange}
-                    options={["NATURAL", "LAB GROWN"]}
+                    options={["NATURAL", "LABGROWN"]}
                   />
                   <InputField
                     label="Stone Shape"

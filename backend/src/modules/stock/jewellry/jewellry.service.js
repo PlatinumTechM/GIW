@@ -27,3 +27,7 @@ export const deleteJewellry = async (id) => {
 export const getFilterOptions = async (userId) => {
   return await jewellryRepo.getFilterOptions(userId);
 };
+
+export const getPublicFilterOptions = async () => {
+  return await jewellryRepo.getPublicFilterOptions();
+};

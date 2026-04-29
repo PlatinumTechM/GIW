@@ -25,7 +25,8 @@ export const verifyAdminPassword = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await adminService.getAllUsers();
+    const { search } = req.query;
+    const users = await adminService.getAllUsers(search);
 
     res.status(200).json({
       success: true,

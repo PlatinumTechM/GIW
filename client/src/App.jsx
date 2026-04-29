@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AISearchChat from "@/components/AISearchChat";
 
 const App = () => {
   const location = useLocation();
@@ -9,16 +10,19 @@ const App = () => {
   const isAuthPage = ["/login", "/register", "/forgot-password"].includes(
     location.pathname,
   );
-  // Check if we're on admin pages to hide navbar and footer
-  const isAdminPage = location.pathname.startsWith("/admin");
+  // Check if we're on admin or share pages to hide navbar and footer
+  const isSpecialPage = location.pathname.startsWith("/admin") || location.pathname.startsWith("/share");
 
   return (
     <>
-      {!isAdminPage && <Navbar />}
+      {!isSpecialPage && !isAuthPage && <Navbar />}
       <main>
         <Outlet />
       </main>
-      {!isAuthPage && !isAdminPage && <Footer />}
+      {!isAuthPage && !isSpecialPage && <Footer />}
+      
+      {/* Global AI Search Sticky Component */}
+      {!isSpecialPage && <AISearchChat />}
     </>
   );
 };

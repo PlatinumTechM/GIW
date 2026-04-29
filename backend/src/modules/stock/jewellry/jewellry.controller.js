@@ -95,3 +95,77 @@ export const getFilters = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Public storefront endpoints (no auth required)
+const buildPublicFilters = (req, typeFilter) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+  const sortBy = req.query.sortBy || "created_at DESC";
+  const ensureArray = (name) => {
+    const val = req.query[name] || req.query[`${name}[]`];
+    if (!val) return [];
+    return Array.isArray(val) ? val : [val];
+  };
+
+  return {
+    page, limit, sortBy,
+    filters: {
+      categories: ensureArray('categories'),
+      materials: ensureArray('materials'),
+      shapes: ensureArray('shapes'),
+      colors: ensureArray('colors'),
+      clarities: ensureArray('clarities'),
+      status: req.query.status,
+      typeFilter,
+      weight: req.query.weight,
+      diamond_weight: req.query.diamond_weight,
+      totalWeightFrom: req.query.totalWeightFrom,
+      totalWeightTo: req.query.totalWeightTo,
+      priceFrom: req.query.priceFrom,
+      priceTo: req.query.priceTo,
+      stock_id: req.query.stock_id,
+      search: req.query.search
+    }
+  };
+};
+
+export const getAllNaturalPublic = async (req, res) => {
+  try {
+    const { page, limit, sortBy, filters } = buildPublicFilters(req, "natural");
+    const result = await jewellryService.getAllJewellry(page, limit, sortBy, filters);
+    res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getAllLabGrownPublic = async (req, res) => {
+  try {
+    const { page, limit, sortBy, filters } = buildPublicFilters(req, "lab-grown");
+    const result = await jewellryService.getAllJewellry(page, limit, sortBy, filters);
+    res.status(200).json({ success: true, data: result.items, pagination: result.pagination });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getByIdPublic = async (req, res) => {
+  try {
+    const item = await jewellryService.getJewellryById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Jewellry not found" });
+    }
+    res.status(200).json({ success: true, data: item });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getFiltersPublic = async (req, res) => {
+  try {
+    const filters = await jewellryService.getPublicFilterOptions();
+    res.status(200).json({ success: true, data: filters });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

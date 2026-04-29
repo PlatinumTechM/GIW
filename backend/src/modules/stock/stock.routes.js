@@ -38,8 +38,10 @@ router.get("/filters", authenticate, stockController.getFilterOptions);
 
 router.get("/fields/mapping", authenticate, stockController.getFieldMapping);
 
-// Get single stock by id - MUST be after all specific routes
+// Get single stock by id (public for sharing) - MUST be after all specific routes
+router.get("/public/:id", stockController.getStockById);
 
+// Get single stock by id - MUST be after all specific routes
 router.get("/:id", authenticate, stockController.getStockById);
 
 // Create single stock
@@ -53,5 +55,13 @@ router.put("/:id", authenticate, stockController.updateStock);
 // Delete stock
 
 router.delete("/:id", authenticate, stockController.deleteStock);
+
+// Toggle Hold status
+router.patch("/bulk-hold", authenticate, stockController.bulkToggleHold);
+router.patch("/:id/hold", authenticate, stockController.toggleHold);
+
+// Mark as sold
+router.post("/bulk-sell", authenticate, stockController.bulkSellStock);
+router.post("/:id/sell", authenticate, stockController.sellStock);
 
 export { router as stockRoutes };

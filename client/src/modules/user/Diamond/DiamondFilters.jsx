@@ -1,9 +1,12 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   ChevronDown,
   Sparkles,
   ChevronDown as ChevronDownIcon,
+  Search,
 } from "lucide-react";
+import { stockAPI } from "../../../services/api.js";
 
 // Constants
 export const shapes = [
@@ -80,8 +83,9 @@ export const clarities = [
   "I1",
   "I2",
 ];
-export const cuts = ["Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
+export const cuts = ["8X", "Ideal", "Excellent", "Very Good", "Good", "Fair", "Poor"];
 export const polishes = [
+  "8X",
   "Ideal",
   "Excellent",
   "Very Good",
@@ -90,6 +94,7 @@ export const polishes = [
   "Poor",
 ];
 export const symmetries = [
+  "8X",
   "Ideal",
   "Excellent",
   "Very Good",
@@ -117,6 +122,10 @@ export const fluorescenceOptions = [
   "Very Strong",
 ];
 
+export const growthTypes = ["CVD", "HPHT", "Other"];
+
+export const treatmentOptions = ["Treated", "Drilling", "Filling", "Other"];
+
 // FilterSection Component
 const FilterSection = ({
   title,
@@ -132,17 +141,19 @@ const FilterSection = ({
     >
       <h3 className="font-semibold text-[#0F172A]">{title}</h3>
       <ChevronDown
-        className={`h-4 w-4 text-[#64748B] transition-transform ${
-          expandedSections[section] ? "" : "-rotate-90"
-        }`}
+        className={`h-4 w-4 text-[#64748B] transition-transform ${expandedSections[section] ? "" : "-rotate-90"
+          }`}
       />
     </button>
     {expandedSections[section] && <div className="mt-4">{children}</div>}
   </div>
 );
 
+
 // Custom Hook for Filter State
 export const useDiamondFilters = () => {
+  const location = useLocation();
+  const isDetailPage = location.pathname.includes('/diamond/') && location.pathname.split('/').length > 4;
   // Pending filter states (what user is selecting)
   const [pendingShapes, setPendingShapes] = useState([]);
   const [pendingShowOnlyMedia, setPendingShowOnlyMedia] = useState(false);
@@ -151,6 +162,8 @@ export const useDiamondFilters = () => {
   const [pendingCaratMax, setPendingCaratMax] = useState("");
   const [pendingPriceMin, setPendingPriceMin] = useState("");
   const [pendingPriceMax, setPendingPriceMax] = useState("");
+  const [pendingPricePerCaratMin, setPendingPricePerCaratMin] = useState("");
+  const [pendingPricePerCaratMax, setPendingPricePerCaratMax] = useState("");
   const [pendingColorType, setPendingColorType] = useState("White");
   const [pendingWhiteColors, setPendingWhiteColors] = useState([]);
   const [pendingFancyColors, setPendingFancyColors] = useState([]);
@@ -163,6 +176,19 @@ export const useDiamondFilters = () => {
   const [pendingCertifications, setPendingCertifications] = useState([]);
   const [pendingCertificateType, setPendingCertificateType] = useState(null);
   const [pendingFluorescence, setPendingFluorescence] = useState([]);
+  const [pendingHeartArrow, setPendingHeartArrow] = useState(false);
+  const [pendingNoBgm, setPendingNoBgm] = useState(false);
+  const [pendingLocation, setPendingLocation] = useState("");
+  const [pendingSupplier, setPendingSupplier] = useState("");
+  const [pendingGrowthType, setPendingGrowthType] = useState([]);
+  const [pendingTreatment, setPendingTreatment] = useState([]);
+  const [dynamicFilters, setDynamicFilters] = useState({
+    shapes: [],
+    colors: [],
+    clarities: [],
+    labs: [],
+    suppliers: []
+  });
   const [visibleShapesCount, setVisibleShapesCount] = useState(8);
   const SHAPES_BATCH_SIZE = 8;
 
@@ -174,6 +200,8 @@ export const useDiamondFilters = () => {
   const [caratMax, setCaratMax] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [pricePerCaratMin, setPricePerCaratMin] = useState("");
+  const [pricePerCaratMax, setPricePerCaratMax] = useState("");
   const [colorType, setColorType] = useState("White");
   const [selectedWhiteColors, setSelectedWhiteColors] = useState([]);
   const [selectedFancyColors, setSelectedFancyColors] = useState([]);
@@ -186,18 +214,28 @@ export const useDiamondFilters = () => {
   const [selectedCertifications, setSelectedCertifications] = useState([]);
   const [certificateType, setCertificateType] = useState(null);
   const [selectedFluorescence, setSelectedFluorescence] = useState([]);
+  const [selectedHeartArrow, setSelectedHeartArrow] = useState(false);
+  const [selectedNoBgm, setSelectedNoBgm] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const [selectedGrowthType, setSelectedGrowthType] = useState([]);
+  const [selectedTreatment, setSelectedTreatment] = useState([]);
   const [expandedSections, setExpandedSections] = useState({
     shape: true,
     color: true,
     clarity: true,
     cut: true,
-    polish: true,
-    symmetry: true,
     carat: true,
     price: true,
+    pricePerCarat: true,
     certification: true,
     labReport: true,
     fluorescence: true,
+    heartArrow: true,
+    location: true,
+    supplier: true,
+    growthType: true,
+    treatment: true,
     advanced: false,
   });
 
@@ -259,6 +297,21 @@ export const useDiamondFilters = () => {
   // Sort by - Applied
   const [sortBy, setSortBy] = useState("featured");
 
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await stockAPI.getDiamondFilters();
+        if (response && response.success) {
+          setDynamicFilters(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching diamond filters:", error);
+      }
+    };
+    fetchFilters();
+  }, []);
+
+
   // Toggle functions for pending states
   const toggleShape = useCallback((shape) => {
     setPendingShapes((prev) =>
@@ -267,9 +320,22 @@ export const useDiamondFilters = () => {
   }, []);
 
   const toggleWhiteColor = useCallback((color) => {
-    setPendingWhiteColors((prev) =>
-      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color],
-    );
+    setPendingWhiteColors((prev) => {
+      if (prev.includes(color)) {
+        // If clicking an already selected color, deselect it
+        return prev.filter((c) => c !== color);
+      }
+      if (prev.length === 0) {
+        // If nothing selected, select the clicked color
+        return [color];
+      }
+      // Range selection: select all colors between first selected and new selection
+      const firstIndex = whiteColors.indexOf(prev[0]);
+      const newIndex = whiteColors.indexOf(color);
+      const startIndex = Math.min(firstIndex, newIndex);
+      const endIndex = Math.max(firstIndex, newIndex);
+      return whiteColors.slice(startIndex, endIndex + 1);
+    });
   }, []);
 
   const toggleFancyColor = useCallback((color) => {
@@ -279,11 +345,22 @@ export const useDiamondFilters = () => {
   }, []);
 
   const toggleClarity = useCallback((clarity) => {
-    setPendingClarities((prev) =>
-      prev.includes(clarity)
-        ? prev.filter((c) => c !== clarity)
-        : [...prev, clarity],
-    );
+    setPendingClarities((prev) => {
+      if (prev.includes(clarity)) {
+        // If clicking an already selected clarity, deselect it
+        return prev.filter((c) => c !== clarity);
+      }
+      if (prev.length === 0) {
+        // If nothing selected, select the clicked clarity
+        return [clarity];
+      }
+      // Range selection: select all clarities between first selected and new selection
+      const firstIndex = clarities.indexOf(prev[0]);
+      const newIndex = clarities.indexOf(clarity);
+      const startIndex = Math.min(firstIndex, newIndex);
+      const endIndex = Math.max(firstIndex, newIndex);
+      return clarities.slice(startIndex, endIndex + 1);
+    });
   }, []);
 
   const toggleCut = useCallback((cut) => {
@@ -320,6 +397,26 @@ export const useDiamondFilters = () => {
     );
   }, []);
 
+  const toggleGrowthType = useCallback((type) => {
+    setPendingGrowthType((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
+    );
+  }, []);
+
+  const toggleTreatment = useCallback((treatment) => {
+    setPendingTreatment((prev) =>
+      prev.includes(treatment) ? prev.filter((t) => t !== treatment) : [...prev, treatment],
+    );
+  }, []);
+
+  const toggleHeartArrow = useCallback(() => {
+    setPendingHeartArrow((prev) => !prev);
+  }, []);
+
+  const toggleNoBgm = useCallback(() => {
+    setPendingNoBgm((prev) => !prev);
+  }, []);
+
   const toggleSection = useCallback((section) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   }, []);
@@ -343,6 +440,8 @@ export const useDiamondFilters = () => {
     setCaratMax(pendingCaratMax);
     setPriceMin(pendingPriceMin);
     setPriceMax(pendingPriceMax);
+    setPricePerCaratMin(pendingPricePerCaratMin);
+    setPricePerCaratMax(pendingPricePerCaratMax);
     setColorType(pendingColorType);
     setSelectedWhiteColors(pendingWhiteColors);
     setSelectedFancyColors(pendingFancyColors);
@@ -355,6 +454,12 @@ export const useDiamondFilters = () => {
     setSelectedCertifications(pendingCertifications);
     setCertificateType(pendingCertificateType);
     setSelectedFluorescence(pendingFluorescence);
+    setSelectedHeartArrow(pendingHeartArrow);
+    setSelectedNoBgm(pendingNoBgm);
+    setSelectedLocation(pendingLocation);
+    setSelectedSupplier(pendingSupplier);
+    setSelectedGrowthType(pendingGrowthType);
+    setSelectedTreatment(pendingTreatment);
     setLengthMin(pendingLengthMin);
     setLengthMax(pendingLengthMax);
     setWidthMin(pendingWidthMin);
@@ -381,6 +486,8 @@ export const useDiamondFilters = () => {
     setEyeClean(pendingEyeClean);
     setShade(pendingShade);
     setSortBy(pendingSortBy);
+
+    setSortBy(pendingSortBy);
   }, [
     pendingShapes,
     pendingShowOnlyMedia,
@@ -390,6 +497,8 @@ export const useDiamondFilters = () => {
     pendingCaratMax,
     pendingPriceMin,
     pendingPriceMax,
+    pendingPricePerCaratMin,
+    pendingPricePerCaratMax,
     pendingColorType,
     pendingWhiteColors,
     pendingFancyColors,
@@ -402,6 +511,12 @@ export const useDiamondFilters = () => {
     pendingCertifications,
     pendingCertificateType,
     pendingFluorescence,
+    pendingHeartArrow,
+    pendingNoBgm,
+    pendingLocation,
+    pendingSupplier,
+    pendingGrowthType,
+    pendingTreatment,
     pendingLengthMin,
     pendingLengthMax,
     pendingWidthMin,
@@ -438,6 +553,8 @@ export const useDiamondFilters = () => {
     setPendingCaratMax(caratMax);
     setPendingPriceMin(priceMin);
     setPendingPriceMax(priceMax);
+    setPendingPricePerCaratMin(pricePerCaratMin);
+    setPendingPricePerCaratMax(pricePerCaratMax);
     setPendingColorType(colorType);
     setPendingWhiteColors(selectedWhiteColors);
     setPendingFancyColors(selectedFancyColors);
@@ -450,6 +567,12 @@ export const useDiamondFilters = () => {
     setPendingCertifications(selectedCertifications);
     setPendingCertificateType(certificateType);
     setPendingFluorescence(selectedFluorescence);
+    setPendingHeartArrow(selectedHeartArrow);
+    setPendingNoBgm(selectedNoBgm);
+    setPendingLocation(selectedLocation);
+    setPendingSupplier(selectedSupplier);
+    setPendingGrowthType(selectedGrowthType);
+    setPendingTreatment(selectedTreatment);
     setPendingLengthMin(lengthMin);
     setPendingLengthMax(lengthMax);
     setPendingWidthMin(widthMin);
@@ -485,6 +608,8 @@ export const useDiamondFilters = () => {
     sortBy,
     priceMin,
     priceMax,
+    pricePerCaratMin,
+    pricePerCaratMax,
     colorType,
     selectedWhiteColors,
     selectedFancyColors,
@@ -497,6 +622,12 @@ export const useDiamondFilters = () => {
     selectedCertifications,
     certificateType,
     selectedFluorescence,
+    selectedHeartArrow,
+    selectedNoBgm,
+    selectedLocation,
+    selectedSupplier,
+    selectedGrowthType,
+    selectedTreatment,
     lengthMin,
     lengthMax,
     widthMin,
@@ -532,19 +663,27 @@ export const useDiamondFilters = () => {
     setPendingFancyIntensity("");
     setPendingFancyOvertone("");
     setPendingColorType("White");
+    setPendingGrowthType([]);
+    setPendingTreatment([]);
     setPendingClarities([]);
     setPendingCuts([]);
     setPendingPolish([]);
     setPendingSymmetry([]);
     setPendingCertifications([]);
     setPendingCertificateType(null);
+    setPendingFluorescence([]);
+    setPendingHeartArrow(false);
+    setPendingNoBgm(false);
+    setPendingLocation("");
+    setPendingSupplier("");
     setPendingCaratMin("");
     setPendingCaratMax("");
     setPendingPriceMin("");
     setPendingPriceMax("");
+    setPendingPricePerCaratMin("");
+    setPendingPricePerCaratMax("");
     setPendingShowOnlyMedia(false);
     setPendingAvailableItems(false);
-    setPendingFluorescence([]);
     setPendingLengthMin("");
     setPendingLengthMax("");
     setPendingWidthMin("");
@@ -578,6 +717,7 @@ export const useDiamondFilters = () => {
     setSelectedFancyIntensity("");
     setSelectedFancyOvertone("");
     setColorType("White");
+    setSelectedTreatment([]);
     setSelectedClarities([]);
     setSelectedCuts([]);
     setSelectedPolish([]);
@@ -588,9 +728,16 @@ export const useDiamondFilters = () => {
     setCaratMax("");
     setPriceMin("");
     setPriceMax("");
+    setPricePerCaratMin("");
+    setPricePerCaratMax("");
     setShowOnlyMedia(false);
     setAvailableItems(false);
     setSelectedFluorescence([]);
+    setSelectedHeartArrow(false);
+    setSelectedNoBgm(false);
+    setSelectedLocation("");
+    setSelectedSupplier("");
+    setSelectedGrowthType([]);
     setLengthMin("");
     setLengthMax("");
     setWidthMin("");
@@ -617,6 +764,12 @@ export const useDiamondFilters = () => {
     setEyeClean("");
     setShade("");
     setSortBy("featured");
+    // Clear localStorage
+    try {
+      localStorage.removeItem('diamondFilters');
+    } catch (error) {
+      console.error('Error clearing filters from localStorage:', error);
+    }
   }, []);
 
   const appliedFilters = useMemo(
@@ -635,10 +788,18 @@ export const useDiamondFilters = () => {
       certificateType,
       available: availableItems,
       showOnlyMedia,
+      heartArrow: selectedHeartArrow,
+      noBgm: selectedNoBgm,
+      location: selectedLocation,
+      supplier: selectedSupplier,
+      growthType: selectedGrowthType,
+      treatment: selectedTreatment,
       caratMin,
       caratMax,
       priceMin,
       priceMax,
+      pricePerCaratMin,
+      pricePerCaratMax,
       lengthMin,
       lengthMax,
       widthMin,
@@ -681,10 +842,19 @@ export const useDiamondFilters = () => {
       certificateType,
       availableItems,
       showOnlyMedia,
+      selectedFluorescence,
+      selectedHeartArrow,
+      selectedNoBgm,
+      selectedLocation,
+      selectedSupplier,
+      selectedGrowthType,
+      selectedTreatment,
       caratMin,
       caratMax,
       priceMin,
       priceMax,
+      pricePerCaratMin,
+      pricePerCaratMax,
       lengthMin,
       lengthMax,
       widthMin,
@@ -729,9 +899,16 @@ export const useDiamondFilters = () => {
       (certificateType ? 1 : 0) +
       (caratMin || caratMax ? 1 : 0) +
       (priceMin || priceMax ? 1 : 0) +
+      (pricePerCaratMin || pricePerCaratMax ? 1 : 0) +
       (showOnlyMedia ? 1 : 0) +
       (availableItems ? 1 : 0) +
+      (selectedHeartArrow ? 1 : 0) +
+      (selectedNoBgm ? 1 : 0) +
+      (selectedLocation ? 1 : 0) +
+      (selectedSupplier ? 1 : 0) +
       selectedFluorescence.length +
+      selectedGrowthType.length +
+      selectedTreatment.length +
       (lengthMin || lengthMax ? 1 : 0) +
       (widthMin || widthMax ? 1 : 0) +
       (heightMin || heightMax ? 1 : 0) +
@@ -758,14 +935,11 @@ export const useDiamondFilters = () => {
       selectedPolish,
       selectedSymmetry,
       selectedCertifications,
-      certificateType,
-      caratMin,
-      caratMax,
-      priceMin,
-      priceMax,
-      showOnlyMedia,
-      availableItems,
-      selectedFluorescence,
+      selectedLocation,
+      selectedSupplier,
+      selectedGrowthType,
+      pricePerCaratMin,
+      pricePerCaratMax,
       lengthMin,
       lengthMax,
       widthMin,
@@ -795,7 +969,6 @@ export const useDiamondFilters = () => {
     ],
   );
 
-  // Count filters that are selected but not yet applied
   const pendingFiltersCount = useMemo(() => {
     const count =
       pendingShapes.length +
@@ -811,9 +984,16 @@ export const useDiamondFilters = () => {
       (pendingCertificateType ? 1 : 0) +
       (pendingCaratMin || pendingCaratMax ? 1 : 0) +
       (pendingPriceMin || pendingPriceMax ? 1 : 0) +
+      (pendingPricePerCaratMin || pendingPricePerCaratMax ? 1 : 0) +
       (pendingShowOnlyMedia ? 1 : 0) +
       (pendingAvailableItems ? 1 : 0) +
+      (pendingHeartArrow ? 1 : 0) +
+      (pendingNoBgm ? 1 : 0) +
+      (pendingLocation ? 1 : 0) +
+      (pendingSupplier ? 1 : 0) +
       pendingFluorescence.length +
+      pendingGrowthType.length +
+      pendingTreatment.length +
       (pendingLengthMin || pendingLengthMax ? 1 : 0) +
       (pendingWidthMin || pendingWidthMax ? 1 : 0) +
       (pendingHeightMin || pendingHeightMax ? 1 : 0) +
@@ -845,9 +1025,16 @@ export const useDiamondFilters = () => {
     pendingCaratMax,
     pendingPriceMin,
     pendingPriceMax,
+    pendingPricePerCaratMin,
+    pendingPricePerCaratMax,
     pendingShowOnlyMedia,
     pendingAvailableItems,
     pendingFluorescence,
+    pendingGrowthType,
+    pendingHeartArrow,
+    pendingNoBgm,
+    pendingLocation, pendingSupplier,
+    pendingTreatment,
     pendingLengthMin,
     pendingLengthMax,
     pendingWidthMin,
@@ -888,6 +1075,8 @@ export const useDiamondFilters = () => {
     caratMax,
     priceMin,
     priceMax,
+    pricePerCaratMin,
+    pricePerCaratMax,
     colorType,
     selectedWhiteColors,
     selectedFancyColors,
@@ -900,6 +1089,12 @@ export const useDiamondFilters = () => {
     selectedCertifications,
     certificateType,
     selectedFluorescence,
+    selectedHeartArrow,
+    selectedNoBgm,
+    selectedLocation,
+    selectedSupplier,
+    selectedGrowthType,
+    selectedTreatment,
     expandedSections,
     lengthMin,
     lengthMax,
@@ -934,6 +1129,8 @@ export const useDiamondFilters = () => {
     pendingCaratMax,
     pendingPriceMin,
     pendingPriceMax,
+    pendingPricePerCaratMin,
+    pendingPricePerCaratMax,
     pendingColorType,
     pendingWhiteColors,
     pendingFancyColors,
@@ -946,6 +1143,10 @@ export const useDiamondFilters = () => {
     pendingCertifications,
     pendingCertificateType,
     pendingFluorescence,
+    pendingHeartArrow,
+    pendingNoBgm,
+    pendingLocation, pendingSupplier,
+    pendingTreatment,
     pendingLengthMin,
     pendingLengthMax,
     pendingWidthMin,
@@ -971,6 +1172,7 @@ export const useDiamondFilters = () => {
     pendingMilky,
     pendingEyeClean,
     pendingShade,
+    pendingGrowthType,
     // Counts and computed
     appliedFilters,
     activeFiltersCount,
@@ -982,6 +1184,8 @@ export const useDiamondFilters = () => {
     setPendingCaratMax,
     setPendingPriceMin,
     setPendingPriceMax,
+    setPendingPricePerCaratMin,
+    setPendingPricePerCaratMax,
     setPendingColorType,
     setPendingFancyIntensity,
     setPendingFancyOvertone,
@@ -1011,6 +1215,18 @@ export const useDiamondFilters = () => {
     setPendingMilky,
     setPendingEyeClean,
     setPendingShade,
+    setPendingCuts,
+    setPendingPolish,
+    setPendingSymmetry,
+    setPendingHeartArrow,
+    setPendingNoBgm,
+    setPendingLocation,
+    setPendingSupplier,
+    setPendingGrowthType,
+    setPendingTreatment,
+    // Toggle
+    toggleGrowthType,
+    toggleTreatment,
     // Applied Setters (for clearing)
     setShowOnlyMedia,
     setAvailableItems,
@@ -1018,6 +1234,8 @@ export const useDiamondFilters = () => {
     setCaratMax,
     setPriceMin,
     setPriceMax,
+    setPricePerCaratMin,
+    setPricePerCaratMax,
     setColorType,
     setSelectedFancyIntensity,
     setSelectedFancyOvertone,
@@ -1047,6 +1265,12 @@ export const useDiamondFilters = () => {
     setMilky,
     setEyeClean,
     setShade,
+    setSelectedHeartArrow,
+    setSelectedNoBgm,
+    setSelectedLocation,
+    setSelectedSupplier,
+    setSelectedGrowthType,
+    setSelectedTreatment,
     setSortBy,
     // Toggles
     toggleShape,
@@ -1058,6 +1282,8 @@ export const useDiamondFilters = () => {
     toggleSymmetry,
     toggleCertification,
     toggleFluorescence,
+    toggleHeartArrow,
+    toggleNoBgm,
     toggleSection,
     // Shape pagination
     visibleShapesCount,
@@ -1067,6 +1293,8 @@ export const useDiamondFilters = () => {
     applyFilters,
     syncPendingToApplied,
     clearAllFilters,
+    // Dynamic data
+    dynamicFilters,
   };
 };
 
@@ -1087,10 +1315,14 @@ export const DiamondFilterContent = ({ filters }) => {
     pendingCertifications: selectedCertifications,
     pendingCertificateType: certificateType,
     pendingFluorescence: selectedFluorescence,
+    pendingGrowthType: selectedGrowthType,
+    pendingTreatment: selectedTreatment,
     pendingCaratMin: caratMin,
     pendingCaratMax: caratMax,
     pendingPriceMin: priceMin,
     pendingPriceMax: priceMax,
+    pendingPricePerCaratMin: pricePerCaratMin,
+    pendingPricePerCaratMax: pricePerCaratMax,
     expandedSections,
     visibleShapesCount,
     pendingLengthMin: lengthMin,
@@ -1118,6 +1350,10 @@ export const DiamondFilterContent = ({ filters }) => {
     pendingMilky: milky,
     pendingEyeClean: eyeClean,
     pendingShade: shade,
+    pendingHeartArrow: heartArrow,
+    pendingNoBgm: noBgm,
+    pendingLocation,
+    pendingSupplier,
     // Pending setters
     setPendingColorType: setColorType,
     setPendingFancyIntensity: setSelectedFancyIntensity,
@@ -1127,6 +1363,8 @@ export const DiamondFilterContent = ({ filters }) => {
     setPendingCaratMax: setCaratMax,
     setPendingPriceMin: setPriceMin,
     setPendingPriceMax: setPriceMax,
+    setPendingPricePerCaratMin: setPricePerCaratMin,
+    setPendingPricePerCaratMax: setPricePerCaratMax,
     setPendingLengthMin: setLengthMin,
     setPendingLengthMax: setLengthMax,
     setPendingWidthMin: setWidthMin,
@@ -1152,6 +1390,13 @@ export const DiamondFilterContent = ({ filters }) => {
     setPendingMilky: setMilky,
     setPendingEyeClean: setEyeClean,
     setPendingShade: setShade,
+    setPendingHeartArrow: setPendingHeartArrow,
+    setPendingNoBgm: setPendingNoBgm,
+    setPendingLocation: setPendingLocation,
+    setPendingSupplier: setPendingSupplier,
+    setPendingCuts,
+    setPendingPolish,
+    setPendingSymmetry,
     // Toggles
     toggleShape,
     toggleWhiteColor,
@@ -1162,8 +1407,13 @@ export const DiamondFilterContent = ({ filters }) => {
     toggleSymmetry,
     toggleCertification,
     toggleFluorescence,
+    toggleGrowthType,
+    toggleTreatment,
+    toggleHeartArrow,
+    toggleNoBgm,
     toggleSection,
     showMoreShapes,
+    dynamicFilters,
   } = filters;
 
   return (
@@ -1180,11 +1430,10 @@ export const DiamondFilterContent = ({ filters }) => {
             <button
               key={shape.name}
               onClick={() => toggleShape(shape.name)}
-              className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all duration-200 ${
-                selectedShapes.includes(shape.name)
-                  ? "bg-[#DBEAFE] ring-1 ring-[#1E3A8A]"
-                  : "bg-white border border-gray-100 hover:bg-[#F1F5F9]"
-              }`}
+              className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all duration-200 ${selectedShapes.includes(shape.name)
+                ? "bg-[#DBEAFE] ring-1 ring-[#1E3A8A]"
+                : "bg-white border border-gray-100 hover:bg-[#F1F5F9]"
+                }`}
             >
               <img
                 src={shape.icon}
@@ -1192,11 +1441,10 @@ export const DiamondFilterContent = ({ filters }) => {
                 className="w-8 h-8 object-contain mb-0.5"
               />
               <span
-                className={`text-[8px] text-center leading-none ${
-                  selectedShapes.includes(shape.name)
-                    ? "text-[#1E3A8A] font-semibold"
-                    : "text-gray-600"
-                }`}
+                className={`text-[8px] text-center leading-none ${selectedShapes.includes(shape.name)
+                  ? "text-[#1E3A8A] font-semibold"
+                  : "text-gray-600"
+                  }`}
               >
                 {shape.name}
               </span>
@@ -1224,21 +1472,19 @@ export const DiamondFilterContent = ({ filters }) => {
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setColorType("White")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              colorType === "White"
-                ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
-                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
-            }`}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${colorType === "White"
+              ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              }`}
           >
             White
           </button>
           <button
             onClick={() => setColorType("Fancy")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              colorType === "Fancy"
-                ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
-                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
-            }`}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${colorType === "Fancy"
+              ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              }`}
           >
             Fancy
           </button>
@@ -1251,11 +1497,10 @@ export const DiamondFilterContent = ({ filters }) => {
                 <button
                   key={color}
                   onClick={() => toggleWhiteColor(color)}
-                  className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    selectedWhiteColors.includes(color)
-                      ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                      : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-                  }`}
+                  className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedWhiteColors.includes(color)
+                    ? "bg-[#1E3A8A] text-white shadow-md scale-105"
+                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    }`}
                 >
                   {color}
                 </button>
@@ -1274,11 +1519,10 @@ export const DiamondFilterContent = ({ filters }) => {
                 <button
                   key={color}
                   onClick={() => toggleFancyColor(color)}
-                  className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                    selectedFancyColors.includes(color)
-                      ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                      : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-                  }`}
+                  className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${selectedFancyColors.includes(color)
+                    ? "bg-[#1E3A8A] text-white shadow-md scale-105"
+                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    }`}
                 >
                   {color}
                 </button>
@@ -1292,7 +1536,7 @@ export const DiamondFilterContent = ({ filters }) => {
                 <select
                   value={selectedFancyIntensity}
                   onChange={(e) => setSelectedFancyIntensity(e.target.value)}
-                  className="w-full py-2 px-3 rounded-lg border border-[#CBD5E1] bg-white text-sm text-[#475569] focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                  className="input-field"
                 >
                   <option value="">Select Intensity</option>
                   {fancyIntensities.map((intensity) => (
@@ -1309,7 +1553,7 @@ export const DiamondFilterContent = ({ filters }) => {
                 <select
                   value={selectedFancyOvertone}
                   onChange={(e) => setSelectedFancyOvertone(e.target.value)}
-                  className="w-full py-2 px-3 rounded-lg border border-[#CBD5E1] bg-white text-sm text-[#475569] focus:border-[#1E3A8A] focus:ring-1 focus:ring-[#1E3A8A]"
+                  className="input-field"
                 >
                   <option value="">Select Overtone</option>
                   {fancyOvertones.map((overtone) => (
@@ -1372,7 +1616,7 @@ export const DiamondFilterContent = ({ filters }) => {
 
       {/* Price Filter */}
       <FilterSection
-        title="Price Range"
+        title="Final Price Range"
         section="price"
         expandedSections={expandedSections}
         toggleSection={toggleSection}
@@ -1400,6 +1644,36 @@ export const DiamondFilterContent = ({ filters }) => {
         </div>
       </FilterSection>
 
+      {/* Price Per Carat Filter */}
+      <FilterSection
+        title="Price Per Carat"
+        section="pricePerCarat"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <input
+              type="number"
+              placeholder="$/ct min"
+              value={pricePerCaratMin}
+              onChange={(e) => setPricePerCaratMin(e.target.value)}
+              className="input-field"
+            />
+          </div>
+          <span className="text-[#64748B]">-</span>
+          <div className="flex-1">
+            <input
+              type="number"
+              placeholder="$/ct max"
+              value={pricePerCaratMax}
+              onChange={(e) => setPricePerCaratMax(e.target.value)}
+              className="input-field"
+            />
+          </div>
+        </div>
+      </FilterSection>
+
       {/* Clarity Filter */}
       <FilterSection
         title="Clarity"
@@ -1412,11 +1686,10 @@ export const DiamondFilterContent = ({ filters }) => {
             <button
               key={clarity}
               onClick={() => toggleClarity(clarity)}
-              className={`py-2 px-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                selectedClarities.includes(clarity)
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-              }`}
+              className={`py-2 px-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedClarities.includes(clarity)
+                ? "bg-[#1E3A8A] text-white shadow-md"
+                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                }`}
             >
               {clarity}
             </button>
@@ -1424,82 +1697,134 @@ export const DiamondFilterContent = ({ filters }) => {
         </div>
       </FilterSection>
 
-      {/* Cut Filter */}
+      {/* Heart & Arrow / No BGM Filter */}
       <FilterSection
-        title="Cut Quality"
+        title="H&A / No BGM"
+        section="heartArrow"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={heartArrow}
+              onChange={toggleHeartArrow}
+              className="w-4 h-4 rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+            />
+            <span className="text-sm text-[#475569]">Heart & Arrow</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={noBgm}
+              onChange={toggleNoBgm}
+              className="w-4 h-4 rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+            />
+            <span className="text-sm text-[#475569]">No BGM</span>
+          </label>
+        </div>
+      </FilterSection>
+
+
+
+      {/* Cut, Polish, Symmetry Filter */}
+      <FilterSection
+        title="Cut / Polish / Symmetry"
         section="cut"
         expandedSections={expandedSections}
         toggleSection={toggleSection}
       >
-        <div className="space-y-1.5">
-          {cuts.map((cut) => (
-            <button
-              key={cut}
-              onClick={() => toggleCut(cut)}
-              className={`w-full py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-between ${
-                selectedCuts.includes(cut)
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-              }`}
-            >
-              {cut}
-              {selectedCuts.includes(cut) && <Sparkles className="w-4 h-4" />}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
+        <div className="space-y-6">
+          {/* Quick Select Presets */}
+          <div className="flex gap-2 p-1 bg-gray-50 rounded-lg border border-gray-100">
+            {[
+              { name: "8X", values: ["8X"] },
+              { name: "3X", values: ["Ideal", "Excellent"] },
+              { name: "3VG", values: ["Ideal", "Excellent", "Very Good"] },
+            ].map((preset) => {
+              const isActive =
+                selectedCuts.length === preset.values.length && selectedCuts.every(v => preset.values.includes(v)) &&
+                selectedPolish.length === preset.values.length && selectedPolish.every(v => preset.values.includes(v)) &&
+                selectedSymmetry.length === preset.values.length && selectedSymmetry.every(v => preset.values.includes(v));
 
-      {/* Polish Filter */}
-      <FilterSection
-        title="Polish"
-        section="polish"
-        expandedSections={expandedSections}
-        toggleSection={toggleSection}
-      >
-        <div className="space-y-1.5">
-          {polishes.map((polish) => (
-            <button
-              key={polish}
-              onClick={() => togglePolish(polish)}
-              className={`w-full py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-between ${
-                selectedPolish.includes(polish)
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-              }`}
-            >
-              {polish}
-              {selectedPolish.includes(polish) && (
-                <Sparkles className="w-4 h-4" />
-              )}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
+              return (
+                <button
+                  key={preset.name}
+                  onClick={() => {
+                    setPendingCuts(preset.values);
+                    setPendingPolish(preset.values);
+                    setPendingSymmetry(preset.values);
+                  }}
+                  className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold transition-all duration-200 ${isActive
+                    ? "bg-[#1E3A8A] text-white shadow-sm"
+                    : "bg-white text-[#475569] border border-gray-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+                    }`}
+                >
+                  {preset.name}
+                </button>
+              );
+            })}
+          </div>
+          {/* Cut */}
+          <div>
+            <h4 className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2 px-1">Cut Quality</h4>
+            <div className="grid grid-cols-2 gap-1.5">
+              {cuts.map((cut) => (
+                <button
+                  key={cut}
+                  onClick={() => toggleCut(cut)}
+                  className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedCuts.includes(cut)
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    }`}
+                >
+                  {cut}
+                  {selectedCuts.includes(cut) && <Sparkles className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Symmetry Filter */}
-      <FilterSection
-        title="Symmetry"
-        section="symmetry"
-        expandedSections={expandedSections}
-        toggleSection={toggleSection}
-      >
-        <div className="space-y-1.5">
-          {symmetries.map((symmetry) => (
-            <button
-              key={symmetry}
-              onClick={() => toggleSymmetry(symmetry)}
-              className={`w-full py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-between ${
-                selectedSymmetry.includes(symmetry)
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-              }`}
-            >
-              {symmetry}
-              {selectedSymmetry.includes(symmetry) && (
-                <Sparkles className="w-4 h-4" />
-              )}
-            </button>
-          ))}
+          {/* Polish */}
+          <div>
+            <h4 className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2 px-1">Polish</h4>
+            <div className="grid grid-cols-2 gap-1.5">
+              {polishes.map((polish) => (
+                <button
+                  key={polish}
+                  onClick={() => togglePolish(polish)}
+                  className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedPolish.includes(polish)
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    }`}
+                >
+                  {polish}
+                  {selectedPolish.includes(polish) && <Sparkles className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Symmetry */}
+          <div>
+            <h4 className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2 px-1">Symmetry</h4>
+            <div className="grid grid-cols-2 gap-1.5">
+              {symmetries.map((symmetry) => (
+                <button
+                  key={symmetry}
+                  onClick={() => toggleSymmetry(symmetry)}
+                  className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedSymmetry.includes(symmetry)
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    }`}
+                >
+                  {symmetry}
+                  {selectedSymmetry.includes(symmetry) && <Sparkles className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </FilterSection>
 
@@ -1515,11 +1840,10 @@ export const DiamondFilterContent = ({ filters }) => {
             <button
               key={fluor}
               onClick={() => toggleFluorescence(fluor)}
-              className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                selectedFluorescence.includes(fluor)
-                  ? "bg-[#7C3AED] text-white shadow-md scale-105"
-                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED]"
-              }`}
+              className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedFluorescence.includes(fluor)
+                ? "bg-[#7C3AED] text-white shadow-md scale-105"
+                : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED]"
+                }`}
             >
               {fluor}
             </button>
@@ -1537,11 +1861,10 @@ export const DiamondFilterContent = ({ filters }) => {
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setCertificateType("certified")}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              certificateType === "certified"
-                ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
-                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
-            }`}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${certificateType === "certified"
+              ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              }`}
           >
             Certified
           </button>
@@ -1549,11 +1872,10 @@ export const DiamondFilterContent = ({ filters }) => {
             onClick={() => {
               setCertificateType("non-certified");
             }}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-              certificateType === "non-certified"
-                ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
-                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
-            }`}
+            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${certificateType === "non-certified"
+              ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              }`}
           >
             Non-certified
           </button>
@@ -1565,11 +1887,10 @@ export const DiamondFilterContent = ({ filters }) => {
               <button
                 key={lab}
                 onClick={() => toggleCertification(lab)}
-                className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all duration-300 ${
-                  selectedCertifications.includes(lab)
-                    ? "bg-[#1E3A8A] text-white shadow-md"
-                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
-                }`}
+                className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all duration-300 ${selectedCertifications.includes(lab)
+                  ? "bg-[#1E3A8A] text-white shadow-md"
+                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  }`}
               >
                 {lab}
               </button>
@@ -1577,6 +1898,115 @@ export const DiamondFilterContent = ({ filters }) => {
           </div>
         )}
       </FilterSection>
+
+      {/* Location Filter */}
+      <FilterSection
+        title="Location"
+        section="location"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={pendingLocation}
+            onChange={(e) => setPendingLocation(e.target.value)}
+            placeholder="Search by city, state, or country..."
+            className="input-field"
+          />
+        </div>
+      </FilterSection>
+
+      {/* Supplier Filter */}
+      <FilterSection
+        title="Supplier"
+        section="supplier"
+        expandedSections={expandedSections}
+        toggleSection={toggleSection}
+      >
+        <div className="space-y-3">
+          <div className="relative">
+            <input
+              type="text"
+              value={pendingSupplier}
+              onChange={(e) => setPendingSupplier(e.target.value)}
+              placeholder="Search by company name..."
+              className="input-field"
+            />
+          </div>
+
+          {/* Dynamic Supplier List (Filtered) */}
+          {dynamicFilters?.suppliers?.length > 0 && (
+            <div className="max-h-40 overflow-y-auto border border-gray-100 rounded-lg p-1 space-y-1 scrollbar-thin">
+              {dynamicFilters.suppliers
+                .filter(s => !pendingSupplier || s.toLowerCase().includes(pendingSupplier.toLowerCase()))
+                .slice(0, 50) // Limit display
+                .map((supplier) => (
+                  <button
+                    key={supplier}
+                    onClick={() => setPendingSupplier(supplier)}
+                    className={`w-full text-left px-3 py-2 text-xs rounded-md transition-colors ${pendingSupplier === supplier
+                      ? "bg-[#1E3A8A] text-white"
+                      : "hover:bg-[#F1F5F9] text-[#475569]"
+                      }`}
+                  >
+                    {supplier}
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+      </FilterSection>
+
+      {/* Growth Type Filter - Only for Lab-Grown */}
+      {filters.isLabGrown && (
+        <FilterSection
+          title="Growth Type"
+          section="growthType"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
+        >
+          <div className="flex flex-wrap gap-2">
+            {growthTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => toggleGrowthType(type)}
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedGrowthType.includes(type)
+                  ? "bg-[#1E3A8A] text-white shadow-md scale-105"
+                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Treatment Filter - Only for Natural */}
+      {!filters.isLabGrown && (
+        <FilterSection
+          title="Treatment"
+          section="treatment"
+          expandedSections={expandedSections}
+          toggleSection={toggleSection}
+        >
+          <div className="flex flex-wrap gap-2">
+            {treatmentOptions.map((treatment) => (
+              <button
+                key={treatment}
+                onClick={() => toggleTreatment(treatment)}
+                className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedTreatment.includes(treatment)
+                  ? "bg-[#1E3A8A] text-white shadow-md scale-105"
+                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  }`}
+              >
+                {treatment}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       {/* Advanced Filters */}
       <FilterSection

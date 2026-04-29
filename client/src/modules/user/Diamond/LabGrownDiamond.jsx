@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Diamond,
@@ -48,10 +48,10 @@ const staggerContainer = {
 };
 
 const LabGrownDiamond = () => {
+  const { role } = useParams();
   const [activeTab, setActiveTab] = useState("Single Stone");
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Use shared diamond filters hook
   const filters = useDiamondFilters();
@@ -80,6 +80,8 @@ const LabGrownDiamond = () => {
     availableItems,
     caratMin,
     caratMax,
+    pricePerCaratMin,
+    pricePerCaratMax,
     setSelectedFancyIntensity,
     setSelectedFancyOvertone,
     setCertificateType,
@@ -87,6 +89,8 @@ const LabGrownDiamond = () => {
     setAvailableItems,
     setCaratMin,
     setCaratMax,
+    setPricePerCaratMin,
+    setPricePerCaratMax,
     toggleShape,
     toggleWhiteColor,
     toggleFancyColor,
@@ -95,9 +99,18 @@ const LabGrownDiamond = () => {
     togglePolish,
     toggleSymmetry,
     toggleCertification,
+    toggleGrowthType,
+    selectedGrowthType,
+    setSelectedGrowthType,
+    selectedLocation,
+    setSelectedLocation,
+    selectedSupplier,
+    setSelectedSupplier,
+    selectedFluorescence,
+    toggleFluorescence,
   } = filters;
 
-  const filterContentJsx = <DiamondFilterContent filters={filters} />;
+  const filterContentJsx = <DiamondFilterContent filters={{ ...filters, isLabGrown: true }} />;
 
   // Lock body scroll when mobile filter is open
   useEffect(() => {
@@ -132,7 +145,7 @@ const LabGrownDiamond = () => {
                 variants={fadeInUp}
                 className="mb-2 flex items-center gap-2 text-sm text-[#64748B]"
               >
-                <Link to="/user/home" className="hover:text-[#1E3A8A]">
+                <Link to={`/${role}/home`} className="hover:text-[#1E3A8A]">
                   Home
                 </Link>
                 <span>/</span>
@@ -150,7 +163,7 @@ const LabGrownDiamond = () => {
             </div>
             <motion.div variants={fadeInUp} className="flex items-center gap-3">
               <Link
-                to="/user/natural-diamonds"
+                to={`/${role}/natural-diamonds`}
                 className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
               >
                 <Gem className="h-4 w-4" />
@@ -165,7 +178,7 @@ const LabGrownDiamond = () => {
       <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl w-full shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 lg:flex-wrap lg:overflow-visible">
               {/* Mobile Filter Button - Left Side */}
               <button
                 onClick={() => setShowMobileFilters(true)}
@@ -331,6 +344,57 @@ const LabGrownDiamond = () => {
                       </button>
                     </span>
                   )}
+                  {(pricePerCaratMin || pricePerCaratMax) && (
+                    <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                      {pricePerCaratMin ? `$${pricePerCaratMin}` : "$0"} - {pricePerCaratMax ? `$${pricePerCaratMax}` : "∞"}/ct
+                      <button
+                        onClick={() => {
+                          setPricePerCaratMin("");
+                          setPricePerCaratMax("");
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedLocation && (
+                    <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                      Location: {selectedLocation}
+                      <button onClick={() => setSelectedLocation("")}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedSupplier && (
+                    <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
+                      Supplier: {selectedSupplier}
+                      <button onClick={() => setSelectedSupplier("")}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedFluorescence.map((fluor) => (
+                    <span
+                      key={fluor}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
+                      Fluor: {fluor}
+                      <button onClick={() => toggleFluorescence(fluor)}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                  {selectedGrowthType.map((type) => (
+                    <span
+                      key={type}
+                      className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]"
+                    >
+                      {type}
+                      <button onClick={() => toggleGrowthType(type)}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
                   <button
                     onClick={clearAllFilters}
                     className="ml-1 flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
@@ -341,18 +405,6 @@ const LabGrownDiamond = () => {
                 </>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              {/* Search Bar */}
-              <div className="block">
-                <input
-                  type="text"
-                  placeholder="Search diamonds..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-32 input-field"
-                />
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -362,7 +414,7 @@ const LabGrownDiamond = () => {
         <div className="mx-auto max-w-7xl">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters */}
-            <aside className="hidden w-64 flex-shrink-0 lg:flex lg:flex-col h-[calc(100vh-140px)] sticky top-[120px]">
+            <aside className="hidden w-80 flex-shrink-0 lg:flex lg:flex-col h-[calc(100vh-140px)] sticky top-[120px]">
               {/* Scrollable Filter Content */}
               <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-4">
                 {filterContentJsx}
@@ -399,7 +451,7 @@ const LabGrownDiamond = () => {
             {/* Main Content Area */}
             <div className="flex-1">
               {/* Toolbar */}
-              <div className="flex items-center justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[#64748B]">Sort by:</span>
                   <select
@@ -422,22 +474,20 @@ const LabGrownDiamond = () => {
                 <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white p-1">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-                      viewMode === "grid"
-                        ? "bg-[#1E3A8A] text-white shadow-sm"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${viewMode === "grid"
+                      ? "bg-[#1E3A8A] text-white shadow-sm"
+                      : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
                   >
                     <Grid3X3 className="h-4 w-4" />
                     <span className="hidden sm:inline">Grid</span>
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-                      viewMode === "list"
-                        ? "bg-[#1E3A8A] text-white shadow-sm"
-                        : "text-[#64748B] hover:text-[#0F172A]"
-                    }`}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${viewMode === "list"
+                      ? "bg-[#1E3A8A] text-white shadow-sm"
+                      : "text-[#64748B] hover:text-[#0F172A]"
+                      }`}
                   >
                     <List className="h-4 w-4" />
                     <span className="hidden sm:inline">List</span>
@@ -450,7 +500,6 @@ const LabGrownDiamond = () => {
                 type="lab-grown"
                 viewMode={viewMode}
                 sortBy={sortBy}
-                searchQuery={searchQuery}
                 filters={appliedFilters}
               />
             </div>
@@ -474,7 +523,7 @@ const LabGrownDiamond = () => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-0 z-50 flex h-full w-80 flex-col bg-white lg:hidden"
+              className="fixed left-0 top-0 z-50 flex h-full w-[90vw] max-w-[400px] flex-col bg-white lg:hidden"
             >
               {/* Fixed Header */}
               <div className="flex items-center justify-between border-b border-[#E2E8F0] p-4">

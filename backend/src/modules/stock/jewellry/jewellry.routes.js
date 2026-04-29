@@ -4,6 +4,13 @@ import { authenticate } from "../../../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+// Public storefront routes (no auth) - similar to diamond stock routes
+router.get("/natural", jewellryController.getAllNaturalPublic);
+router.get("/lab-grown", jewellryController.getAllLabGrownPublic);
+router.get("/public/filters", jewellryController.getFiltersPublic);
+router.get("/public/:id", jewellryController.getByIdPublic);
+
+// Admin/Manufacturer authenticated routes
 router.get("/", authenticate, jewellryController.getAll);
 router.get("/filters", authenticate, jewellryController.getFilters);
 router.get("/:id", authenticate, jewellryController.getById);

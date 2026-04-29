@@ -2,7 +2,7 @@ import axios from "axios";
 import notify from "../utils/notifications.jsx";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1",
   withCredentials: true,
 });
 
@@ -79,8 +79,9 @@ export const authAPI = {
       // Silently fail
       console.error("Logout API error:", error);
     }
-    // Clear role from localStorage
+    // Clear role and filters from localStorage
     localStorage.removeItem("role");
+    localStorage.removeItem("diamondFilters");
   },
 
   checkAuth: async () => {
@@ -101,9 +102,14 @@ export const authAPI = {
     const response = await api.put("/auth/profile", userData);
     return response.data;
   },
+  
+  changePassword: async (passwords) => {
+    const response = await api.put("/auth/change-password", passwords);
+    return response.data;
+  },
 
-  getAllUsers: async () => {
-    const response = await api.get("/admin/users");
+  getAllUsers: async (params = {}) => {
+    const response = await api.get("/admin/users", { params });
     return response.data;
   },
 
@@ -171,6 +177,53 @@ export const authAPI = {
   },
 };
 
+export const notificationAPI = {
+  getAllNotifications: async (filters = {}) => {
+    const response = await api.get("/notifications", { params: filters });
+    return response.data;
+  },
+
+  createNotification: async (notificationData) => {
+    const response = await api.post("/notifications", notificationData);
+    return response.data;
+  },
+
+  getAllUsersForNotification: async () => {
+    const response = await api.get("/notifications/users");
+    return response.data;
+  },
+
+  getNotificationById: async (id) => {
+    const response = await api.get(`/notifications/${id}`);
+    return response.data;
+  },
+
+  updateNotification: async (id, notificationData) => {
+    const response = await api.put(`/notifications/${id}`, notificationData);
+    return response.data;
+  },
+
+  deleteNotification: async (id) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+
+  markAsRead: async (id) => {
+    const response = await api.patch(`/notifications/${id}/read`);
+    return response.data;
+  },
+
+  markAllAsRead: async () => {
+    const response = await api.patch("/notifications/mark-all-read");
+    return response.data;
+  },
+
+  getUnreadCount: async () => {
+    const response = await api.get("/notifications/unread-count");
+    return response.data;
+  },
+};
+
 export const stockAPI = {
   getAllStocks: async (params = {}) => {
     const response = await api.get("/stock", { params });
@@ -188,7 +241,7 @@ export const stockAPI = {
   },
 
   getStockById: async (id) => {
-    const response = await api.get(`/stock/${id}`);
+    const response = await api.get(`/stock/public/${id}`);
     return response.data;
   },
 
@@ -219,6 +272,32 @@ export const stockAPI = {
 
   getFieldMapping: async () => {
     const response = await api.get("/stock/fields/mapping");
+    return response.data;
+  },
+  getDiamondFilters: async () => {
+    const response = await api.get("/stock/filters");
+    return response.data;
+  },
+};
+
+export const jewelryAPI = {
+  getNaturalJewelry: async (params = {}) => {
+    const response = await api.get("/jewellry-stock/natural", { params });
+    return response.data;
+  },
+
+  getLabGrownJewelry: async (params = {}) => {
+    const response = await api.get("/jewellry-stock/lab-grown", { params });
+    return response.data;
+  },
+
+  getJewelryById: async (id) => {
+    const response = await api.get(`/jewellry-stock/public/${id}`);
+    return response.data;
+  },
+
+  getJewelryFilters: async () => {
+    const response = await api.get("/jewellry-stock/public/filters");
     return response.data;
   },
 };

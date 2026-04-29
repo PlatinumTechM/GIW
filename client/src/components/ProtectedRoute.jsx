@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import notify from "@/utils/notifications.jsx";
 
@@ -7,6 +7,7 @@ const ProtectedRoute = ({
   requireAdmin = false,
   allowAdmin = false,
 }) => {
+  const { role: urlRole } = useParams();
   const { isAuthenticated, user, loading, sessionExpired } = useAuth();
   const location = useLocation();
 
@@ -57,9 +58,23 @@ const ProtectedRoute = ({
     );
   }
 
+  // Validate URL role if present
+  if (urlRole && user?.role) {
+    const userRoleLower = user.role.toLowerCase();
+    const urlRoleLower = urlRole.toLowerCase();
+
+    if (userRoleLower !== urlRoleLower) {
+      // Role mismatch - redirect to correct role dashboard
+      const correctDashboard =
+        userRoleLower === "admin" ? "/admin" : `/${userRoleLower}/home`;
+      return <Navigate to={correctDashboard} replace />;
+    }
+  }
+
   if (requireAdmin && user?.role !== "admin") {
     // Redirect to home if not admin
-    return <Navigate to="/" replace />;
+    const userRolePath = user?.role?.toLowerCase() || 'buyer';
+    return <Navigate to={`/${userRolePath}/home`} replace />;
   }
 
   // Admin trying to access user routes - redirect to admin dashboard (unless allowAdmin is true)

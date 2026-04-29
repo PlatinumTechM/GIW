@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Diamond,
@@ -24,6 +24,7 @@ import api from "../../services/api";
 
 const INITIAL_FORM_DATA = {
   stock_id: "",
+  party: "",
   type: "",
   certificate_number: "",
   weight: "",
@@ -261,6 +262,7 @@ const FIELD_MAPPINGS = {
     "ref #",
     "reference",
   ],
+  party: ["party", "supplier", "vendor", "source", "party name", "party_name"],
   certificate_number: [
     "certificate number",
     "cert no",
@@ -510,7 +512,7 @@ const InputField = ({
           <textarea
             name={name}
             value={value}
-            onChange={readonly ? () => {} : handleChange}
+            onChange={readonly ? () => { } : handleChange}
             placeholder={placeholder}
             rows={3}
             readOnly={readonly}
@@ -521,7 +523,7 @@ const InputField = ({
             type={type}
             name={name}
             value={value}
-            onChange={readonly ? () => {} : handleChange}
+            onChange={readonly ? () => { } : handleChange}
             placeholder={placeholder}
             min={min}
             max={max}
@@ -536,8 +538,44 @@ const InputField = ({
   );
 };
 
-const AddStockManual = () => {
+const AddStockManual = ({ onStockAdded, editData, onCancel }) => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+
+  useEffect(() => {
+    if (editData) {
+      // Map editData to INITIAL_FORM_DATA structure if necessary
+      // For now assume they match mostly
+      const sanitizedData = { ...INITIAL_FORM_DATA };
+      Object.keys(INITIAL_FORM_DATA).forEach(key => {
+        if (editData[key] !== undefined && editData[key] !== null) {
+          sanitizedData[key] = editData[key];
+        }
+      });
+      setFormData(sanitizedData);
+
+      // Handle image previews if they are URLs
+      setImagePreview({
+        diamond_image1: editData.diamond_image1 || null,
+        diamond_image2: editData.diamond_image2 || null,
+        diamond_image3: editData.diamond_image3 || null,
+        diamond_image4: editData.diamond_image4 || null,
+        diamond_image5: editData.diamond_image5 || null,
+        diamond_video: editData.diamond_video || null,
+        certificate_image: editData.certificate_image || null,
+      });
+    } else {
+      setFormData(INITIAL_FORM_DATA);
+      setImagePreview({
+        diamond_image1: null,
+        diamond_image2: null,
+        diamond_image3: null,
+        diamond_image4: null,
+        diamond_image5: null,
+        diamond_video: null,
+        certificate_image: null,
+      });
+    }
+  }, [editData]);
   const [activeTab, setActiveTab] = useState("basic");
   const [isLoading, setIsLoading] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -561,20 +599,20 @@ const AddStockManual = () => {
         return;
       }
     }
-    
+
     setFormData((prev) => {
       const updatedData = {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       };
-      
+
       // Auto-calculate final price when price_per_carat or rap_per_carat changesz
       if (name === 'price_per_carat' || name === 'weight') {
         const pricePerCarat = parseFloat(updatedData.price_per_carat) || 0;
         const weight = parseFloat(updatedData.weight) || 0;
         updatedData.final_price = Math.max(pricePerCarat * weight, 0).toFixed(2);
       }
-      
+
       // Auto-calculate RS amount when final_price or dollar_rate changes
       if (name === 'final_price' || name === 'dollar_rate') {
         const finalPrice = parseFloat(updatedData.final_price) || 0;
@@ -582,8 +620,8 @@ const AddStockManual = () => {
         updatedData.rs_amount = Math.max(finalPrice * dollarRate, 0).toFixed(2);
       }
 
-     
-      
+
+
       return updatedData;
     });
   };
@@ -612,7 +650,7 @@ const AddStockManual = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate required fields
     const { missingFields, negativeFields } = validateForm();
     if (missingFields.length > 0) {
@@ -640,9 +678,13 @@ const AddStockManual = () => {
     setIsLoading(true);
 
     try {
-      await api.post("/stock", formData);
-
-      notify.success("Success", "Stock item added successfully!");
+      if (editData) {
+        await api.put(`/stock/${editData.id}`, formData);
+        notify.success("Success", "Stock item updated successfully!");
+      } else {
+        await api.post("/stock", formData);
+        notify.success("Success", "Stock item added successfully!");
+      }
       setFormData(INITIAL_FORM_DATA);
       setImagePreview({
         diamond_image1: null,
@@ -653,15 +695,15 @@ const AddStockManual = () => {
         diamond_video: null,
         certificate_image: null,
       });
+      if (onStockAdded) onStockAdded();
     } catch (error) {
       console.error("Submit error:", error);
       const errorMessage = error.response?.data?.message || "Failed to add stock";
-      
+
       // Handle subscription limit error
-      if (errorMessage.includes("Subscription limit")) {
-        setSubscriptionError(errorMessage);
-        setShowSubscriptionModal(true);
-      } 
+      if (errorMessage.includes("Subscription limit") || errorMessage.includes("No active subscription")) {
+        notify.error(errorMessage);
+      }
       // Handle duplicate stock_id error
       else if (errorMessage.includes("already exists")) {
         notify.error(
@@ -711,11 +753,13 @@ const AddStockManual = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             {/* Left: Title */}
             <div className="flex items-center gap-3 sm:gap-4">
-             
+
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">Add Stock</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-[#0F172A] truncate">
+                  {editData ? "Update Stock" : "Add Stock"}
+                </h1>
                 <p className="text-xs sm:text-sm text-[#64748B] hidden sm:block">
-                  Manual stock entry form
+                  {editData ? "Edit existing stock record" : "Manual stock entry form"}
                 </p>
               </div>
             </div>
@@ -723,6 +767,15 @@ const AddStockManual = () => {
             {/* Right: Actions */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 sm:gap-3">
+                {editData && (
+                  <button
+                    onClick={onCancel}
+                    className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all border border-red-200 flex-1 sm:flex-none"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Cancel</span>
+                  </button>
+                )}
                 <button
                   onClick={handleReset}
                   className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-[#64748B] hover:text-[#0F172A] hover:bg-white rounded-lg transition-all border border-[#E2E8F0] flex-1 sm:flex-none"
@@ -739,12 +792,12 @@ const AddStockManual = () => {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span className="hidden sm:inline">Saving...</span>
+                    <span className="hidden sm:inline">{editData ? "Updating..." : "Saving..."}</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    <span className="hidden sm:inline">Save Stock</span>
+                    <span className="hidden sm:inline">{editData ? "Update Stock" : "Save Stock"}</span>
                   </>
                 )}
               </button>
@@ -762,11 +815,10 @@ const AddStockManual = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                  activeTab === tab.id
-                    ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
-                    : "bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0]"
-                }`}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.id
+                  ? "bg-[#1E3A8A] text-white shadow-lg shadow-[#1E3A8A]/20"
+                  : "bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-[#E2E8F0]"
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -798,6 +850,13 @@ const AddStockManual = () => {
                       placeholder="Enter unique stock ID"
                     />
                     <InputField
+                      label="Party"
+                      name="party"
+                      value={formData.party}
+                      onChange={handleInputChange}
+                      placeholder="Enter party name"
+                    />
+                    <InputField
                       label="Type"
                       name="type"
                       value={formData.type}
@@ -805,7 +864,7 @@ const AddStockManual = () => {
                       options={TYPE_OPTIONS}
                       required
                     />
-                 
+
                     <InputField
                       label="Status"
                       name="status"
@@ -1248,7 +1307,7 @@ const AddStockManual = () => {
                     value={formData.rap_per_carat}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Price/Carat"
@@ -1259,7 +1318,7 @@ const AddStockManual = () => {
                     value={formData.price_per_carat}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Discount %"
@@ -1270,7 +1329,7 @@ const AddStockManual = () => {
                     value={formData.discount}
                     onChange={handleInputChange}
                     placeholder="0.00"
-                   
+
                   />
                   <InputField
                     label="Final Price"

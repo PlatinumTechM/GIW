@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
 import { stockAPI } from "../../../services/api.js";
 
-const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, searchQuery = "" }) => {
+const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) => {
   const navigate = useNavigate();
+  const { role } = useParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -20,7 +21,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
       console.error("Invalid diamond ID:", diamond.id);
       return;
     }
-    navigate(`/user/diamond/${type}/${diamond.id}`);
+    navigate(`/${role}/diamond/${type}/${diamond.id}`);
   };
 
   // Map backend data to frontend format
@@ -65,6 +66,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
       eyeClean: stock.eye_clean,
       shade: stock.shade,
       type: stock.type,
+      party: stock.party,
     };
   };
 
@@ -84,25 +86,38 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
         if (filters?.colors?.length > 0 && filters?.colorType === "White") {
           params.color = filters.colors.join(",");
         }
-        if (filters?.clarities?.length > 0) params.clarity = filters.clarities.join(",");
-        if (filters?.caratMin) params.minCarat = filters.caratMin;
-        if (filters?.caratMax) params.maxCarat = filters.caratMax;
+        if (filters?.clarity?.length > 0) params.clarity = filters.clarity.join(",");
+        if (filters?.caratMin) params.minWeight = filters.caratMin;
+        if (filters?.caratMax) params.maxWeight = filters.caratMax;
         if (filters?.priceMin) params.minPrice = filters.priceMin;
         if (filters?.priceMax) params.maxPrice = filters.priceMax;
-        if (searchQuery?.trim()) params.search = searchQuery.trim();
+        if (filters?.pricePerCaratMin) params.minPricePerCarat = filters.pricePerCaratMin;
+        if (filters?.pricePerCaratMax) params.maxPricePerCarat = filters.pricePerCaratMax;
 
         // Detailed filters
         if (filters?.cuts?.length > 0) params.cut = filters.cuts.join(",");
         if (filters?.polish?.length > 0) params.polish = filters.polish.join(",");
         if (filters?.symmetry?.length > 0) params.symmetry = filters.symmetry.join(",");
         if (filters?.fluorescence?.length > 0) params.fluorescence = filters.fluorescence.join(",");
+        if (filters?.growthType?.length > 0) params.growthType = filters.growthType.join(",");
+        if (filters?.treatment?.length > 0) params.treatment = filters.treatment.join(",");
         if (filters?.certifications?.length > 0) params.lab = filters.certifications.join(",");
-        if (filters?.fancyColors?.length > 0) params.fancyColor = filters.fancyColors.join(",");
+        
+        // Color handling - backend handles both in color param
+        if (filters?.colorType === "White" && filters?.colors?.length > 0) {
+          params.color = filters.colors.join(",");
+        } else if (filters?.colorType === "Fancy" && filters?.fancyColors?.length > 0) {
+          params.color = filters.fancyColors.join(",");
+        }
         if (filters?.fancyIntensity) params.fancyIntensity = filters.fancyIntensity;
         if (filters?.fancyOvertone) params.fancyOvertone = filters.fancyOvertone;
         if (filters?.certificateType) params.certificateType = filters.certificateType;
-        if (filters?.available) params.availability = "AVAILABLE";
+        if (filters?.available) params.status = "AVAILABLE";
         if (filters?.showOnlyMedia) params.hasMedia = "true";
+        if (filters?.heartArrow) params.heartArrow = "true";
+        if (filters?.noBgm) params.noBgm = "true";
+        if (filters?.location) params.location = filters.location;
+        if (filters?.supplier) params.supplier = filters.supplier;
 
         // Measurement filters
         if (filters?.lengthMin) params.minLength = filters.lengthMin;
@@ -168,12 +183,12 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
     };
 
     fetchStocks();
-  }, [type, currentPage, filters, searchQuery, sortBy]);
+  }, [type, currentPage, filters, sortBy]);
 
-  // Reset to page 1 when filters or search change
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filters, sortBy, searchQuery]);
+  }, [filters, sortBy]);
 
   const toggleSelect = (id) => {
     if (selectedItems.includes(id)) {
@@ -265,7 +280,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
         // List View
         <div className="bg-white rounded-2xl border border-[#E2E8F0] overflow-hidden">
           {/* Table Header */}
-          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
+          <div className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr_1.5fr] gap-3 px-6 py-4 bg-[#F8FAFC] border-b border-[#E2E8F0] text-sm font-semibold text-[#475569]">
             <div>Carat</div>
             <div>Color</div>
             <div>Clarity</div>
@@ -273,6 +288,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
             <div>Polish</div>
             <div>Symmetry</div>
             <div>Fluor</div>
+            <div>Party</div>
             <div>Certification</div>
             <div className="text-right">Price</div>
           </div>
@@ -299,7 +315,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
               >
                 {/* Desktop Row */}
                 <div
-                  className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center cursor-pointer"
+                  className="hidden lg:grid lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1.5fr_1.5fr_1.5fr] gap-3 px-6 py-4 items-center cursor-pointer"
                   onClick={() => openDiamondDetail(item)}
                 >
                   <div className="flex items-center gap-2">
@@ -335,6 +351,9 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                     <span className="font-medium text-[#0F172A]">{item.fluorescence}</span>
                   </div>
                   <div>
+                    <span className="font-medium text-[#0F172A]">{item.party || "-"}</span>
+                  </div>
+                  <div>
                     <div className="flex flex-col">
                       <span className="font-medium text-[#0F172A]">{item.certification}</span>
                       <span className="text-xs text-[#64748B]">{item.certificationNumber}</span>
@@ -353,41 +372,32 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   className="lg:hidden p-4 cursor-pointer"
                   onClick={() => openDiamondDetail(item)}
                 >
-                  <div className="flex gap-4">
-                    <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] flex-shrink-0 overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.shape}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold text-[#0F172A]">
-                            {item.shape} {item.carat}ct
-                          </h3>
-                          <p className="text-sm text-[#64748B] mt-0.5">
-                            {item.colorType === "Fancy" && item.fancyIntensity ? `${item.fancyIntensity} ` : ""}
-                            {item.color} · {item.clarity}
-                          </p>
-                        </div>
-                        <p className="text-lg font-bold text-[#1E3A8A] whitespace-nowrap">
-                          ${item.price.toLocaleString()}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-[#0F172A]">
+                          {item.shape} {item.carat}ct
+                        </h3>
+                        <p className="text-sm text-[#64748B] mt-0.5">
+                          {item.colorType === "Fancy" && item.fancyIntensity ? `${item.fancyIntensity} ` : ""}
+                          {item.color} · {item.clarity}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.cut} Cut</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.polish} P</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.symmetry} S</span>
-                        <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.fluorescence}</span>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber}</span>
-                        {item.available && (
-                          <span className="text-xs text-green-600 font-medium">Available</span>
-                        )}
-                      </div>
+                      <p className="text-lg font-bold text-[#1E3A8A] whitespace-nowrap">
+                        ${item.price.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.cut} Cut</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.polish} P</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.symmetry} S</span>
+                      <span className="text-xs bg-[#F1F5F9] px-2 py-1 rounded">{item.fluorescence}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber} · {item.party || "-"}</span>
+                      {item.available && (
+                        <span className="text-xs text-green-600 font-medium">Available</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -429,7 +439,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   animate={{ scale: hoveredItem === item.id ? 1.1 : 1 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   onError={(e) => {
-                    e.target.style.display = "none";
+                    e.target.style.display = "None";
                   }}
                 />
 
@@ -493,7 +503,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
 
                 {/* Specs */}
                 <p className="mb-3 text-sm text-[#64748B] line-clamp-2">
-                  {item.cut} Cut · {item.polish} Polish · {item.symmetry} Symmetry · {item.fluorescence}
+                  {item.cut} Cut · {item.polish} Polish · {item.symmetry} Symmetry · {item.fluorescence} · {item.party || "No Party"}
                 </p>
 
                 {/* Price */}
@@ -533,11 +543,10 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters, sear
                   <button
                     key={page}
                     onClick={() => handlePageChange(page)}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${
-                      currentPage === page
+                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 ${currentPage === page
                         ? "bg-gradient-to-br from-[#1E3A8A] to-[#2563EB] text-white shadow-md shadow-blue-900/20 scale-105"
                         : "text-[#475569] hover:bg-gray-100 hover:text-[#1E3A8A]"
-                    }`}
+                      }`}
                   >
                     {page}
                   </button>

@@ -22,13 +22,15 @@ export const bulkUpload = async (req, res) => {
       message: result.limitReached ? result.limitMessage : `Successfully uploaded ${result.insertedCount} stock items`,
 
       data: result,
-      
+
       limitReached: result.limitReached || false,
     });
   } catch (error) {
     console.error("Error at bulkUpload = ", error);
 
-    res.status(500).json({
+    const status = (error.message?.includes("Subscription limit") || error.message?.includes("No active subscription")) ? 403 : 500;
+
+    res.status(status).json({
       success: false,
 
       message: error.message || "Failed to upload stock data",
@@ -57,7 +59,6 @@ export const getAllStocks = async (req, res) => {
       minPricePerCarat,
       maxPricePerCarat,
       growthType,
-      search,
       type,
       polish,
       symmetry,
@@ -96,6 +97,11 @@ export const getAllStocks = async (req, res) => {
       shade,
       hasMedia,
       certificateType,
+      heartArrow,
+      noBgm,
+      location,
+      supplier,
+      treatment,
     } = req.query;
 
     const filters = {
@@ -105,11 +111,12 @@ export const getAllStocks = async (req, res) => {
       shape,
       color,
       clarity,
+      location,
+      supplier,
       minCarat: minCarat ? parseFloat(minCarat) : null,
       maxCarat: maxCarat ? parseFloat(maxCarat) : null,
       minPrice: minPrice ? parseFloat(minPrice) : null,
       maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-      search,
       type: req.diamondType || type,
       // Detailed filters
       cut,
@@ -147,6 +154,9 @@ export const getAllStocks = async (req, res) => {
       shade,
       hasMedia: hasMedia === "true",
       certificateType,
+      heartArrow: heartArrow === "true",
+      noBgm: noBgm === "true",
+      location,
       weight,
       minWeight: minWeight ? parseFloat(minWeight) : null,
       maxWeight: maxWeight ? parseFloat(maxWeight) : null,
@@ -157,7 +167,8 @@ export const getAllStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
-      search,
+      treatment,
+      supplier,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };
@@ -286,6 +297,132 @@ export const deleteStock = async (req, res) => {
   }
 };
 
+export const toggleHold = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    const result = await stockService.toggleHold(id, userId);
+
+    res.status(200).json({
+      success: true,
+      message: `Stock status updated to ${result.status}`,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error at toggleHold = ", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const sellStock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    await stockService.sellStock(id, userId, ip);
+
+    res.status(200).json({
+      success: true,
+      message: "Stock marked as sold and moved to sales history",
+    });
+  } catch (error) {
+    console.error("Error at sellStock = ", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const bulkToggleHold = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No IDs provided",
+      });
+    }
+
+    const result = await stockService.bulkToggleHold(ids, userId);
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully updated ${result.length} items`,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error at bulkToggleHold = ", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const bulkSellStock = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userId = req.user?.id;
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No IDs provided",
+      });
+    }
+
+    const result = await stockService.bulkSellStock(ids, userId, ip);
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully marked ${result} items as sold`,
+    });
+  } catch (error) {
+    console.error("Error at bulkSellStock = ", error);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getFieldMapping = async (req, res) => {
   try {
     const mapping = stockService.getFieldMapping();
@@ -333,7 +470,7 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat,
       maxPricePerCarat,
       growthType,
-      search,
+      party,
       sortBy,
       sortOrder,
     } = req.query;
@@ -352,7 +489,7 @@ export const getMyStocks = async (req, res) => {
       minPricePerCarat: minPricePerCarat ? parseFloat(minPricePerCarat) : null,
       maxPricePerCarat: maxPricePerCarat ? parseFloat(maxPricePerCarat) : null,
       growthType,
-      search,
+      party,
       sortBy: sortBy || "created_at",
       sortOrder: sortOrder || "DESC",
     };
@@ -380,7 +517,8 @@ export const getMyStocks = async (req, res) => {
 
 export const getFilterOptions = async (req, res) => {
   try {
-    const result = await stockService.getFilterOptions();
+    const userId = req.user?.id;
+    const result = await stockService.getFilterOptions(userId);
 
     res.status(200).json({
       success: true,

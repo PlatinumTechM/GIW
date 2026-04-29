@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import {
   Heart,
   Eye,
-  Star,
   ChevronLeft,
   ChevronRight,
   ShoppingBag as ShoppingBagIcon,
@@ -11,6 +10,11 @@ import {
   ArrowUpDown,
   Grid3X3,
   List,
+  Gem,
+  Diamond,
+  Scale,
+  Tag,
+  Box,
 } from "lucide-react";
 
 const JewelryGrid = ({
@@ -54,8 +58,6 @@ const JewelryGrid = ({
         return sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
       case "price-high":
         return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
-      case "rating":
-        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       case "newest":
         return sorted.sort((a, b) => (b.id || 0) - (a.id || 0));
       case "name-asc":
@@ -169,7 +171,6 @@ const JewelryGrid = ({
     { id: "price-low", label: "Price: Low to High" },
     { id: "price-high", label: "Price: High to Low" },
     { id: "newest", label: "Newest First" },
-    { id: "rating", label: "Best Rated" },
     { id: "name-asc", label: "Name: A-Z" },
     { id: "name-desc", label: "Name: Z-A" },
   ];
@@ -275,7 +276,6 @@ const JewelryGrid = ({
             <div className="col-span-2">Category</div>
             <div className="col-span-2">Metal</div>
             <div className="col-span-2">Description</div>
-            <div className="col-span-1">Rating</div>
             <div className="col-span-1 text-right">Price</div>
           </div>
 
@@ -339,14 +339,6 @@ const JewelryGrid = ({
                   <div className="col-span-2">
                     <span className="text-sm text-[#64748B] line-clamp-1">{item.description}</span>
                   </div>
-                  <div className="col-span-1">
-                    {item.rating && (
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="text-sm font-medium text-[#0F172A]">{item.rating}</span>
-                      </div>
-                    )}
-                  </div>
                   <div className="col-span-1 text-right">
                     <p className="text-lg font-bold text-[#1E3A8A]">
                       {item.priceDisplay || `$${item.price?.toLocaleString()}`}
@@ -371,12 +363,6 @@ const JewelryGrid = ({
                       </div>
                       <p className="text-sm text-[#64748B] mt-2 line-clamp-1">{item.description}</p>
                       <div className="flex items-center justify-between mt-2">
-                        {item.rating && (
-                          <div className="flex items-center gap-1 text-amber-500">
-                            <Star className="h-3 w-3 fill-current" />
-                            <span className="text-xs font-medium text-[#0F172A]">{item.rating}</span>
-                          </div>
-                        )}
                         {item.badge && (
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
                             item.badge === "Sale"
@@ -416,7 +402,7 @@ const JewelryGrid = ({
               transition: { staggerChildren: 0.08, delayChildren: 0.1 },
             },
           }}
-          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {paginatedItems.map((item) => (
             <motion.div
@@ -433,9 +419,24 @@ const JewelryGrid = ({
                   src={item.image}
                   alt={item.name}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                   animate={{ scale: hoveredItem === item.id ? 1.1 : 1 }}
                   transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 />
+
+                {item.status && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold shadow-lg ${
+                      item.status === 'available' || item.status === 'AVAILABLE'
+                        ? 'bg-emerald-600 text-white'
+                        : item.status === 'sold' || item.status === 'SOLD'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                )}
 
                 {item.badge && (
                   <motion.div
@@ -485,37 +486,23 @@ const JewelryGrid = ({
               </div>
 
               <div className="p-5">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-medium uppercase tracking-wider text-[#64748B]">
-                    {item.category?.replace(/s$/, "").replace(/-/g, " ")}
-                  </span>
-                  {item.rating && (
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="text-sm font-medium text-[#0F172A]">
-                        {item.rating}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <h3 className="mb-2 text-lg font-semibold text-[#0F172A] transition-colors group-hover:text-[#1E3A8A] line-clamp-2">
+                {/* Name */}
+                <h3 className="mb-3 text-lg font-bold text-[#1E3A8A] transition-colors group-hover:text-[#1E40AF] line-clamp-2 uppercase">
                   {item.name}
                 </h3>
 
-                <p className="mb-3 text-sm text-[#64748B] line-clamp-2">
-                  {item.description}
-                </p>
-
-                {item.metal && (
-                  <span className="inline-block px-3 py-1 bg-[#F1F5F9] rounded-full text-xs text-[#475569] mb-3 capitalize">
-                    {item.metal.replace(/-/g, " ")}
+                {/* Gram Value */}
+                <div className="mb-3 flex items-center gap-2">
+                  <Scale className="h-3.5 w-3.5 text-[#64748B]" />
+                  <span className="text-xs text-[#0F172A] font-medium">
+                    {item.weight && item.weight.toLowerCase() !== "noneg" ? `${item.weight}g` : "N/A"}
                   </span>
-                )}
+                </div>
 
+                {/* Price */}
                 <div className="flex items-center justify-between pt-3 border-t border-[#E2E8F0]">
                   <div>
-                    <p className="text-xl font-bold text-[#1E3A8A]">
+                    <p className="text-lg font-bold text-[#1E3A8A]">
                       {item.priceDisplay || `$${item.price?.toLocaleString()}`}
                     </p>
                   </div>
