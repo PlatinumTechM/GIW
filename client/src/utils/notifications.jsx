@@ -149,14 +149,12 @@ export const showConfirm = (options = {}) => {
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        variant === "danger" ? "bg-[#EF4444]/10" : "bg-amber-100"
-                      }`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${variant === "danger" ? "bg-[#EF4444]/10" : "bg-amber-100"
+                        }`}
                     >
                       <AlertTriangle
-                        className={`w-6 h-6 ${
-                          variant === "danger" ? "text-[#EF4444]" : "text-amber-600"
-                        }`}
+                        className={`w-6 h-6 ${variant === "danger" ? "text-[#EF4444]" : "text-amber-600"
+                          }`}
                       />
                     </div>
                     <h3 className="text-lg font-bold text-[#0F172A]">{title}</h3>
@@ -183,11 +181,10 @@ export const showConfirm = (options = {}) => {
                         if (onConfirm) onConfirm();
                         resolve(true);
                       }}
-                      className={`inline-flex items-center gap-2 px-6 py-2.5 text-white font-medium rounded-xl transition-all ${
-                        variant === "danger"
+                      className={`inline-flex items-center gap-2 px-6 py-2.5 text-white font-medium rounded-xl transition-all ${variant === "danger"
                           ? "bg-[#EF4444] hover:bg-[#DC2626] shadow-lg shadow-red-100"
                           : "bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 shadow-lg shadow-blue-100"
-                      }`}
+                        }`}
                     >
                       {variant === "danger" && <Trash2 className="w-4 h-4" />}
                       {confirmText}
