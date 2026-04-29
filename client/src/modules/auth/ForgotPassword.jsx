@@ -46,6 +46,7 @@ const ForgotPassword = () => {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    const email = formData.email.toLowerCase();
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
     notify.success("Email Sent", "Check your inbox for reset instructions");
