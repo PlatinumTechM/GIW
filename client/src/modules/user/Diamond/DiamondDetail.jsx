@@ -122,6 +122,11 @@ const DiamondDetail = () => {
       diamondImage5: stock.diamond_image5,
       mediaAvailable: getAvailableMediaTypes(stock),
       party: stock.party,
+      supplierCompany: stock.supplier_company,
+      supplierAddress: stock.supplier_address,
+      supplierGst: stock.supplier_gst,
+      supplierEmail: stock.supplier_email,
+      supplierPhone: stock.supplier_phone,
     };
   };
 
@@ -349,9 +354,9 @@ const DiamondDetail = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="overflow-hidden rounded-3xl"
-          style={{ 
+          style={{
             background: "transparent",
-            boxShadow: "0 25px 50px -12px rgba(30, 58, 138, 0.15), 0 0 0 1px rgba(30, 58, 138, 0.05)" 
+            boxShadow: "0 25px 50px -12px rgba(30, 58, 138, 0.15), 0 0 0 1px rgba(30, 58, 138, 0.05)"
           }}
         >
           {/* Header */}
@@ -360,9 +365,9 @@ const DiamondDetail = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="relative overflow-hidden px-8 py-6"
-            style={{ 
+            style={{
               background: "transparent",
-              borderBottom: `1px solid ${theme.border}` 
+              borderBottom: `1px solid ${theme.border}`
             }}
           >
             <motion.div
@@ -410,7 +415,7 @@ const DiamondDetail = () => {
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsLiked(!isLiked)}
                   className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
-                  style={{ 
+                  style={{
                     background: isLiked ? theme.danger : theme.surface,
                     color: isLiked ? "#fff" : theme.textMuted,
                     boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
@@ -500,7 +505,7 @@ const DiamondDetail = () => {
                     transition={{ delay: 0.5 }}
                     className="absolute bottom-4 left-4"
                   >
-                    <span 
+                    <span
                       className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg"
                       style={{ background: `linear-gradient(135deg, ${theme.success} 0%, #059669 100%)` }}
                     >
@@ -607,8 +612,10 @@ const DiamondDetail = () => {
 
               {/* Additional Info */}
               <motion.div
-                variants={itemVariants}
-                whileHover={{ boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.1)" }}
+                initial="rest"
+                whileHover="hover"
+                animate="rest"
+                variants={cardHoverVariants}
                 className="rounded-xl p-5 transition-all"
                 style={{
                   background: "transparent",
@@ -648,8 +655,10 @@ const DiamondDetail = () => {
 
               {/* More Details */}
               <motion.div
-                variants={itemVariants}
-                whileHover={{ boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.1)" }}
+                initial="rest"
+                whileHover="hover"
+                animate="rest"
+                variants={cardHoverVariants}
                 className="rounded-xl p-5 transition-all"
                 style={{
                   background: "transparent",
@@ -709,7 +718,7 @@ const DiamondDetail = () => {
                   >
                     <img
                       src={getShapeIcon(diamond.shape)}
-                      alt={diamond.shape }
+                      alt={diamond.shape}
                       className="h-6 w-6"
                     />
                   </motion.div>
@@ -921,7 +930,7 @@ const DiamondDetail = () => {
                     { label: "Table", value: diamond.table, unit: "%" },
                     { label: "Culet Size", value: diamond.culetSize, unit: "" },
                     { label: "Girdle %", value: diamond.girdlePercentage, unit: "%" },
-                    { label: "Crown Height", value: diamond.crownHeight, unit: ""},
+                    { label: "Crown Height", value: diamond.crownHeight, unit: "" },
                     { label: "Crown Angle", value: diamond.crownAngle, unit: "" },
                     { label: "Pavilion Depth", value: diamond.pavilionDepth, unit: " mm" },
                     { label: "Pavilion Angle", value: diamond.pavilionAngle, unit: "°" },
@@ -944,7 +953,49 @@ const DiamondDetail = () => {
                   })}
                 </div>
               </motion.div>
-
+              {/* Supplier Details */}
+              {diamond.supplierCompany && (
+                <motion.div
+                  initial="rest"
+                  whileHover="hover"
+                  animate="rest"
+                  variants={cardHoverVariants}
+                  className="rounded-xl p-5 transition-all"
+                  style={{
+                    background: "transparent",
+                    border: `1px solid ${theme.border}`
+                  }}
+                >
+                  <h3 className="mb-4 flex items-center gap-2 font-semibold" style={{ color: theme.secondary }}>
+                    <Shield className="h-5 w-5" style={{ color: theme.primary }} />
+                    Supplier Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                      <span style={{ color: theme.textMuted }}>Company Name</span>
+                      <span className="font-semibold text-right" style={{ color: theme.secondary }}>{diamond.supplierCompany || "None"}</span>
+                    </div>
+                    <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                      <span style={{ color: theme.textMuted }}>Address</span>
+                      <span className="font-semibold text-right max-w-xs" style={{ color: theme.secondary }}>{diamond.supplierAddress || "None"}</span>
+                    </div>
+                    <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                      <span style={{ color: theme.textMuted }}>GST Number</span>
+                      <span className="font-semibold text-right" style={{ color: theme.secondary }}>{diamond.supplierGst || "None"}</span>
+                    </div>
+                    <div className="flex items-start justify-between pb-2" style={{ borderBottom: `1px solid ${theme.border}` }}>
+                      <span style={{ color: theme.textMuted }}>Email</span>
+                      <span className="font-semibold text-right" style={{ color: theme.secondary }}>{diamond.supplierEmail || "None"}</span>
+                    </div>
+                    {diamond.supplierPhone && (
+                      <div className="flex items-start justify-between">
+                        <span style={{ color: theme.textMuted }}>Phone</span>
+                        <span className="font-semibold text-right" style={{ color: theme.secondary }}>{diamond.supplierPhone}</span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
               {/* Reference ID */}
               <motion.div
                 variants={itemVariants}
@@ -963,13 +1014,13 @@ const DiamondDetail = () => {
                       }}
                       className="rounded-lg p-1.5 transition-colors"
                       style={{ color: theme.textMuted }}
-                      onMouseEnter={(e) => { 
-                        e.currentTarget.style.background = theme.surface; 
-                        e.currentTarget.style.color = theme.primary; 
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = theme.surface;
+                        e.currentTarget.style.color = theme.primary;
                       }}
-                      onMouseLeave={(e) => { 
-                        e.currentTarget.style.background = "transparent"; 
-                        e.currentTarget.style.color = theme.textMuted; 
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = theme.textMuted;
                       }}
                     >
                       <Copy className="h-4 w-4" />
@@ -977,6 +1028,8 @@ const DiamondDetail = () => {
                   </div>
                 </div>
               </motion.div>
+
+
             </motion.div>
           </div>
         </motion.div>
@@ -1001,7 +1054,7 @@ const DiamondDetail = () => {
               className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl"
               style={{ background: theme.surface }}
             >
-              <div 
+              <div
                 className="flex items-center justify-between px-6 py-4"
                 style={{ borderBottom: `1px solid ${theme.border}` }}
               >
@@ -1012,13 +1065,13 @@ const DiamondDetail = () => {
                   onClick={() => setShowShareModal(false)}
                   className="rounded-full p-1 transition-colors"
                   style={{ color: theme.textMuted }}
-                  onMouseEnter={(e) => { 
-                    e.currentTarget.style.background = theme.background; 
-                    e.currentTarget.style.color = theme.text; 
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = theme.background;
+                    e.currentTarget.style.color = theme.text;
                   }}
-                  onMouseLeave={(e) => { 
-                    e.currentTarget.style.background = "transparent"; 
-                    e.currentTarget.style.color = theme.textMuted; 
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = theme.textMuted;
                   }}
                 >
                   <X className="h-5 w-5" />
@@ -1027,7 +1080,7 @@ const DiamondDetail = () => {
               <div className="p-6">
                 <p className="mb-4 text-sm" style={{ color: theme.textMuted }}>Copy link to share this diamond</p>
                 <div className="flex gap-2">
-                  <div 
+                  <div
                     className="flex-1 rounded-xl px-4 py-3 text-sm font-mono"
                     style={{ background: theme.background, color: theme.text }}
                   >

@@ -745,7 +745,18 @@ const normalizeNullValues = (data) => {
 };
 
 export const getById = async (id) => {
-  const query = "SELECT * FROM diamond_stock WHERE id = $1";
+  const query = `
+    SELECT 
+      ds.*,
+      u.company as supplier_company,
+      u.address as supplier_address,
+      u.gst as supplier_gst,
+      u.email as supplier_email,
+      u.phone as supplier_phone
+    FROM diamond_stock ds
+    LEFT JOIN users u ON ds.user_id = u.id
+    WHERE ds.id = $1
+  `;
 
   const result = await pool.query(query, [id]);
 
