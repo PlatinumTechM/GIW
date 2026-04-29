@@ -130,17 +130,17 @@ export const router = createBrowserRouter([
       {
         path: ":role/diamond/:type/:id",
         element: (
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <DiamondDetail />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         ),
       },
       {
         path: ":role/jewelry/:type/:id",
         element: (
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <JewelryDetail />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         ),
       },
       {

@@ -38,8 +38,10 @@ router.get("/filters", authenticate, stockController.getFilterOptions);
 
 router.get("/fields/mapping", authenticate, stockController.getFieldMapping);
 
-// Get single stock by id - MUST be after all specific routes
+// Get single stock by id (public for sharing) - MUST be after all specific routes
+router.get("/public/:id", stockController.getStockById);
 
+// Get single stock by id - MUST be after all specific routes
 router.get("/:id", authenticate, stockController.getStockById);
 
 // Create single stock
