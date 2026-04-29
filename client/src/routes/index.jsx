@@ -24,6 +24,7 @@ import AddStockManual from "@/modules/stock/AddStockManual";
 import JewelleryStock from "@/modules/stock/jewellery/JewelleryStock";
 import SharePage from "@/modules/share/SharePage";
 import NotificationPage from "@/modules/notifications/NotificationPage";
+import NotFound from "@/components/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -222,5 +223,9 @@ export const router = createBrowserRouter([
         element: <Navigate to="/buyer/lab-grown-diamonds" replace />,
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
