@@ -4,27 +4,68 @@ const ALL_COLUMNS = [
   "type",
   "user_id",
   "stock_id",
-  "category",
   "name",
   "description",
-  "material",
-  "weight",
-  "diamond_type",
-  "diamond_shape",
-  "diamond_weight",
-  "total_diamond_weight",
-  "diamond_color",
-  "diamond_clarity",
-  "diamond_cut",
-  "diamond_growth",
-  "price",
+  "design_number",
+  "brand",
+  "jewelry_style",
+  "jewelry_sub_category",
   "status",
+  "material",
+  "metal_purity",
+  "weight",
+  "city",
+  "country",
+  "price",
   "jewellery_image1",
   "jewellery_image2",
   "jewellery_image3",
   "jewellery_image4",
   "jewellery_image5",
-  "jewellery_video"
+  "jewellery_video",
+  "center_type",
+  "center_gem_type",
+  "center_gem_color",
+  "center_shape",
+  "center_weight_cts",
+  "center_color_grade",
+  "center_clarity",
+  "center_cut",
+  "center_polish",
+  "center_symmetry",
+  "center_fancy_color",
+  "center_fancy_intensity",
+  "center_fluorescence_intensity",
+  "center_lab",
+  "center_enhancement",
+  "center_total_stones",
+  "center_measurement_length",
+  "center_measurement_width",
+  "center_measurement_depth",
+  "center_depth_percent",
+  "center_table_percent",
+  "side_stone_type",
+  "side_gem_type",
+  "side_gem_color",
+  "side_shape",
+  "side_weight_cts",
+  "side_color_grade",
+  "side_clarity",
+  "side_fancy_color",
+  "side_fancy_intensity",
+  "side_total_stones",
+  "mount",
+  "setting_supported_carat_from",
+  "setting_supported_carat_to",
+  "supported_diamond_shapes",
+  "total_number_of_stones",
+  "certificate_number",
+  "certificate_url",
+  "certificate_comment",
+  "lab",
+  "rank",
+  "is_customizable",
+  "is_featured"
 ];
 
 export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", filters = {}) => {
@@ -40,45 +81,37 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.categories && Array.isArray(filters.categories) && filters.categories.length > 0) {
-    // Handle OTHER category - items not in listed categories
+    // Map 'category' filter to 'jewelry_sub_category'
     if (filters.categories.includes("OTHER")) {
       const listedCategories = filters.categories.filter(c => c !== "OTHER");
       if (listedCategories.length > 0) {
-        // OTHER: items not in the listed categories
-        whereConditions.push(`(category IS NULL OR category NOT IN (${listedCategories.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
+        whereConditions.push(`(jewelry_sub_category IS NULL OR jewelry_sub_category NOT IN (${listedCategories.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
         values.push(...listedCategories);
         paramIndex += listedCategories.length;
       } else {
-        // If only OTHER is selected, show items with null or empty category
-        whereConditions.push(`(category IS NULL OR category = '' OR category NOT IN ('RING', 'NECKLACE', 'EARRINGS', 'BRACELET', 'PENDANT', 'BANGLE', 'BROOCH'))`);
+        whereConditions.push(`(jewelry_sub_category IS NULL OR jewelry_sub_category = '' OR jewelry_sub_category NOT IN ('RING', 'NECKLACE', 'EARRINGS', 'BRACELET', 'PENDANT', 'BANGLE', 'BROOCH'))`);
       }
     } else {
-      // Normal category filtering
-      whereConditions.push(`category = ANY($${paramIndex})`);
+      whereConditions.push(`jewelry_sub_category = ANY($${paramIndex})`);
       values.push(filters.categories);
       paramIndex++;
     }
   }
 
   if (filters.materials && Array.isArray(filters.materials) && filters.materials.length > 0) {
-    // Handle OTHER material - items not in listed predefined materials
     const predefinedMaterials = ["WHITE GOLD", "YELLOW GOLD", "ROSE GOLD", "PLATINUM", "SILVER", "TWO TONE"];
-
     if (filters.materials.includes("other")) {
       const listedMaterials = filters.materials.map(m => m.toUpperCase()).filter(m => m !== "OTHER");
       if (listedMaterials.length > 0) {
-        // OTHER + specific materials: items not in predefined OR matching specific materials
         whereConditions.push(`(material IS NULL OR material NOT IN (${predefinedMaterials.map((_, i) => `$${paramIndex + i}`).join(",")}) OR UPPER(material) = ANY($${paramIndex + predefinedMaterials.length}))`);
         values.push(...predefinedMaterials, listedMaterials);
         paramIndex += predefinedMaterials.length + 1;
       } else {
-        // If only OTHER is selected, show items with materials not in predefined list
         whereConditions.push(`(material IS NULL OR material NOT IN (${predefinedMaterials.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
         values.push(...predefinedMaterials);
         paramIndex += predefinedMaterials.length;
       }
     } else {
-      // Normal material filtering
       whereConditions.push(`UPPER(material) = ANY($${paramIndex})`);
       values.push(filters.materials.map(m => m.toUpperCase()));
       paramIndex++;
@@ -86,38 +119,33 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.shapes && Array.isArray(filters.shapes) && filters.shapes.length > 0) {
-    // Handle OTHER shape - items not in listed predefined shapes
     const predefinedShapes = ["ROUND", "PEAR", "OVAL", "PRINCESS", "EMERALD", "CUSHION", "MARQUISE", "HEART", "RADIANT", "BAGUETTE", "HEXAGONAL", "SQUARE EMERALD", "BRIOLETTE", "TRILLIANT", "HALF MOON", "ROSE CUT", "KITE"];
-
     if (filters.shapes.includes("other")) {
       const listedShapes = filters.shapes.filter(s => s !== "other");
       if (listedShapes.length > 0) {
-        // OTHER + specific shapes: items not in predefined OR matching specific shapes
-        whereConditions.push(`(diamond_shape IS NULL OR diamond_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}) OR diamond_shape = ANY($${paramIndex + predefinedShapes.length}))`);
+        whereConditions.push(`(center_shape IS NULL OR center_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}) OR center_shape = ANY($${paramIndex + predefinedShapes.length}))`);
         values.push(...predefinedShapes, listedShapes);
         paramIndex += predefinedShapes.length + 1;
       } else {
-        // If only OTHER is selected, show items with shapes not in predefined list
-        whereConditions.push(`(diamond_shape IS NULL OR diamond_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
+        whereConditions.push(`(center_shape IS NULL OR center_shape NOT IN (${predefinedShapes.map((_, i) => `$${paramIndex + i}`).join(",")}))`);
         values.push(...predefinedShapes);
         paramIndex += predefinedShapes.length;
       }
     } else {
-      // Normal shape filtering
-      whereConditions.push(`diamond_shape = ANY($${paramIndex})`);
+      whereConditions.push(`center_shape = ANY($${paramIndex})`);
       values.push(filters.shapes);
       paramIndex++;
     }
   }
 
   if (filters.colors && Array.isArray(filters.colors) && filters.colors.length > 0) {
-    whereConditions.push(`diamond_color = ANY($${paramIndex})`);
+    whereConditions.push(`center_color_grade = ANY($${paramIndex})`);
     values.push(filters.colors);
     paramIndex++;
   }
 
   if (filters.clarities && Array.isArray(filters.clarities) && filters.clarities.length > 0) {
-    whereConditions.push(`diamond_clarity = ANY($${paramIndex})`);
+    whereConditions.push(`center_clarity = ANY($${paramIndex})`);
     values.push(filters.clarities);
     paramIndex++;
   }
@@ -129,13 +157,13 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.typeFilter === "natural") {
-    whereConditions.push(`(diamond_type IS NULL OR LOWER(diamond_type) NOT LIKE '%lab%')`);
+    whereConditions.push(`(center_gem_type IS NULL OR LOWER(center_gem_type) NOT LIKE '%lab%')`);
   } else if (filters.typeFilter === "lab-grown") {
-    whereConditions.push(`(LOWER(diamond_type) LIKE '%lab%' OR LOWER(diamond_type) LIKE '%cvd%' OR LOWER(diamond_type) LIKE '%hpht%')`);
+    whereConditions.push(`(LOWER(center_gem_type) LIKE '%lab%' OR LOWER(center_gem_type) LIKE '%cvd%' OR LOWER(center_gem_type) LIKE '%hpht%')`);
   }
 
   if (filters.diamond_type) {
-    whereConditions.push(`LOWER(diamond_type) = LOWER($${paramIndex})`);
+    whereConditions.push(`LOWER(center_gem_type) = LOWER($${paramIndex})`);
     values.push(filters.diamond_type);
     paramIndex++;
   }
@@ -147,7 +175,7 @@ export const getAll = async (page = 1, limit = 50, sortBy = "created_at DESC", f
   }
 
   if (filters.diamond_weight && filters.diamond_weight !== "") {
-    whereConditions.push(`diamond_weight >= $${paramIndex}`);
+    whereConditions.push(`center_weight_cts >= $${paramIndex}`);
     values.push(parseFloat(filters.diamond_weight));
     paramIndex++;
   }
@@ -229,6 +257,12 @@ export const getById = async (id) => {
   return result.rows[0];
 };
 
+export const getByStockIdAndUser = async (stockId, userId) => {
+  const query = "SELECT * FROM jewellery_stock WHERE stock_id = $1 AND user_id = $2";
+  const result = await pool.query(query, [stockId, userId]);
+  return result.rows[0];
+};
+
 export const create = async (data) => {
   const columns = Object.keys(data).filter(col => ALL_COLUMNS.includes(col));
   const values = columns.map(col => data[col]);
@@ -269,12 +303,12 @@ export const deleteById = async (id) => {
 };
 
 export const getFilterOptions = async (userId) => {
-  const categoryQuery = `SELECT DISTINCT category FROM jewellery_stock WHERE user_id = $1 AND category IS NOT NULL ORDER BY category`;
+  const categoryQuery = `SELECT DISTINCT jewelry_sub_category FROM jewellery_stock WHERE user_id = $1 AND jewelry_sub_category IS NOT NULL ORDER BY jewelry_sub_category`;
   const materialQuery = `SELECT DISTINCT material FROM jewellery_stock WHERE user_id = $1 AND material IS NOT NULL ORDER BY material`;
   const statusQuery = `SELECT DISTINCT status FROM jewellery_stock WHERE user_id = $1 AND status IS NOT NULL ORDER BY status`;
-  const shapeQuery = `SELECT DISTINCT diamond_shape FROM jewellery_stock WHERE user_id = $1 AND diamond_shape IS NOT NULL ORDER BY diamond_shape`;
-  const colorQuery = `SELECT DISTINCT diamond_color FROM jewellery_stock WHERE user_id = $1 AND diamond_color IS NOT NULL ORDER BY diamond_color`;
-  const clarityQuery = `SELECT DISTINCT diamond_clarity FROM jewellery_stock WHERE user_id = $1 AND diamond_clarity IS NOT NULL ORDER BY diamond_clarity`;
+  const shapeQuery = `SELECT DISTINCT center_shape FROM jewellery_stock WHERE user_id = $1 AND center_shape IS NOT NULL ORDER BY center_shape`;
+  const colorQuery = `SELECT DISTINCT center_color_grade FROM jewellery_stock WHERE user_id = $1 AND center_color_grade IS NOT NULL ORDER BY center_color_grade`;
+  const clarityQuery = `SELECT DISTINCT center_clarity FROM jewellery_stock WHERE user_id = $1 AND center_clarity IS NOT NULL ORDER BY center_clarity`;
 
   const [categories, materials, statuses, shapes, colors, clarities] = await Promise.all([
     pool.query(categoryQuery, [userId]),
@@ -286,22 +320,22 @@ export const getFilterOptions = async (userId) => {
   ]);
 
   return {
-    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.jewelry_sub_category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
     materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
     statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
-    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
-    colors: colors.rows.length > 0 ? colors.rows.map(r => r.diamond_color) : ["D", "E", "F", "G", "H", "I", "J"],
-    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.diamond_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
+    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.center_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
+    colors: colors.rows.length > 0 ? colors.rows.map(r => r.center_color_grade) : ["D", "E", "F", "G", "H", "I", "J"],
+    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.center_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
   };
 };
 
 export const getPublicFilterOptions = async () => {
-  const categoryQuery = `SELECT DISTINCT category FROM jewellery_stock WHERE category IS NOT NULL ORDER BY category`;
+  const categoryQuery = `SELECT DISTINCT jewelry_sub_category FROM jewellery_stock WHERE jewelry_sub_category IS NOT NULL ORDER BY jewelry_sub_category`;
   const materialQuery = `SELECT DISTINCT material FROM jewellery_stock WHERE material IS NOT NULL ORDER BY material`;
   const statusQuery = `SELECT DISTINCT status FROM jewellery_stock WHERE status IS NOT NULL ORDER BY status`;
-  const shapeQuery = `SELECT DISTINCT diamond_shape FROM jewellery_stock WHERE diamond_shape IS NOT NULL ORDER BY diamond_shape`;
-  const colorQuery = `SELECT DISTINCT diamond_color FROM jewellery_stock WHERE diamond_color IS NOT NULL ORDER BY diamond_color`;
-  const clarityQuery = `SELECT DISTINCT diamond_clarity FROM jewellery_stock WHERE diamond_clarity IS NOT NULL ORDER BY diamond_clarity`;
+  const shapeQuery = `SELECT DISTINCT center_shape FROM jewellery_stock WHERE center_shape IS NOT NULL ORDER BY center_shape`;
+  const colorQuery = `SELECT DISTINCT center_color_grade FROM jewellery_stock WHERE center_color_grade IS NOT NULL ORDER BY center_color_grade`;
+  const clarityQuery = `SELECT DISTINCT center_clarity FROM jewellery_stock WHERE center_clarity IS NOT NULL ORDER BY center_clarity`;
 
   const [categories, materials, statuses, shapes, colors, clarities] = await Promise.all([
     pool.query(categoryQuery),
@@ -313,11 +347,11 @@ export const getPublicFilterOptions = async () => {
   ]);
 
   return {
-    categories: categories.rows.length > 0 ? categories.rows.map(r => r.category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
+    categories: categories.rows.length > 0 ? categories.rows.map(r => r.jewelry_sub_category) : ["RING", "NECKLACE", "EARRINGS", "BRACELET", "PENDANT", "BANGLE", "BROOCH", "OTHER"],
     materials: materials.rows.length > 0 ? materials.rows.map(r => r.material) : ["GOLD", "WHITE GOLD", "ROSE GOLD", "PLATINUM", "YELLOW GOLD"],
     statuses: statuses.rows.length > 0 ? statuses.rows.map(r => r.status) : ["AVAILABLE", "SOLD"],
-    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.diamond_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
-    colors: colors.rows.length > 0 ? colors.rows.map(r => r.diamond_color) : ["D", "E", "F", "G", "H", "I", "J"],
-    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.diamond_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
+    shapes: shapes.rows.length > 0 ? shapes.rows.map(r => r.center_shape) : ["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION"],
+    colors: colors.rows.length > 0 ? colors.rows.map(r => r.center_color_grade) : ["D", "E", "F", "G", "H", "I", "J"],
+    clarities: clarities.rows.length > 0 ? clarities.rows.map(r => r.center_clarity) : ["FL", "IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2"]
   };
 };

@@ -99,7 +99,7 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
           <div className="p-4 flex-1 flex flex-col space-y-3.5">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-black text-[#B8860B] uppercase tracking-[0.1em]">{item.category}</span>
+                <span className="text-[10px] font-black text-[#B8860B] uppercase tracking-[0.1em]">{item.jewelry_sub_category || "Jewellery"}</span>
                 <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">#{item.stock_id?.slice(-6)}</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:text-[#1E3A8A] transition-colors leading-snug">
@@ -111,36 +111,48 @@ const JewelleryGrid = ({ data, loading, onEdit, onDelete }) => {
             <div className="grid grid-cols-2 gap-y-2.5 gap-x-4 py-3 border-y border-slate-50">
               <div className="flex items-center gap-2.5">
                 <Scale className="w-3.5 h-3.5 text-[#64748B]" />
-                <span className="text-xs font-bold text-[#334155]">{item.weight && item.weight.toString().toLowerCase() !== "noneg" ? `${item.weight}g` : "N/A"}</span>
+                <span className="text-xs font-bold text-[#334155]">{item.weight ? `${item.weight}g` : "-"}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Tag className="w-3.5 h-3.5 text-[#64748B]" />
-                <span className="text-xs font-bold text-[#334155] truncate">{item.material}</span>
+                <span className="text-xs font-bold text-[#334155] truncate">{item.material || "-"}</span>
               </div>
               
-              {item.diamond_weight && (
-                <div className="flex items-center gap-2.5">
-                  <Gem className="w-3.5 h-3.5 text-[#1E3A8A]" />
-                  <span className="text-xs font-bold text-[#1E3A8A]">{Number(item.diamond_weight)} CT</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5">
+                <Gem className="w-3.5 h-3.5 text-[#1E3A8A]" />
+                <span className="text-xs font-bold text-[#1E3A8A]">{item.center_weight_cts ? `${item.center_weight_cts} CT` : "-"}</span>
+              </div>
               
-              {item.diamond_shape && (
-                <div className="flex items-center gap-2.5">
-                  <Layers className="w-3.5 h-3.5 text-[#64748B]" />
-                  <span className="text-[10px] font-black text-[#64748B] uppercase tracking-wider truncate">{item.diamond_shape}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5">
+                <Layers className="w-3.5 h-3.5 text-[#64748B]" />
+                <span className="text-[10px] font-black text-[#64748B] uppercase tracking-wider truncate">{item.center_shape || "-"}</span>
+              </div>
+            </div>
 
-              {item.total_diamond_weight && (
-                <div className="flex items-center justify-between col-span-2 pt-2 border-t border-slate-50/50 mt-1">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Weight</span>
+            {/* All Specs List */}
+            <div className="space-y-1.5 py-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Extended Specs</p>
+              <div className="max-h-32 overflow-y-auto pr-1 scrollbar-hide space-y-1">
+                {[
+                  { label: "Style", value: item.jewelry_style },
+                  { label: "Sub Cat", value: item.jewelry_sub_category },
+                  { label: "Purity", value: item.metal_purity },
+                  { label: "Center Gem", value: item.center_gem_type },
+                  { label: "Center Color", value: item.center_color_grade },
+                  { label: "Center Clarity", value: item.center_clarity },
+                  { label: "Side Gem", value: item.side_gem_type },
+                  { label: "Side Weight", value: item.side_weight_cts ? `${item.side_weight_cts} CT` : null },
+                  { label: "Side Stones", value: item.side_total_stones },
+                  { label: "Mount", value: item.mount },
+                  { label: "Lab", value: item.lab },
+                  { label: "Cert #", value: item.certificate_number }
+                ].map((spec, i) => (
+                  <div key={i} className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400 font-medium">{spec.label}</span>
+                    <span className="text-slate-700 font-bold">{spec.value || "-"}</span>
                   </div>
-                  <span className="text-xs font-black text-[#1E3A8A]">{Number(item.total_diamond_weight)} CT</span>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
 
             <div className="mt-auto pt-1">
