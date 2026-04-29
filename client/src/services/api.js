@@ -241,7 +241,7 @@ export const stockAPI = {
   },
 
   getStockById: async (id) => {
-    const response = await api.get(`/stock/${id}`);
+    const response = await api.get(`/stock/public/${id}`);
     return response.data;
   },
 

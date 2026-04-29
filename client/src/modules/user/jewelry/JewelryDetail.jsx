@@ -24,6 +24,9 @@ import {
   Play,
   Video,
   Menu,
+  Share2,
+  Mail,
+  Copy,
 } from "lucide-react";
 import { jewelryAPI } from "../../../services/api.js";
 
@@ -37,7 +40,50 @@ const JewelryDetail = () => {
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVideoActive, setIsVideoActive] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
+
+  const closeShareModal = () => {
+    setShowShareModal(false);
+    setCopied(false);
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch (err) {
+      const textarea = document.createElement("textarea");
+      textarea.value = window.location.href;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+      console.error("Clipboard fallback used:", err);
+    }
+  };
+
+  const shareViaWhatsApp = () => {
+    const text = encodeURIComponent(`Check out this jewelry: ${window.location.href}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
+  const shareViaEmail = () => {
+    const subject = encodeURIComponent(`Check out this jewelry`);
+    const body = encodeURIComponent(`Check out this jewelry: ${window.location.href}`);
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, "_blank", "noopener,noreferrer");
+  };
+
 
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -217,16 +263,6 @@ const JewelryDetail = () => {
 
   if (!jewelry) return null;
 
-  const getCategoryIcon = (category) => {
-    const iconMap = {
-      rings: "/diamond shap icon/round.svg",
-      necklaces: "/diamond shap icon/oval.svg",
-      earrings: "/diamond shap icon/pear.svg",
-      bracelets: "/diamond shap icon/cub.svg",
-    };
-    return iconMap[category] || "/diamond shap icon/round.svg";
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -312,26 +348,43 @@ const JewelryDetail = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </motion.button>
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => setIsLiked(!isLiked)}
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
-            style={{
-              background: isLiked ? theme.danger : theme.surface,
-              color: isLiked ? "#fff" : theme.textMuted,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-            }}
-          >
-            <motion.div
-              animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
-              transition={{ duration: 0.3 }}
+          <div className="flex gap-2">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleShareClick}
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
+              style={{
+                background: theme.surface,
+                color: theme.textMuted,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
             >
-              <Heart className={`h-5 w-5 ${isLiked && "fill-current"}`} />
-            </motion.div>
-          </motion.button>
+              <Share2 className="h-5 w-5" />
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsLiked(!isLiked)}
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-all"
+              style={{
+                background: isLiked ? theme.danger : theme.surface,
+                color: isLiked ? "#fff" : theme.textMuted,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+              }}
+            >
+              <motion.div
+                animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
+                transition={{ duration: 0.3 }}
+              >
+                <Heart className={`h-5 w-5 ${isLiked && "fill-current"}`} />
+              </motion.div>
+            </motion.button>
+          </div>
         </div>
 
         {/* Breadcrumb & Back */}
@@ -451,6 +504,19 @@ const JewelryDetail = () => {
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleShareClick}
+                  className="hidden sm:flex h-11 w-11 items-center justify-center rounded-full transition-all"
+                  style={{
+                    background: theme.surface,
+                    color: theme.textMuted,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                  }}
+                >
+                  <Share2 className="h-5 w-5" />
+                </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -889,6 +955,196 @@ const JewelryDetail = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Share Modal */}
+      <AnimatePresence>
+        {showShareModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-md"
+            onClick={closeShareModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.86, y: 28, rotateX: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 18, rotateX: -6 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md overflow-hidden rounded-[28px] bg-white/95 p-6 text-center shadow-[0_25px_80px_rgba(15,23,42,0.28)] ring-1 ring-white/70"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.div
+                className="absolute -left-16 -top-16 h-40 w-40 rounded-full bg-blue-500/10 blur-2xl"
+                animate={{ scale: [1, 1.18, 1], opacity: [0.55, 0.9, 0.55] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="absolute -bottom-20 -right-16 h-48 w-48 rounded-full bg-purple-500/10 blur-2xl"
+                animate={{ scale: [1, 1.15, 1], opacity: [0.45, 0.85, 0.45] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.08, rotate: 90 }}
+                whileTap={{ scale: 0.92 }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  closeShareModal();
+                }}
+                className="absolute right-5 top-5 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-400 shadow-sm backdrop-blur-md transition-all hover:bg-slate-100 hover:text-slate-700"
+                aria-label="Close share modal"
+              >
+                <X className="h-5 w-5 pointer-events-none" />
+              </motion.button>
+
+              <div className="relative z-10">
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 }}
+                  className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 text-[#1E3A8A] shadow-sm"
+                >
+                  <Share2 className="h-5 w-5" />
+                </motion.div>
+
+                <motion.h3
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.12 }}
+                  className="text-2xl font-bold text-slate-900"
+                >
+                  Share This Product
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.16 }}
+                  className="mt-1 text-sm text-slate-500"
+                >
+                  Send this product link quickly
+                </motion.p>
+
+                <div className="mt-7 flex justify-center gap-5">
+                  <motion.button
+                    whileHover={{ y: -4, scale: 1.04 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={shareViaWhatsApp}
+                    className="group flex flex-col items-center gap-2"
+                  >
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#25D366] text-white shadow-[0_14px_30px_rgba(37,211,102,0.35)] transition-all group-hover:shadow-[0_18px_38px_rgba(37,211,102,0.45)]">
+                      <motion.span
+                        className="absolute inset-0 rounded-2xl bg-white/20"
+                        animate={{ opacity: [0, 0.45, 0], scale: [0.75, 1.16, 1.28] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                      />
+                      <svg className="relative h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-semibold text-slate-600 transition-colors group-hover:text-slate-900">WhatsApp</span>
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ y: -4, scale: 1.04 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={shareViaEmail}
+                    className="group flex flex-col items-center gap-2"
+                  >
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#EA4335] text-white shadow-[0_14px_30px_rgba(234,67,53,0.35)] transition-all group-hover:shadow-[0_18px_38px_rgba(234,67,53,0.45)]">
+                      <motion.span
+                        className="absolute inset-0 rounded-2xl bg-white/20"
+                        animate={{ opacity: [0, 0.45, 0], scale: [0.75, 1.16, 1.28] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut", delay: 0.3 }}
+                      />
+                      <Mail className="relative h-7 w-7" />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-600 transition-colors group-hover:text-slate-900">Gmail</span>
+                  </motion.button>
+                </div>
+
+                <div className="relative my-7">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-4 text-slate-500">Or copy the link</span>
+                  </div>
+                </div>
+
+                <motion.div
+                  animate={copied ? { scale: [1, 1.02, 1], borderColor: ["#E2E8F0", "#10B981", "#E2E8F0"] } : {}}
+                  transition={{ duration: 0.55 }}
+                  className="relative flex items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 pl-4 shadow-inner"
+                >
+                  <motion.div
+                    animate={copied ? { rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.45 }}
+                    className="mr-2 text-slate-400"
+                  >
+                    {copied ? <CheckCircle2 className="h-5 w-5 text-emerald-500" /> : <Copy className="h-5 w-5" />}
+                  </motion.div>
+
+                  <input
+                    type="text"
+                    readOnly
+                    value={window.location.href}
+                    className="min-w-0 flex-1 bg-transparent text-sm text-slate-600 outline-none"
+                  />
+
+                  <motion.button
+                    type="button"
+                    onClick={handleCopyShareLink}
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.92 }}
+                    animate={copied ? { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)" } : { background: "linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)" }}
+                    className="relative ml-2 overflow-hidden rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25"
+                  >
+                    {copied && (
+                      <motion.span
+                        className="absolute inset-0 bg-white/25"
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "120%" }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                      />
+                    )}
+                    <span className="relative flex items-center gap-1.5">
+                      {copied ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4" />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          Copy
+                        </>
+                      )}
+                    </span>
+                  </motion.button>
+                </motion.div>
+
+                <AnimatePresence>
+                  {copied && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-600 ring-1 ring-emerald-100"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Link copied successfully
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
