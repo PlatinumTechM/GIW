@@ -19,7 +19,8 @@ import {
   Mail,
   X,
 } from "lucide-react";
-import { stockAPI } from "../../../services/api.js";
+import { stockAPI, favoritesAPI } from "../../../services/api.js";
+import notify from "../../../utils/notifications.jsx";
 
 const DiamondDetail = () => {
   const { id } = useParams();
@@ -181,6 +182,44 @@ const DiamondDetail = () => {
     };
     fetchDiamond();
   }, [id]);
+
+  useEffect(() => {
+    if (!diamond?.id) return;
+
+    const fetchFavoriteStatus = async () => {
+      try {
+        const response = await favoritesAPI.checkDiamondFavorite(diamond.id);
+        if (response.success) {
+          setIsLiked(response.data?.isFavorite ?? false);
+        }
+      } catch (error) {
+        console.error("Error checking diamond favorite status:", error);
+      }
+    };
+
+    fetchFavoriteStatus();
+  }, [diamond]);
+
+  const handleToggleFavorite = async () => {
+    if (!diamond?.id) return;
+
+    try {
+      const response = await favoritesAPI.toggleDiamondFavorite(diamond.id);
+      if (response.success) {
+        const isFavorite = response.data?.isFavorite ?? !isLiked;
+        setIsLiked(isFavorite);
+        notify.success(
+          isFavorite ? "Added to Favorites" : "Removed from Favorites",
+          isFavorite ? "Diamond has been added to your favorites." : "Diamond removed from your favorites."
+        );
+      } else {
+        notify.error("Favorite Error", response.message || "Could not update favorite status.");
+      }
+    } catch (error) {
+      console.error("Error toggling diamond favorite:", error);
+      notify.error("Favorite Error", "Something went wrong while updating favorites.");
+    }
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -459,7 +498,7 @@ const DiamondDetail = () => {
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsLiked(!isLiked)}
+                  onClick={handleToggleFavorite}
                   className="flex h-11 w-11 items-center justify-center rounded-full transition-all"
                   style={{
                     background: isLiked ? theme.danger : theme.surface,

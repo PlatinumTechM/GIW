@@ -18,6 +18,7 @@ import {
   Sparkles,
   Users,
   User,
+  Heart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { notificationAPI } from "@/services/api";
@@ -261,6 +262,14 @@ const Navbar = () => {
                           >
                             <UserCircle className="w-4 h-4 text-[#2e7c9e]" />
                             <span>My Profile</span>
+                          </Link>
+
+                          <Link
+                            to="/favorites"
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#475569] hover:text-[#2e7c9e] hover:bg-[#d9f0fa]/30 rounded-xl transition-all group"
+                          >
+                            <Heart className="w-4 h-4 text-[#2e7c9e]" />
+                            <span>My Favorites</span>
                           </Link>
 
                           <div className="h-px bg-gray-50 mx-3 my-2" />

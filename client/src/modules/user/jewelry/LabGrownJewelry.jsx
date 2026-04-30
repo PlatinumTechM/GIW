@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import { Diamond, Filter, X, Search, RefreshCw, SlidersHorizontal } from "lucide-react";
 import JewelryGrid from "./JewelryGrid";
 import JewelryFilters from "./JewelryFilters";
-import { jewelryAPI } from "../../../services/api.js";
+import { jewelryAPI, favoritesAPI } from "../../../services/api.js";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
+import notify from "../../../utils/notifications.jsx";
 
 const normalizeCategory = (cat) => {
   if (!cat) return null;
@@ -77,12 +79,15 @@ const mapJewelryItem = (item) => {
 const LabGrownJewelry = () => {
   const navigate = useNavigate();
   const { role } = useParams();
+  const { isAuthenticated } = useAuth();
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [favorites, setFavorites] = useState({});
+  const [togglingId, setTogglingId] = useState(null);
   const itemsPerPage = 9;
 
   useEffect(() => {
@@ -106,6 +111,53 @@ const LabGrownJewelry = () => {
     };
     fetchJewelry();
   }, [activeCategory]);
+
+  // Fetch favorite status for loaded items
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      if (!isAuthenticated || items.length === 0) return;
+
+      try {
+        const ids = items.map((item) => item.id);
+        const response = await favoritesAPI.getBulkJewelryFavoriteStatus(ids);
+        if (response.success) {
+          setFavorites(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching jewelry favorite status:", error);
+      }
+    };
+
+    fetchFavoriteStatus();
+  }, [items, isAuthenticated]);
+
+  const handleToggleFavorite = async (item) => {
+    if (!isAuthenticated) {
+      notify.warning("Login Required", "Please login to save favorites");
+      return;
+    }
+
+    setTogglingId(item.id);
+    try {
+      const response = await favoritesAPI.toggleJewelryFavorite(item.id);
+      if (response.success) {
+        setFavorites((prev) => ({
+          ...prev,
+          [item.id]: response.data.isFavorite,
+        }));
+        if (response.data.isFavorite) {
+          notify.success("Added to Favorites", "Item saved to your favorites");
+        } else {
+          notify.info("Removed from Favorites", "Item removed from your favorites");
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling jewelry favorite:", error);
+      notify.error("Error", "Failed to update favorite");
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
@@ -320,13 +372,13 @@ const LabGrownJewelry = () => {
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
                   type="lab-grown"
+                  favorites={favorites}
+                  togglingId={togglingId}
                   onItemClick={(item) =>
                     navigate(`/${role}/jewelry/lab-grown/${item.id}`)
                   }
                   onAddToCart={(item) => console.log("Add to cart:", item.name)}
-                  onAddToWishlist={(item) =>
-                    console.log("Add to wishlist:", item.name)
-                  }
+                  onAddToWishlist={handleToggleFavorite}
                   onQuickView={(item) => console.log("Quick view:", item.name)}
                 />
 

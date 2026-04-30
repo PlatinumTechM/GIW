@@ -337,4 +337,72 @@ export const rateAPI = {
   },
 };
 
+export const favoritesAPI = {
+  // Get all favorites
+  getAllFavorites: async (params = {}) => {
+    const response = await api.get("/favorites", { params });
+    return response.data;
+  },
+
+  // Get favorite counts
+  getFavoriteCounts: async () => {
+    const response = await api.get("/favorites/counts");
+    return response.data;
+  },
+
+  // Get favorite diamonds
+  getFavoriteDiamonds: async (page = 1, limit = 12) => {
+    const response = await api.get("/favorites/diamonds", { params: { page, limit } });
+    return response.data;
+  },
+
+  // Get favorite jewelry
+  getFavoriteJewelry: async (page = 1, limit = 12) => {
+    const response = await api.get("/favorites/jewelry", { params: { page, limit } });
+    return response.data;
+  },
+
+  // Toggle diamond favorite
+  toggleDiamondFavorite: async (stockId) => {
+    const response = await api.post(`/favorites/diamonds/${stockId}`);
+    return response.data;
+  },
+
+  // Toggle jewelry favorite
+  toggleJewelryFavorite: async (jewelryId) => {
+    const response = await api.post(`/favorites/jewelry/${jewelryId}`);
+    return response.data;
+  },
+
+  // Check diamond favorite status
+  checkDiamondFavorite: async (stockId) => {
+    const response = await api.get(`/favorites/diamonds/${stockId}/status`);
+    return response.data;
+  },
+
+  // Check jewelry favorite status
+  checkJewelryFavorite: async (jewelryId) => {
+    const response = await api.get(`/favorites/jewelry/${jewelryId}/status`);
+    return response.data;
+  },
+
+  // Bulk check diamond favorites
+  getBulkDiamondFavoriteStatus: async (ids) => {
+    const response = await api.post("/favorites/diamonds/bulk-status", { ids });
+    return response.data;
+  },
+
+  // Bulk check jewelry favorites
+  getBulkJewelryFavoriteStatus: async (ids) => {
+    const response = await api.post("/favorites/jewelry/bulk-status", { ids });
+    return response.data;
+  },
+
+  // Clear all favorites
+  clearAllFavorites: async () => {
+    const response = await api.delete("/favorites/clear");
+    return response.data;
+  },
+};
+
 export default api;

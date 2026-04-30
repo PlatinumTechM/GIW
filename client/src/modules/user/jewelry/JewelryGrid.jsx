@@ -31,6 +31,8 @@ const JewelryGrid = ({
   viewMode = "grid",
   onViewModeChange,
   type = "natural",
+  favorites = {},
+  togglingId = null,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -339,10 +341,22 @@ const JewelryGrid = ({
                   <div className="col-span-2">
                     <span className="text-sm text-[#64748B] line-clamp-1">{item.description}</span>
                   </div>
-                  <div className="col-span-1 text-right">
+                  <div className="col-span-1 text-right flex items-center justify-end gap-3">
                     <p className="text-lg font-bold text-[#1E3A8A]">
                       {item.priceDisplay || `$${item.price?.toLocaleString()}`}
                     </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToWishlist?.(item);
+                      }}
+                      disabled={togglingId === item.id}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full transition-all hover:scale-110 ${
+                        favorites[item.id] ? "text-red-500 bg-red-50" : "text-[#64748B] bg-[#F1F5F9] hover:text-red-500"
+                      }`}
+                    >
+                      <Heart className="w-4 h-4" fill={favorites[item.id] ? "currentColor" : "none"} />
+                    </button>
                   </div>
                 </div>
 
@@ -382,6 +396,18 @@ const JewelryGrid = ({
                             {item.badge}
                           </span>
                         )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToWishlist?.(item);
+                          }}
+                          disabled={togglingId === item.id}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                            favorites[item.id] ? "text-red-500 bg-red-50" : "text-[#64748B] bg-[#F1F5F9]"
+                          }`}
+                        >
+                          <Heart className="w-4 h-4" fill={favorites[item.id] ? "currentColor" : "none"} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -462,27 +488,33 @@ const JewelryGrid = ({
                   </motion.div>
                 )}
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{
-                    opacity: hoveredItem === item.id ? 1 : 0,
-                    y: hoveredItem === item.id ? 0 : 10,
-                  }}
-                  className="absolute top-4 right-4 flex flex-col gap-2"
+                <div
+                  className="absolute top-3 right-3 z-20 flex flex-col gap-2 opacity-100 sm:top-4 sm:right-4 md:opacity-0 md:group-hover:opacity-100"
                 >
                   <button
-                    onClick={() => onAddToWishlist?.(item)}
-                    className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#64748B] hover:text-red-500 hover:scale-110 transition-all duration-300"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToWishlist?.(item);
+                    }}
+                    disabled={togglingId === item.id}
+                    className={`w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                      favorites[item.id]
+                        ? "text-red-500"
+                        : "text-[#64748B] hover:text-red-500"
+                    }`}
                   >
-                    <Heart className="w-5 h-5" />
+                    <Heart
+                      className="w-5 h-5"
+                      fill={favorites[item.id] ? "currentColor" : "none"}
+                    />
                   </button>
                   <button
                     onClick={() => onQuickView?.(item)}
-                    className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#64748B] hover:text-[#1E3A8A] hover:scale-110 transition-all duration-300"
+                    className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[#64748B] hover:text-[#1E3A8A] hover:scale-110 transition-all duration-300"
                   >
                     <Eye className="w-5 h-5" />
                   </button>
-                </motion.div>
+                </div>
               </div>
 
               <div className="p-5">

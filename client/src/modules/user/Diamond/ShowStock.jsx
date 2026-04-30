@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, Eye, Check, ChevronLeft, ChevronRight, Star, Diamond } from "lucide-react";
-import { stockAPI } from "../../../services/api.js";
+import { stockAPI, favoritesAPI } from "../../../services/api.js";
+import { useAuth } from "../../../contexts/AuthContext.jsx";
+import notify from "../../../utils/notifications.jsx";
 
 const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) => {
   const navigate = useNavigate();
   const { role } = useParams();
+  const { isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -14,6 +17,8 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [favorites, setFavorites] = useState({});
+  const [togglingFavorite, setTogglingFavorite] = useState(null);
   const itemsPerPage = 9;
 
   const openDiamondDetail = (diamond) => {
@@ -190,6 +195,55 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
     setCurrentPage(1);
   }, [filters, sortBy]);
 
+  // Fetch favorite status for loaded items
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      if (!isAuthenticated || items.length === 0) return;
+
+      try {
+        const ids = items.map((item) => item.id);
+        const response = await favoritesAPI.getBulkDiamondFavoriteStatus(ids);
+        if (response.success) {
+          setFavorites(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching favorite status:", error);
+      }
+    };
+
+    fetchFavoriteStatus();
+  }, [items, isAuthenticated]);
+
+  // Toggle favorite
+  const toggleFavorite = async (e, item) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      notify.warning("Login Required", "Please login to save favorites");
+      return;
+    }
+
+    setTogglingFavorite(item.id);
+    try {
+      const response = await favoritesAPI.toggleDiamondFavorite(item.id);
+      if (response.success) {
+        setFavorites((prev) => ({
+          ...prev,
+          [item.id]: response.data.isFavorite,
+        }));
+        if (response.data.isFavorite) {
+          notify.success("Added to Favorites", "Item saved to your favorites");
+        } else {
+          notify.info("Removed from Favorites", "Item removed from your favorites");
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      notify.error("Error", "Failed to update favorite");
+    } finally {
+      setTogglingFavorite(null);
+    }
+  };
+
   const toggleSelect = (id) => {
     if (selectedItems.includes(id)) {
       setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
@@ -320,11 +374,6 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-[#0F172A]">{item.carat}ct</span>
-                    {item.badge && (
-                      <span className="text-xs text-[#1E3A8A] bg-[#DBEAFE] px-2 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
                   </div>
                   <div>
                     <span className="font-medium text-[#0F172A]">
@@ -359,11 +408,22 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                       <span className="text-xs text-[#64748B]">{item.certificationNumber}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-[#1E3A8A]">${item.price.toLocaleString()}</p>
-                    {item.available && (
-                      <span className="text-xs text-green-600 font-medium">Available</span>
-                    )}
+                  <div className="text-right flex items-center justify-end gap-3">
+                    <div>
+                      <p className="text-lg font-bold text-[#1E3A8A]">${item.price.toLocaleString()}</p>
+                      {item.available && (
+                        <span className="text-xs text-green-600 font-medium">Available</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => toggleFavorite(e, item)}
+                      disabled={togglingFavorite === item.id}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full transition-all hover:scale-110 ${
+                        favorites[item.id] ? "text-red-500 bg-red-50" : "text-[#64748B] bg-[#F1F5F9] hover:text-red-500"
+                      }`}
+                    >
+                      <Heart className="w-4 h-4" fill={favorites[item.id] ? "currentColor" : "none"} />
+                    </button>
                   </div>
                 </div>
 
@@ -395,9 +455,20 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-[#64748B]">{item.certification} · {item.certificationNumber} · {item.party || "-"}</span>
-                      {item.available && (
-                        <span className="text-xs text-green-600 font-medium">Available</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {item.available && (
+                          <span className="text-xs text-green-600 font-medium">Available</span>
+                        )}
+                        <button
+                          onClick={(e) => toggleFavorite(e, item)}
+                          disabled={togglingFavorite === item.id}
+                          className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                            favorites[item.id] ? "text-red-500 bg-red-50" : "text-[#64748B] bg-[#F1F5F9]"
+                          }`}
+                        >
+                          <Heart className="w-4 h-4" fill={favorites[item.id] ? "currentColor" : "none"} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -455,27 +526,35 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
                 )}
 
                 {/* Hover Actions */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{
-                    opacity: hoveredItem === item.id ? 1 : 0,
-                    y: hoveredItem === item.id ? 0 : 10,
-                  }}
-                  className="absolute top-4 right-4 flex flex-col gap-2"
-                >
-                  <button className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#64748B] hover:text-red-500 hover:scale-110 transition-all duration-300">
-                    <Heart className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDiamondDetail(item);
-                    }}
-                    className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-[#64748B] hover:text-[#1E3A8A] hover:scale-110 transition-all duration-300"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
-                </motion.div>
+ {/* Hover / Favorite Actions */}
+<div
+  className="absolute top-3 right-3 z-20 flex flex-col gap-2 opacity-100 sm:top-4 sm:right-4 md:opacity-0 md:group-hover:opacity-100"
+>
+  <button
+    onClick={(e) => toggleFavorite(e, item)}
+    disabled={togglingFavorite === item.id}
+    className={`w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+      favorites[item.id]
+        ? "text-red-500"
+        : "text-[#64748B] hover:text-red-500"
+    }`}
+  >
+    <Heart
+      className="w-5 h-5"
+      fill={favorites[item.id] ? "currentColor" : "none"}
+    />
+  </button>
+
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      openDiamondDetail(item);
+    }}
+    className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-[#64748B] hover:text-[#1E3A8A] hover:scale-110 transition-all duration-300"
+  >
+    <Eye className="w-5 h-5" />
+  </button>
+</div>
 
                 {/* Available Badge */}
                 {item.available && (
