@@ -1,6 +1,16 @@
 import axios from "axios";
 import { rateRepo } from "./rate.repo.js";
 
+// Mock data mode - set USE_MOCK_RATES=true to avoid API calls
+const USE_MOCK_RATES = process.env.USE_MOCK_RATES === "true";
+
+// Mock rate values for development/testing without API calls
+const MOCK_RATES = {
+  usd: 83.5,
+  gold: 7250,
+  silver: 85,
+};
+
 // API sources for fetching rates
 const EXTERNAL_APIS = {
   // Using exchangerate-api.com for USD/INR (free tier available)
@@ -96,15 +106,22 @@ export const rateService = {
   /**
    * Fetch and store rates for all types
    * Updates existing records instead of inserting new ones
+   * Uses mock data if USE_MOCK_RATES=true to avoid API rate limits
    */
   async fetchAndStoreRates() {
     const types = ["usd", "gold"]; // Add 'silver' if needed
     const results = {};
 
+    if (USE_MOCK_RATES) {
+      console.log("🧪 MOCK MODE: Using static rates (no API calls)");
+    }
+
     for (const type of types) {
       try {
-        // Fetch from external API
-        const value = await EXTERNAL_APIS[type]();
+        // Fetch from external API or use mock data
+        const value = USE_MOCK_RATES
+          ? MOCK_RATES[type]
+          : await EXTERNAL_APIS[type]();
 
         if (value === null) {
           console.warn(`Failed to fetch ${type} rate`);
@@ -133,8 +150,9 @@ export const rateService = {
           changeValue !== null
             ? `(${changeValue >= 0 ? "+" : ""}${changeValue})`
             : "(new)";
+        const mockLabel = USE_MOCK_RATES ? " [MOCK]" : "";
         console.log(
-          `✅ ${type.toUpperCase()} rate updated: ₹${value} ${changeStr}`,
+          `✅ ${type.toUpperCase()} rate updated${mockLabel}: ₹${value} ${changeStr}`,
         );
       } catch (error) {
         console.error(`Error fetching ${type} rate:`, error.message);
