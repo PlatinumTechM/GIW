@@ -29,6 +29,7 @@ export const findUserWithSubscription = async (id) => {
       u.id, u.name, u.email, u.company, u.phone, u.address,
       u.gst, u.document, u.is_active, u.role, u.type, u.created_at,
       sp.name as plan_name,
+      sp.has_share_link as plan_has_share_link,
       us.end_date as plan_expiry,
       us.status as subscription_status,
       usage.uploaded as used_stock,
@@ -53,13 +54,13 @@ export const findUserByPhone = async (phone) => {
 };
 
 export const createUser = async (userData) => {
-  const { name, email, company, phone, address, gst, password, document, type, role } =
+  const { name, email, company, phone, address, city, country, gst, password, document, type, role } =
     userData;
 
-  const query = `INSERT INTO users 
-    (name, email, company, phone, address, gst, password, document, role, type, is_active) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
-    RETURNING id, name, email, company, phone, address, gst, document, role, type, is_active, created_at`;
+  const query = `INSERT INTO users
+    (name, email, company, phone, address, city, country, gst, password, document, role, type, is_active)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    RETURNING id, name, email, company, phone, address, city, country, gst, document, role, type, is_active, created_at`;
 
   const result = await pool.query(query, [
     name,
@@ -67,6 +68,8 @@ export const createUser = async (userData) => {
     company,
     phone,
     address,
+    city || "",
+    country || "",
     gst,
     password,
     document || null,

@@ -41,6 +41,7 @@ import notify from "@/utils/notifications";
 import api from "@/services/api";
 import AddStockManual from "./AddStockManual";
 import ShareAPI from "../share-api/ShareAPI";
+import { useAuth } from "@/contexts/AuthContext";
 
 // All columns from the database
 const ALL_DB_FIELDS = [
@@ -492,6 +493,9 @@ const FIELD_MAPPINGS = {
 };
 
 const AddStock = () => {
+  // Auth context for user data
+  const { user } = useAuth();
+
   // View mode: 'show' | 'import' | 'manual'
   const [viewMode, setViewMode] = useState("show");
   const [editingStock, setEditingStock] = useState(null);
@@ -800,6 +804,13 @@ const AddStock = () => {
   useEffect(() => {
     fetchUserStock();
   }, [userStockPage, userStockLimit, appliedFilters, sortConfig, debouncedSearch]);
+
+  // Redirect from share-api view if user doesn't have share link feature
+  useEffect(() => {
+    if (viewMode === "share-api" && !user?.planHasShareLink) {
+      setViewMode("show");
+    }
+  }, [viewMode, user]);
 
   const handleEditStock = useCallback((item) => {
     setEditingStock(item);
@@ -1577,17 +1588,19 @@ const AddStock = () => {
                 <span className="hidden sm:inline">Manual Entry</span>
                 <span className="sm:hidden">Manual</span>
               </button>
-              <button
-                onClick={() => setViewMode("share-api")}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "share-api"
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "text-[#64748B] hover:text-[#0F172A]"
-                  }`}
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Share API</span>
-                <span className="sm:hidden">API</span>
-              </button>
+              {user?.planHasShareLink && (
+                <button
+                  onClick={() => setViewMode("share-api")}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${viewMode === "share-api"
+                    ? "bg-[#1E3A8A] text-white shadow-md"
+                    : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Share API</span>
+                  <span className="sm:hidden">API</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -2051,16 +2064,18 @@ const AddStock = () => {
                   )}
                 </button>
 
-                {/* share */}
-                <button
-                  onClick={handleShare}
-                  disabled={userStockLoading || filteredUserStock.length === 0}
-                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  title="Share current stock selection"
-                >
-                  <Share2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Share</span>
-                </button>
+                {/* share - only show if user plan has share link feature */}
+                {user?.planHasShareLink && (
+                  <button
+                    onClick={handleShare}
+                    disabled={userStockLoading || filteredUserStock.length === 0}
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    title="Share current stock selection"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Share</span>
+                  </button>
+                )}
                 <button
                   onClick={fetchUserStock}
                   disabled={userStockLoading}
@@ -2860,8 +2875,8 @@ const AddStock = () => {
           />
         )}
 
-        {/* VIEW 4: Share API */}
-        {viewMode === "share-api" && <ShareAPI />}
+        {/* VIEW 4: Share API - only if user plan has share link feature */}
+        {viewMode === "share-api" && user?.planHasShareLink && <ShareAPI />}
       </div>
 
       {/* Import Loading Overlay */}

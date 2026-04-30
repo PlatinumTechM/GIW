@@ -169,3 +169,26 @@ export const getFiltersPublic = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const bulkUpload = async (req, res) => {
+  try {
+    const { stock } = req.body;
+    const userId = req.user.id;
+
+    if (!stock || !Array.isArray(stock) || stock.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No stock data provided or invalid format",
+      });
+    }
+
+    const result = await jewellryService.bulkUpload(stock, userId);
+    res.status(201).json({
+      success: true,
+      message: `Successfully processed ${result.insertedCount + result.updatedCount} items`,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -37,16 +37,27 @@ api.interceptors.response.use(
 
     // Only handle 401 as session expiration for authenticated users
     const isAuthenticated = !!localStorage.getItem("role");
-    if (status === 401 && isAuthenticated && !isLoginRequest && !isVerifyAdminRequest) {
+    if (
+      status === 401 &&
+      isAuthenticated &&
+      !isLoginRequest &&
+      !isVerifyAdminRequest
+    ) {
       const errorData = error.response?.data;
-      
+
       if (errorData?.code === "USER_DEACTIVATED") {
-        notify.error("Account Deactivated", errorData.message || "Your account has been deactivated.");
+        notify.error(
+          "Account Deactivated",
+          errorData.message || "Your account has been deactivated.",
+        );
         // Force logout
         localStorage.removeItem("role");
         window.location.href = "/login?reason=deactivated";
       } else {
-        notify.warning("Session Expired", "Your session has expired. Please login again.");
+        notify.warning(
+          "Session Expired",
+          "Your session has expired. Please login again.",
+        );
         // Optionally clear session and redirect
         localStorage.removeItem("role");
         window.location.href = "/login?reason=expired";
@@ -102,7 +113,7 @@ export const authAPI = {
     const response = await api.put("/auth/profile", userData);
     return response.data;
   },
-  
+
   changePassword: async (passwords) => {
     const response = await api.put("/auth/change-password", passwords);
     return response.data;
@@ -298,6 +309,30 @@ export const jewelryAPI = {
 
   getJewelryFilters: async () => {
     const response = await api.get("/jewellry-stock/public/filters");
+    return response.data;
+  },
+};
+
+export const rateAPI = {
+  getRates: async () => {
+    const response = await api.get("/rates");
+    return response.data;
+  },
+
+  getRateByType: async (type) => {
+    const response = await api.get(`/rates/${type}`);
+    return response.data;
+  },
+
+  getRateHistory: async (type, limit = 24) => {
+    const response = await api.get(`/rates/history/${type}`, {
+      params: { limit },
+    });
+    return response.data;
+  },
+
+  refreshRates: async () => {
+    const response = await api.post("/rates/refresh");
     return response.data;
   },
 };

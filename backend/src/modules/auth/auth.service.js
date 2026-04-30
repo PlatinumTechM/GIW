@@ -6,8 +6,11 @@ export const login = async (identifier, password) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   let user;
 
-  if (emailRegex.test(identifier)) {
-    user = await authRepo.findUserByEmail(identifier);
+  // Normalize identifier to lowercase before checking regex
+  const normalizedIdentifier = identifier.toLowerCase().trim();
+
+  if (emailRegex.test(normalizedIdentifier)) {
+    user = await authRepo.findUserByEmail(normalizedIdentifier);
   } else {
     // Treat as phone number
     user = await authRepo.findUserByPhone(identifier);
@@ -71,6 +74,7 @@ export const login = async (identifier, password) => {
       role: userRole,
       isActive: userWithSubscription.is_active,
       planName: userWithSubscription.plan_name,
+      planHasShareLink: userWithSubscription.plan_has_share_link,
       planExpiry: userWithSubscription.plan_expiry,
       subscriptionStatus: userWithSubscription.subscription_status,
       type: userWithSubscription.type,
@@ -87,6 +91,8 @@ export const register = async (userData) => {
     company,
     phone,
     address,
+    city,
+    country,
     gst,
     password,
     confirmPassword,
@@ -124,6 +130,8 @@ export const register = async (userData) => {
     company: company.toUpperCase(),
     phone,
     address: address.toUpperCase(),
+    city: city ? city.toLowerCase() : "",
+    country: country ? country.toLowerCase() : "",
     gst: gst.toUpperCase(),
     password,
     document,
@@ -165,6 +173,7 @@ export const getCurrentUser = async (userId) => {
     role: user.role || "user",
     isActive: user.is_active,
     planName: user.plan_name,
+    planHasShareLink: user.plan_has_share_link,
     planExpiry: user.plan_expiry,
     subscriptionStatus: user.subscription_status,
     type: user.type,

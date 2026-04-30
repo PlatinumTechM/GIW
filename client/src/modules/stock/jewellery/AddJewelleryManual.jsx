@@ -43,7 +43,13 @@ const INITIAL_FORM_DATA = {
   jewellery_image3: "",
   jewellery_image4: "",
   jewellery_image5: "",
-  jewellery_video: ""
+  jewellery_video: "",
+  side_diamond_type: "",
+  side_diamond_shape: "",
+  side_diamond_weight: "",
+  side_diamond_color: "",
+  side_diamond_clarity: "",
+  side_diamond_cut: ""
 };
 
 const SectionCard = React.memo(({ title, icon: Icon, children, className = "" }) => (
@@ -162,7 +168,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
     try {
       // Prepare data for submission
       const submissionData = { ...formData };
-      const numericFields = ["weight", "diamond_weight", "total_diamond_weight", "price"];
+      const numericFields = ["weight", "diamond_weight", "total_diamond_weight", "price", "side_diamond_weight"];
 
       Object.keys(submissionData).forEach(key => {
         // Handle numeric fields: convert empty strings to null
@@ -286,7 +292,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
-              <SectionCard title="Basic Specifications" icon={Package}>
+              <SectionCard title="Center Diamond Details" icon={Package}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <InputField
                     label="Stock ID"
@@ -359,7 +365,7 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
               exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
-              <SectionCard title="Diamond Specifications" icon={Gem}>
+              <SectionCard title="Center Diamond Specs" icon={Gem}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <InputField
                     label="Stone Type"
@@ -412,27 +418,69 @@ const AddJewelleryManual = ({ onRefresh, editData, setEditData }) => {
                     onChange={handleInputChange}
                     options={["EXCELLENT", "VERY GOOD", "GOOD", "FAIR"]}
                   />
+                  <InputField
+                    label="Diamond Growth"
+                    name="diamond_growth"
+                    value={formData.diamond_growth}
+                    onChange={handleInputChange}
+                    options={["CVD", "HPHT", "NATURAL", "OTHER"]}
+                  />
+                  <InputField
+                    label="Current Status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    options={["AVAILABLE", "SOLD"]}
+                    className="sm:col-span-2"
+                  />
                 </div>
               </SectionCard>
 
-              <SectionCard title="Other Gem Details" icon={Sparkles}>
+              <SectionCard title="Side Diamond Details" icon={Sparkles}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <InputField
-                        label="Diamond Growth"
-                        name="diamond_growth"
-                        value={formData.diamond_growth}
-                        onChange={handleInputChange}
-                        options={["CVD", "HPHT", "NATURAL", "OTHER"]}
-                    />
-          
-                    <InputField
-                        label="Current Status"
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
-                        options={["AVAILABLE", "SOLD"]}
-                        className="sm:col-span-2"
-                    />
+                  <InputField
+                    label="Side Stone Type"
+                    name="side_diamond_type"
+                    value={formData.side_diamond_type}
+                    onChange={handleInputChange}
+                    options={["NATURAL", "LABGROWN"]}
+                  />
+                  <InputField
+                    label="Side Stone Shape"
+                    name="side_diamond_shape"
+                    value={formData.side_diamond_shape}
+                    onChange={handleInputChange}
+                    options={["ROUND", "PRINCESS", "PEAR", "OVAL", "EMERALD", "MARQUISE", "HEART", "CUSHION", "RADIANT", "ASSCHER"]}
+                  />
+                  <InputField
+                    label="Side Stone Weight (CT)"
+                    name="side_diamond_weight"
+                    type="number"
+                    value={formData.side_diamond_weight}
+                    onChange={handleInputChange}
+                    placeholder="0.00"
+                  />
+                  <InputField
+                    label="Side Color Grade"
+                    name="side_diamond_color"
+                    value={formData.side_diamond_color}
+                    onChange={handleInputChange}
+                    placeholder="E.G. D, E-F"
+                  />
+                  <InputField
+                    label="Side Clarity Grade"
+                    name="side_diamond_clarity"
+                    value={formData.side_diamond_clarity}
+                    onChange={handleInputChange}
+                    placeholder="E.G. VVS1, VS2"
+                  />
+                  <InputField
+                    label="Side Stone Cut"
+                    name="side_diamond_cut"
+                    value={formData.side_diamond_cut}
+                    onChange={handleInputChange}
+                    options={["EXCELLENT", "VERY GOOD", "GOOD", "FAIR"]}
+                  />
                 </div>
               </SectionCard>
             </motion.div>

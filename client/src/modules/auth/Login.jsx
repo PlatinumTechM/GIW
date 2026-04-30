@@ -56,7 +56,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const result = await login(formData.identifier, formData.password, rememberMe);
+      const identifier = formData.identifier.includes('@') ? formData.identifier.toLowerCase() : formData.identifier;
+      const result = await login(identifier, formData.password, rememberMe);
 
       if (result.success) {
         const user = result.user || JSON.parse(localStorage.getItem('user') || '{}');
