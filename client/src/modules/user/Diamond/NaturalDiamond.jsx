@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gem,
   Filter,
-  FlaskConical,
   X,
   SlidersHorizontal,
   RefreshCw,
-  Search,
   Grid3X3,
   List,
 } from "lucide-react";
@@ -24,31 +22,12 @@ const sorts = [
   { value: "color", label: "Color Grade" },
 ];
 
-// Animation variants - defined outside component to prevent re-creation
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-};
-
 const NaturalDiamond = () => {
   const { role } = useParams();
   const [activeTab, setActiveTab] = useState("Single Stone");
   const [viewMode, setViewMode] = useState("grid");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Use shared diamond filters hook
   const filters = useDiamondFilters();
   const {
     appliedFilters,
@@ -58,7 +37,6 @@ const NaturalDiamond = () => {
     applyFilters,
     sortBy,
     setSortBy,
-    pendingSortBy,
     setPendingSortBy,
     selectedShapes,
     selectedWhiteColors,
@@ -96,9 +74,8 @@ const NaturalDiamond = () => {
     toggleCertification,
     toggleTreatment,
     selectedTreatment,
-    setSelectedTreatment,
-    selectedLocation,
     setSelectedLocation,
+    selectedLocation,
     selectedSupplier,
     setSelectedSupplier,
     selectedHeartArrow,
@@ -111,13 +88,13 @@ const NaturalDiamond = () => {
 
   const filterContentJsx = <DiamondFilterContent filters={{ ...filters, isLabGrown: false }} />;
 
-  // Lock body scroll when mobile filter is open
   useEffect(() => {
     if (showMobileFilters) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
+
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -130,55 +107,11 @@ const NaturalDiamond = () => {
       transition={{ duration: 0.4 }}
       className="min-h-screen bg-[#FAFBFC]"
     >
-      {/* Professional Header */}
-      <section className="border-b border-[#E2E8F0] bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-            className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <motion.div
-                variants={fadeInUp}
-                className="mb-2 flex items-center gap-2 text-sm text-[#64748B]"
-              >
-                <Link to={`/${role}/home`} className="hover:text-[#1E3A8A]">
-                  Home
-                </Link>
-                <span>/</span>
-                <span className="text-[#1E3A8A]">Natural Diamonds</span>
-              </motion.div>
-              <motion.h1
-                variants={fadeInUp}
-                className="text-2xl font-bold text-[#0F172A]"
-              >
-                Natural Diamond Collection
-              </motion.h1>
-              <motion.p variants={fadeInUp} className="text-sm text-[#64748B]">
-                GIA Certified • Premium Quality • Ethically Sourced
-              </motion.p>
-            </div>
-            <motion.div variants={fadeInUp} className="flex items-center gap-3">
-              <Link
-                to={`/${role}/lab-grown-diamonds`}
-                className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
-              >
-                <FlaskConical className="h-4 w-4" />
-                View Lab-Grown Diamonds
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Top Filter Bar */}
       <section className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white py-3 backdrop-blur-xl w-full shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 lg:flex-wrap lg:overflow-visible">
-              {/* Mobile Filter Button - Left Side */}
               <button
                 onClick={() => setShowMobileFilters(true)}
                 className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A] lg:hidden"
@@ -191,11 +124,14 @@ const NaturalDiamond = () => {
                   </span>
                 )}
               </button>
+
               <span className="text-sm text-[#64748B]">Natural Diamonds</span>
+
               {activeFiltersCount > 0 && (
                 <>
                   <span className="text-sm text-[#64748B]">•</span>
                   <span className="text-sm text-[#64748B]">Active:</span>
+
                   {selectedShapes.map((shape) => (
                     <span
                       key={shape}
@@ -207,6 +143,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedWhiteColors.map((color) => (
                     <span
                       key={color}
@@ -218,6 +155,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedFancyColors.map((color) => (
                     <span
                       key={color}
@@ -229,6 +167,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedFancyIntensity && (
                     <span className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#BE185D]">
                       Intensity: {selectedFancyIntensity}
@@ -237,6 +176,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedFancyOvertone && (
                     <span className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#BE185D]">
                       Overtone: {selectedFancyOvertone}
@@ -245,6 +185,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedClarities.map((clarity) => (
                     <span
                       key={clarity}
@@ -256,6 +197,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedCuts.map((cut) => (
                     <span
                       key={cut}
@@ -267,6 +209,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedPolish.map((polish) => (
                     <span
                       key={polish}
@@ -278,6 +221,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedSymmetry.map((symmetry) => (
                     <span
                       key={symmetry}
@@ -289,6 +233,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedCertifications.map((cert) => (
                     <span
                       key={cert}
@@ -300,11 +245,10 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {certificateType && (
                     <span className="flex items-center gap-1 rounded-full bg-[#FCE7F3] px-3 py-1 text-xs font-medium text-[#86198F]">
-                      {certificateType === "certified"
-                        ? "Certified"
-                        : "Non-certified"}
+                      {certificateType === "certified" ? "Certified" : "Non-certified"}
                       <button
                         onClick={() => {
                           setCertificateType(null);
@@ -315,6 +259,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {showOnlyMedia && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       With Media
@@ -323,6 +268,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {availableItems && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       Available
@@ -331,6 +277,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {(caratMin || caratMax) && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       {caratMin || "0"} - {caratMax || "∞"} ct
@@ -344,9 +291,11 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {(pricePerCaratMin || pricePerCaratMax) && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
-                      {pricePerCaratMin ? `$${pricePerCaratMin}` : "$0"} - {pricePerCaratMax ? `$${pricePerCaratMax}` : "∞"}/ct
+                      {pricePerCaratMin ? `$${pricePerCaratMin}` : "$0"} -{" "}
+                      {pricePerCaratMax ? `$${pricePerCaratMax}` : "∞"}/ct
                       <button
                         onClick={() => {
                           setPricePerCaratMin("");
@@ -357,6 +306,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedLocation && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       Location: {selectedLocation}
@@ -365,6 +315,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedSupplier && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       Supplier: {selectedSupplier}
@@ -373,6 +324,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedHeartArrow && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       H&A
@@ -381,6 +333,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedNoBgm && (
                     <span className="flex items-center gap-1 rounded-full bg-[#DBEAFE] px-3 py-1 text-xs font-medium text-[#1E3A8A]">
                       No BGM
@@ -389,6 +342,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   )}
+
                   {selectedFluorescence.map((fluor) => (
                     <span
                       key={fluor}
@@ -400,6 +354,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   {selectedTreatment.map((treatment) => (
                     <span
                       key={treatment}
@@ -411,6 +366,7 @@ const NaturalDiamond = () => {
                       </button>
                     </span>
                   ))}
+
                   <button
                     onClick={clearAllFilters}
                     className="ml-1 flex items-center gap-1 text-xs font-medium text-[#64748B] underline hover:text-[#1E3A8A]"
@@ -429,33 +385,29 @@ const NaturalDiamond = () => {
       <section className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex gap-8">
-            {/* Desktop Sidebar Filters */}
             <aside className="hidden w-80 flex-shrink-0 lg:flex lg:flex-col h-[calc(100vh-140px)] sticky top-[120px]">
-              {/* Scrollable Filter Content */}
               <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-4">
                 {filterContentJsx}
               </div>
 
-              {/* Fixed Bottom Buttons */}
-              <div className="border-t border-[#E2E8F0] pt-4 pb-2 space-y-3 bg-white">
-                {/* Apply Filters Button */}
+              <div className="border-t border-[#B2D5E2] bg-white pt-4 pb-2 space-y-3">
                 {pendingFiltersCount > 0 && (
                   <button
                     onClick={applyFilters}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E3A8A] py-3 text-sm font-medium text-white transition-all hover:bg-[#1E40AF] shadow-md"
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-[#004554] py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#03363F] active:scale-[0.98]"
                   >
                     <Filter className="h-4 w-4" />
                     Apply Filters
-                    <span className="ml-1 bg-white text-[#1E3A8A] text-xs px-2 py-0.5 rounded-full font-semibold">
+                    <span className="ml-2 rounded-full bg-[#B2D5E2] px-2.5 py-0.5 text-xs font-bold text-[#004554]">
                       {pendingFiltersCount}
                     </span>
                   </button>
                 )}
-                {/* Clear Filters */}
+
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white py-3 text-sm font-medium text-[#475569] transition-all hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-[#004554] bg-[#B2D5E2] py-3 text-sm font-semibold text-[#004554] shadow-sm transition-all duration-300 hover:bg-[#9FC8D8] active:scale-[0.98]"
                   >
                     <X className="h-4 w-4" />
                     Clear All Filters
@@ -464,9 +416,7 @@ const NaturalDiamond = () => {
               </div>
             </aside>
 
-            {/* Main Content Area */}
             <div className="flex-1">
-              {/* Toolbar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-[#64748B]">Sort by:</span>
@@ -486,24 +436,25 @@ const NaturalDiamond = () => {
                   </select>
                 </div>
 
-                {/* View Mode Toggle */}
                 <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white p-1">
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${viewMode === "grid"
-                      ? "bg-[#1E3A8A] text-white shadow-sm"
-                      : "text-[#64748B] hover:text-[#0F172A]"
-                      }`}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                      viewMode === "grid"
+                        ? "bg-[#1E3A8A] text-white shadow-sm"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
                   >
                     <Grid3X3 className="h-4 w-4" />
                     <span className="hidden sm:inline">Grid</span>
                   </button>
                   <button
                     onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${viewMode === "list"
-                      ? "bg-[#1E3A8A] text-white shadow-sm"
-                      : "text-[#64748B] hover:text-[#0F172A]"
-                      }`}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                      viewMode === "list"
+                        ? "bg-[#1E3A8A] text-white shadow-sm"
+                        : "text-[#64748B] hover:text-[#0F172A]"
+                    }`}
                   >
                     <List className="h-4 w-4" />
                     <span className="hidden sm:inline">List</span>
@@ -511,7 +462,6 @@ const NaturalDiamond = () => {
                 </div>
               </div>
 
-              {/* Stock Grid/List */}
               <ShowStock
                 type="natural"
                 viewMode={viewMode}
@@ -523,7 +473,6 @@ const NaturalDiamond = () => {
         </div>
       </section>
 
-      {/* Mobile Filters Drawer */}
       <AnimatePresence>
         {showMobileFilters && (
           <>
@@ -541,7 +490,6 @@ const NaturalDiamond = () => {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed left-0 top-0 z-50 flex h-full w-[90vw] max-w-[400px] flex-col bg-white lg:hidden"
             >
-              {/* Fixed Header */}
               <div className="flex items-center justify-between border-b border-[#E2E8F0] p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 overflow-hidden rounded-lg bg-[#F1F5F9] flex items-center justify-center">
@@ -562,12 +510,10 @@ const NaturalDiamond = () => {
                 </button>
               </div>
 
-              {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-4">
                 {filterContentJsx}
               </div>
 
-              {/* Fixed Footer */}
               <div className="border-t border-[#E2E8F0] p-4">
                 <div className="flex gap-3">
                   <button

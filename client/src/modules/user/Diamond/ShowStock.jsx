@@ -310,7 +310,7 @@ const ShowStock = ({ type, viewMode = "grid", sortBy = "featured", filters }) =>
         <p className="text-[#64748B] mb-6">Try adjusting your filters to see more results</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E40AF] transition-colors"
+          className="px-4 py-2 bg-[#B2D5E2] text-[#004554] rounded-lg hover:bg-[#9FC8D8] transition-colors"
         >
           Clear Filters
         </button>
