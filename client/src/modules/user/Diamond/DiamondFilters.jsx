@@ -1430,9 +1430,9 @@ export const DiamondFilterContent = ({ filters }) => {
             <button
               key={shape.name}
               onClick={() => toggleShape(shape.name)}
-              className={`flex flex-col items-center justify-center p-1.5 rounded-lg transition-all duration-200 ${selectedShapes.includes(shape.name)
-                ? "bg-[#DBEAFE] ring-1 ring-[#1E3A8A]"
-                : "bg-white border border-gray-100 hover:bg-[#F1F5F9]"
+              className={`flex flex-col items-center justify-center p-1.5 rounded-lg border shadow-sm transition-all duration-200 ${selectedShapes.includes(shape.name)
+                ? "bg-[#B2D5E2] border-[#2E8D9A] ring-2 ring-[#BFE6EC] shadow-md scale-[1.03]"
+                : "bg-[#F8FCFD] border-[#BFE6EC] text-[#3FA6B5] hover:bg-[#E6F7FA] hover:border-[#3FA6B5] hover:shadow-md"
                 }`}
             >
               <img
@@ -1441,9 +1441,9 @@ export const DiamondFilterContent = ({ filters }) => {
                 className="w-8 h-8 object-contain mb-0.5"
               />
               <span
-                className={`text-[8px] text-center leading-none ${selectedShapes.includes(shape.name)
-                  ? "text-[#1E3A8A] font-semibold"
-                  : "text-gray-600"
+                className={`text-[8px] text-center leading-none font-semibold ${selectedShapes.includes(shape.name)
+                  ? "text-black"
+                  : "text-[#004554]"
                   }`}
               >
                 {shape.name}
@@ -1454,7 +1454,7 @@ export const DiamondFilterContent = ({ filters }) => {
         {visibleShapesCount < shapes.length && (
           <button
             onClick={showMoreShapes}
-            className="w-full mt-3 py-2 flex items-center justify-center gap-1 text-sm text-[#1E3A8A] font-medium hover:bg-[#DBEAFE] rounded-lg transition-colors duration-200"
+            className="w-full mt-3 py-2 flex items-center justify-center gap-1 text-sm text-[#004554] font-medium hover:bg-[#B2D5E2] rounded-lg transition-colors duration-200"
           >
             More shape
             <ChevronDownIcon className="w-4 h-4" />
@@ -1473,8 +1473,8 @@ export const DiamondFilterContent = ({ filters }) => {
           <button
             onClick={() => setColorType("White")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${colorType === "White"
-              ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
-              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              ? "bg-[#B2D5E2] text-[#004554] border border-[#004554]"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] border border-transparent"
               }`}
           >
             White
@@ -1482,8 +1482,8 @@ export const DiamondFilterContent = ({ filters }) => {
           <button
             onClick={() => setColorType("Fancy")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${colorType === "Fancy"
-              ? "bg-[#DBEAFE] text-[#1E3A8A] border border-[#1E3A8A]"
-              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              ? "bg-[#B2D5E2] text-[#004554] border border-[#004554]"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] border border-transparent"
               }`}
           >
             Fancy
@@ -1498,8 +1498,8 @@ export const DiamondFilterContent = ({ filters }) => {
                   key={color}
                   onClick={() => toggleWhiteColor(color)}
                   className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedWhiteColors.includes(color)
-                    ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-md scale-105"
+                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                     }`}
                 >
                   {color}
@@ -1520,8 +1520,8 @@ export const DiamondFilterContent = ({ filters }) => {
                   key={color}
                   onClick={() => toggleFancyColor(color)}
                   className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${selectedFancyColors.includes(color)
-                    ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-md scale-105"
+                    : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                     }`}
                 >
                   {color}
@@ -1530,7 +1530,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">
+                <label className="block text-sm font-medium text-[#004554] mb-1.5">
                   Color Intensity
                 </label>
                 <select
@@ -1547,7 +1547,7 @@ export const DiamondFilterContent = ({ filters }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#1E3A8A] mb-1.5">
+                <label className="block text-sm font-medium text-[#004554] mb-1.5">
                   Color Overtone
                 </label>
                 <select
@@ -1606,7 +1606,7 @@ export const DiamondFilterContent = ({ filters }) => {
                 setCaratMin(carat.toString());
                 setCaratMax((carat + 0.99).toString());
               }}
-              className="flex-1 py-1.5 px-1 rounded-md text-xs bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] transition-colors"
+              className="flex-1 py-1.5 px-1 rounded-md text-xs bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] transition-colors"
             >
               {carat}ct
             </button>
@@ -1687,8 +1687,8 @@ export const DiamondFilterContent = ({ filters }) => {
               key={clarity}
               onClick={() => toggleClarity(clarity)}
               className={`py-2 px-2 rounded-lg text-sm font-medium transition-all duration-300 ${selectedClarities.includes(clarity)
-                ? "bg-[#1E3A8A] text-white shadow-md"
-                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                ? "bg-[#B2D5E2] text-[#004554] shadow-md"
+                : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                 }`}
             >
               {clarity}
@@ -1710,7 +1710,7 @@ export const DiamondFilterContent = ({ filters }) => {
               type="checkbox"
               checked={heartArrow}
               onChange={toggleHeartArrow}
-              className="w-4 h-4 rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+              className="w-4 h-4 rounded border-gray-300 text-[#004554] accent-[#004554] focus:ring-[#004554]"
             />
             <span className="text-sm text-[#475569]">Heart & Arrow</span>
           </label>
@@ -1719,7 +1719,7 @@ export const DiamondFilterContent = ({ filters }) => {
               type="checkbox"
               checked={noBgm}
               onChange={toggleNoBgm}
-              className="w-4 h-4 rounded border-gray-300 text-[#1E3A8A] focus:ring-[#1E3A8A]"
+              className="w-4 h-4 rounded border-gray-300 text-[#004554] accent-[#004554] focus:ring-[#004554]"
             />
             <span className="text-sm text-[#475569]">No BGM</span>
           </label>
@@ -1757,8 +1757,8 @@ export const DiamondFilterContent = ({ filters }) => {
                     setPendingSymmetry(preset.values);
                   }}
                   className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold transition-all duration-200 ${isActive
-                    ? "bg-[#1E3A8A] text-white shadow-sm"
-                    : "bg-white text-[#475569] border border-gray-200 hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-sm"
+                    : "bg-white text-[#475569] border border-gray-200 hover:border-[#004554] hover:text-[#004554]"
                     }`}
                 >
                   {preset.name}
@@ -1775,8 +1775,8 @@ export const DiamondFilterContent = ({ filters }) => {
                   key={cut}
                   onClick={() => toggleCut(cut)}
                   className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedCuts.includes(cut)
-                    ? "bg-[#1E3A8A] text-white shadow-md"
-                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                     }`}
                 >
                   {cut}
@@ -1795,8 +1795,8 @@ export const DiamondFilterContent = ({ filters }) => {
                   key={polish}
                   onClick={() => togglePolish(polish)}
                   className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedPolish.includes(polish)
-                    ? "bg-[#1E3A8A] text-white shadow-md"
-                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                     }`}
                 >
                   {polish}
@@ -1815,8 +1815,8 @@ export const DiamondFilterContent = ({ filters }) => {
                   key={symmetry}
                   onClick={() => toggleSymmetry(symmetry)}
                   className={`py-2 px-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-between ${selectedSymmetry.includes(symmetry)
-                    ? "bg-[#1E3A8A] text-white shadow-md"
-                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                    ? "bg-[#B2D5E2] text-[#004554] shadow-md"
+                    : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                     }`}
                 >
                   {symmetry}
@@ -1841,8 +1841,8 @@ export const DiamondFilterContent = ({ filters }) => {
               key={fluor}
               onClick={() => toggleFluorescence(fluor)}
               className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedFluorescence.includes(fluor)
-                ? "bg-[#7C3AED] text-white shadow-md scale-105"
-                : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#EDE9FE] hover:text-[#7C3AED] hover:border-[#7C3AED]"
+                ? "bg-[#B2D5E2] text-[#004554] shadow-md scale-105"
+                : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] hover:border-[#004554]"
                 }`}
             >
               {fluor}
@@ -1862,8 +1862,8 @@ export const DiamondFilterContent = ({ filters }) => {
           <button
             onClick={() => setCertificateType("certified")}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${certificateType === "certified"
-              ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
-              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              ? "bg-[#B2D5E2] text-[#004554] border border-[#004554] shadow-md"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] border border-transparent"
               }`}
           >
             Certified
@@ -1873,8 +1873,8 @@ export const DiamondFilterContent = ({ filters }) => {
               setCertificateType("non-certified");
             }}
             className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${certificateType === "non-certified"
-              ? "bg-[#1E3A8A] text-white border border-[#1E3A8A] shadow-md"
-              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A] border border-transparent"
+              ? "bg-[#B2D5E2] text-[#004554] border border-[#004554] shadow-md"
+              : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554] border border-transparent"
               }`}
           >
             Non-certified
@@ -1888,8 +1888,8 @@ export const DiamondFilterContent = ({ filters }) => {
                 key={lab}
                 onClick={() => toggleCertification(lab)}
                 className={`py-1.5 px-1 rounded-lg text-xs font-medium transition-all duration-300 ${selectedCertifications.includes(lab)
-                  ? "bg-[#1E3A8A] text-white shadow-md"
-                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  ? "bg-[#B2D5E2] text-[#004554] shadow-md"
+                  : "bg-[#F1F5F9] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                   }`}
               >
                 {lab}
@@ -1946,7 +1946,7 @@ export const DiamondFilterContent = ({ filters }) => {
                     key={supplier}
                     onClick={() => setPendingSupplier(supplier)}
                     className={`w-full text-left px-3 py-2 text-xs rounded-md transition-colors ${pendingSupplier === supplier
-                      ? "bg-[#1E3A8A] text-white"
+                      ? "bg-[#B2D5E2] text-[#004554]"
                       : "hover:bg-[#F1F5F9] text-[#475569]"
                       }`}
                   >
@@ -1972,8 +1972,8 @@ export const DiamondFilterContent = ({ filters }) => {
                 key={type}
                 onClick={() => toggleGrowthType(type)}
                 className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedGrowthType.includes(type)
-                  ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  ? "bg-[#B2D5E2] text-[#004554] shadow-md scale-105"
+                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                   }`}
               >
                 {type}
@@ -1997,8 +1997,8 @@ export const DiamondFilterContent = ({ filters }) => {
                 key={treatment}
                 onClick={() => toggleTreatment(treatment)}
                 className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-300 ${selectedTreatment.includes(treatment)
-                  ? "bg-[#1E3A8A] text-white shadow-md scale-105"
-                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#DBEAFE] hover:text-[#1E3A8A]"
+                  ? "bg-[#B2D5E2] text-[#004554] shadow-md scale-105"
+                  : "bg-white border border-[#CBD5E1] text-[#475569] hover:bg-[#B2D5E2] hover:text-[#004554]"
                   }`}
               >
                 {treatment}
@@ -2018,7 +2018,7 @@ export const DiamondFilterContent = ({ filters }) => {
         <div className="space-y-4">
           {/* Measurements */}
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Length (mm)
             </label>
             <div className="flex items-center gap-2">
@@ -2040,7 +2040,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Width (mm)
             </label>
             <div className="flex items-center gap-2">
@@ -2062,7 +2062,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Height (mm)
             </label>
             <div className="flex items-center gap-2">
@@ -2084,7 +2084,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Ratio
             </label>
             <div className="flex items-center gap-2">
@@ -2106,7 +2106,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Depth %
             </label>
             <div className="flex items-center gap-2">
@@ -2128,7 +2128,7 @@ export const DiamondFilterContent = ({ filters }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#1E3A8A] mb-2">
+            <label className="block text-sm font-medium text-[#004554] mb-2">
               Table %
             </label>
             <div className="flex items-center gap-2">
