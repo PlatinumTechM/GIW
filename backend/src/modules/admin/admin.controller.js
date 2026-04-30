@@ -78,7 +78,7 @@ export const getActiveSubscriptions = async (req, res) => {
 // Create subscription
 export const createSubscription = async (req, res) => {
   try {
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, hasShareLink, description } = req.body;
 
     if (
       !name ||
@@ -100,6 +100,7 @@ export const createSubscription = async (req, res) => {
       stockLimit: parseInt(stockLimit),
       hasDiamonds: hasDiamonds === true || hasDiamonds === "true",
       hasJewellery: hasJewellery === true || hasJewellery === "true",
+      hasShareLink: hasShareLink === true || hasShareLink === "true",
       description: description || null,
     });
 
@@ -121,7 +122,7 @@ export const createSubscription = async (req, res) => {
 export const updateSubscription = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = req.body;
+    const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, hasShareLink, description, isActive } = req.body;
 
     if (
       !name ||
@@ -143,6 +144,7 @@ export const updateSubscription = async (req, res) => {
       stockLimit: parseInt(stockLimit),
       hasDiamonds: hasDiamonds === true || hasDiamonds === "true",
       hasJewellery: hasJewellery === true || hasJewellery === "true",
+      hasShareLink: hasShareLink === true || hasShareLink === "true",
       description: description || null,
       isActive,
     });

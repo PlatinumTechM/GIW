@@ -20,8 +20,10 @@ import JewelleryFilters from "./JewelleryFilters";
 import JewelleryGrid from "./JewelleryGrid";
 import api from "../../../services/api";
 import notify from "../../../utils/notifications";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const JewelleryStock = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("view"); // "view" or "add"
   const [stockData, setStockData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -285,15 +287,17 @@ const JewelleryStock = () => {
                     )}
                   </button>
 
-                  <button
-                    onClick={() =>
-                      notify.info("Share", "Sharing feature coming soon!")
-                    }
-                    className="flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-[#6366F1] text-white hover:bg-[#4F46E5] rounded-xl transition-all shadow-md shadow-indigo-100 text-xs font-bold"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    <span className="hidden md:inline">Share</span>
-                  </button>
+                  {user?.planHasShareLink && (
+                    <button
+                      onClick={() =>
+                        notify.info("Share", "Sharing feature coming soon!")
+                      }
+                      className="flex items-center justify-center gap-2 p-2 sm:px-4 sm:py-2.5 bg-[#6366F1] text-white hover:bg-[#4F46E5] rounded-xl transition-all shadow-md shadow-indigo-100 text-xs font-bold"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span className="hidden md:inline">Share</span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => fetchStock(currentPage, searchQuery)}

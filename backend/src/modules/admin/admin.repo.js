@@ -49,7 +49,7 @@ export const getAllUsers = async (search = "") => {
 // Get all subscription plans
 export const getSubscriptions = async () => {
   const query = `SELECT id, name, duration_month, price, stock_limit, is_active,
-                        has_diamonds, has_jewellery, description, created_at
+                        has_diamonds, has_jewellery, has_share_link, description, created_at
                  FROM subscription_plans ORDER BY name ASC, duration_month ASC`;
   const result = await pool.query(query);
   return result.rows.map((row) => ({
@@ -60,6 +60,7 @@ export const getSubscriptions = async () => {
     stockLimit: row.stock_limit,
     hasDiamonds: row.has_diamonds,
     hasJewellery: row.has_jewellery,
+    hasShareLink: row.has_share_link,
     description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
@@ -69,7 +70,7 @@ export const getSubscriptions = async () => {
 // Get only active subscription plans (for public pricing page)
 export const getActiveSubscriptions = async () => {
   const query = `SELECT id, name, duration_month, price, stock_limit, is_active,
-                        has_diamonds, has_jewellery, description, created_at
+                        has_diamonds, has_jewellery, has_share_link, description, created_at
                  FROM subscription_plans
                  WHERE is_active = true
                  ORDER BY name ASC, duration_month ASC`;
@@ -82,6 +83,7 @@ export const getActiveSubscriptions = async () => {
     stockLimit: row.stock_limit,
     hasDiamonds: row.has_diamonds,
     hasJewellery: row.has_jewellery,
+    hasShareLink: row.has_share_link,
     description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
@@ -90,10 +92,10 @@ export const getActiveSubscriptions = async () => {
 
 // Create subscription plan
 export const createSubscription = async (data) => {
-  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description } = data;
-  const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7)
-                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, hasShareLink, description } = data;
+  const query = `INSERT INTO subscription_plans (name, duration_month, price, stock_limit, has_diamonds, has_jewellery, has_share_link, description)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, has_share_link, description, is_active, created_at`;
   const result = await pool.query(query, [
     name,
     durationMonth,
@@ -101,6 +103,7 @@ export const createSubscription = async (data) => {
     stockLimit,
     hasDiamonds ?? false,
     hasJewellery ?? false,
+    hasShareLink ?? false,
     description || null,
   ]);
   const row = result.rows[0];
@@ -112,6 +115,7 @@ export const createSubscription = async (data) => {
     stockLimit: row.stock_limit,
     hasDiamonds: row.has_diamonds,
     hasJewellery: row.has_jewellery,
+    hasShareLink: row.has_share_link,
     description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
@@ -120,12 +124,12 @@ export const createSubscription = async (data) => {
 
 // Update subscription plan
 export const updateSubscription = async (id, data) => {
-  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, description, isActive } = data;
+  const { name, durationMonth, price, stockLimit, hasDiamonds, hasJewellery, hasShareLink, description, isActive } = data;
   const query = `UPDATE subscription_plans
                  SET name = $1, duration_month = $2, price = $3, stock_limit = $4, 
-                     has_diamonds = $5, has_jewellery = $6, description = $7, is_active = $8
-                 WHERE id = $9
-                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, description, is_active, created_at`;
+                     has_diamonds = $5, has_jewellery = $6, has_share_link = $7, description = $8, is_active = $9
+                 WHERE id = $10
+                 RETURNING id, name, duration_month, price, stock_limit, has_diamonds, has_jewellery, has_share_link, description, is_active, created_at`;
   const result = await pool.query(query, [
     name,
     durationMonth,
@@ -133,6 +137,7 @@ export const updateSubscription = async (id, data) => {
     stockLimit,
     hasDiamonds ?? false,
     hasJewellery ?? false,
+    hasShareLink ?? false,
     description || null,
     isActive ?? true,
     id,
@@ -149,6 +154,7 @@ export const updateSubscription = async (id, data) => {
     stockLimit: row.stock_limit,
     hasDiamonds: row.has_diamonds,
     hasJewellery: row.has_jewellery,
+    hasShareLink: row.has_share_link,
     description: row.description,
     isActive: row.is_active,
     createdAt: row.created_at,
