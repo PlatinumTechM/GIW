@@ -23,6 +23,7 @@ import {
   Sparkles,
   Clock,
   Users,
+  Share2,
 } from "lucide-react";
 
 const DURATION_OPTIONS = [
@@ -113,6 +114,7 @@ const ManageSubscription = () => {
     stockLimit: "",
     hasDiamonds: false,
     hasJewellery: false,
+    hasShareLink: false,
     description: "",
     isActive: true,
   });
@@ -206,6 +208,7 @@ const ManageSubscription = () => {
       stockLimit: "",
       hasDiamonds: false,
       hasJewellery: false,
+      hasShareLink: false,
       description: "",
       isActive: true,
     });
@@ -229,6 +232,7 @@ const ManageSubscription = () => {
       stockLimit: subscription.stockLimit?.toString() || "",
       hasDiamonds: subscription.hasDiamonds ?? false,
       hasJewellery: subscription.hasJewellery ?? false,
+      hasShareLink: subscription.hasShareLink ?? false,
       description: subscription.description || "",
       isActive: subscription.isActive ?? true,
     });
@@ -280,6 +284,7 @@ const ManageSubscription = () => {
         stockLimit: parseInt(formData.stockLimit),
         hasDiamonds: formData.hasDiamonds,
         hasJewellery: formData.hasJewellery,
+        hasShareLink: formData.hasShareLink,
         description: formData.description.trim() || null,
         isActive: formData.isActive,
       };
@@ -597,6 +602,21 @@ const ManageSubscription = () => {
                           >
                             <Gem className="w-3 h-3" />
                             Jewellery
+                          </motion.span>
+                        )}
+                        {sub.hasShareLink && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              delay: 0.2,
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-indigo-100 to-purple-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-200"
+                          >
+                            <Share2 className="w-3 h-3" />
+                            Share
                           </motion.span>
                         )}
                       </div>
@@ -1016,8 +1036,8 @@ const ManageSubscription = () => {
                   <label className="block text-sm font-medium text-[#475569] mb-2">
                     Description
                   </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-3 w-5 h-5 text-[#94A3B8]" />
+                  <div className="relative input-with-icon">
+                    <FileText className="icon absolute left-3 top-3 w-5 h-5 text-[#94A3B8]" />
                     <textarea
                       value={formData.description}
                       onChange={(e) =>
@@ -1025,9 +1045,51 @@ const ManageSubscription = () => {
                       }
                       placeholder="Enter plan description (optional)"
                       rows={3}
-                      className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-md text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all resize-none"
+                      className="w-full input-field"
                     />
                   </div>
+                </motion.div>
+
+                {/* Share Link Toggle */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28 }}
+                  className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-100"
+                >
+                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                    <Share2 className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium text-[#0F172A]">
+                      Share Link Feature
+                    </label>
+                    <p className="text-xs text-[#64748B]">
+                      Allow sellers to generate shareable stock links
+                    </p>
+                  </div>
+                  <motion.button
+                    type="button"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() =>
+                      handleInputChange("hasShareLink", !formData.hasShareLink)
+                    }
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      formData.hasShareLink ? "bg-indigo-600" : "bg-gray-300"
+                    }`}
+                  >
+                    <motion.span
+                      layout
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                      }}
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white ${
+                        formData.hasShareLink ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </motion.button>
                 </motion.div>
 
                 {/* Active Toggle (only when editing) */}

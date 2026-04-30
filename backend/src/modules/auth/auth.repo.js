@@ -29,6 +29,7 @@ export const findUserWithSubscription = async (id) => {
       u.id, u.name, u.email, u.company, u.phone, u.address,
       u.gst, u.document, u.is_active, u.role, u.type, u.created_at,
       sp.name as plan_name,
+      sp.has_share_link as plan_has_share_link,
       us.end_date as plan_expiry,
       us.status as subscription_status,
       usage.uploaded as used_stock,
