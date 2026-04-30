@@ -24,6 +24,7 @@ import AddStockManual from "@/modules/stock/AddStockManual";
 import JewelleryStock from "@/modules/stock/jewellery/JewelleryStock";
 import SharePage from "@/modules/share/SharePage";
 import NotificationPage from "@/modules/notifications/NotificationPage";
+import FavoritesPage from "@/modules/user/Favorites/FavoritesPage";
 import NotFound from "@/components/NotFound";
 
 export const router = createBrowserRouter([
@@ -48,6 +49,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowAdmin>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/favorites",
+        element: (
+          <ProtectedRoute>
+            <FavoritesPage />
           </ProtectedRoute>
         ),
       },
