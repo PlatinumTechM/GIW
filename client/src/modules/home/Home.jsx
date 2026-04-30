@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import "./Home.css"
+import "./Home.css";
 import {
   Diamond,
   Shield,
@@ -17,6 +17,7 @@ import {
   Gem,
   Award,
 } from "lucide-react";
+import RateCards from "@/components/dashboard/RateCards";
 
 const Home = () => {
   const features = [
@@ -126,18 +127,12 @@ const Home = () => {
             </p>
 
             <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-              <Link
-                to="/register"
-                className="btn-primary"
-              >
+              <Link to="/register" className="btn-primary">
                 Start Trading
                 <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
 
-              <Link
-                to="/login"
-                className="btn-secondary"
-              >
+              <Link to="/login" className="btn-secondary">
                 <Users className="h-5 w-5" />
                 Dealer Login
               </Link>
@@ -147,10 +142,7 @@ const Home = () => {
           {/* Right Stats */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="card-turquoise-3d p-6"
-              >
+              <div key={index} className="card-turquoise-3d p-6">
                 <div className="mb-4 flex h-10 w-14 items-center justify-center icon-rectangle-3d">
                   <stat.Icon className="h-6 w-6" />
                 </div>
@@ -168,6 +160,23 @@ const Home = () => {
           <div className="flex h-10 w-6 justify-center rounded-full border-2 border-[#CBD5E1] pt-2">
             <div className="h-1.5 w-1.5 rounded-full bg-[#2e7c9e]" />
           </div>
+        </div>
+      </section>
+
+      {/* Live Rates Section */}
+      <section className="bg-[var(--bg-primary)] px-4 py-12 border-y border-gray-100">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[#0F172A]">
+                Live Market Rates
+              </h2>
+              <p className="text-sm text-[#475569]">
+                Real-time USD/INR and Gold rates for informed trading decisions
+              </p>
+            </div>
+          </div>
+          <RateCards />
         </div>
       </section>
 
@@ -235,7 +244,10 @@ const Home = () => {
 
           <div className="relative grid gap-8 md:grid-cols-3 pt-10">
             {steps.map((item, index) => (
-              <div key={index} className="group relative card-turquoise-3d p-8 pt-16">
+              <div
+                key={index}
+                className="group relative card-turquoise-3d p-8 pt-16"
+              >
                 <div className="absolute top-4 right-6 text-6xl font-black text-[#2e7c9e]/10 transition-colors duration-300 group-hover:text-[#2e7c9e]/20">
                   {item.step}
                 </div>
@@ -331,18 +343,12 @@ const Home = () => {
               </p>
 
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Link
-                  to="/register"
-                  className="btn-primary"
-                >
+                <Link to="/register" className="btn-primary">
                   Apply for Membership
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
 
-                <a
-                  href="#"
-                  className="btn-secondary"
-                >
+                <a href="#" className="btn-secondary">
                   Learn More
                 </a>
               </div>
