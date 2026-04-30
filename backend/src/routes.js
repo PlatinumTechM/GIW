@@ -6,6 +6,7 @@ import { jewellryRoutes } from "./modules/stock/jewellry/jewellry.routes.js";
 import { shareRoutes } from "./modules/share/share.routes.js";
 import shareApiRoutes from "./modules/share/share-api/share-api.routes.js";
 import { notificationRoutes } from "./modules/notification/notification.routes.js";
+import { rateRoutes } from "./modules/rates/rate.routes.js";
 
 const app = express();
 
@@ -16,5 +17,6 @@ app.use("/v1/jewellry-stock", jewellryRoutes);
 app.use("/v1/share", shareRoutes);
 app.use("/v1/notifications", notificationRoutes);
 app.use("/v1/share-api", shareApiRoutes);
+app.use("/v1/rates", rateRoutes);
 
 export default app;
